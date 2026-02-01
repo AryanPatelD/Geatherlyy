@@ -19,3 +19,5 @@ export function buildApiUrl(endpoint: string): string {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${baseUrl}${cleanEndpoint}`;
 }
+
+export const apiUrl = getApiUrl();

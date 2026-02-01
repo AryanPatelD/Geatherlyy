@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
+import { apiUrl } from '@/lib/apiUrl';
 import { getApiUrl } from '@/lib/apiUrl';
 
 function ManageClubContent() {
