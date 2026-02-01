@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ExclamationTriangleIcon, PersonIcon, PlusIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,9 +28,10 @@ export default function DashboardPage() {
     const fetchClubs = async () => {
       try {
         const token = localStorage.getItem('token');
+        const apiUrl = getApiUrl();
         
         // Fetch categories
-        const categoriesResponse = await fetch('http://localhost:5000/api/clubs/categories', {
+        const categoriesResponse = await fetch(`${apiUrl}/api/clubs/categories`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -44,21 +46,21 @@ export default function DashboardPage() {
         const categoryParam = selectedCategory !== 'all' ? `?category=${selectedCategory}` : '';
         
         // Fetch all clubs (with optional category filter)
-        const allClubsResponse = await fetch(`http://localhost:5000/api/clubs${categoryParam}`, {
+        const allClubsResponse = await fetch(`${apiUrl}/api/clubs${categoryParam}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
         
         // Fetch user's clubs
-        const myClubsResponse = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+        const myClubsResponse = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
         // Fetch pending clubs
-        const pendingClubsResponse = await fetch('http://localhost:5000/api/clubs/pending-requests', {
+        const pendingClubsResponse = await fetch(`${apiUrl}/api/clubs/pending-requests`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -100,7 +102,8 @@ export default function DashboardPage() {
     setJoiningClub(clubId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}/join`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${clubId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -110,13 +113,13 @@ export default function DashboardPage() {
       if (response.ok) {
         // Refresh clubs data
         const categoryParam = selectedCategory !== 'all' ? `?category=${selectedCategory}` : '';
-        const allClubsResponse = await fetch(`http://localhost:5000/api/clubs${categoryParam}`, {
+        const allClubsResponse = await fetch(`${apiUrl}/api/clubs${categoryParam}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        const myClubsResponse = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+        const myClubsResponse = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        const pendingClubsResponse = await fetch('http://localhost:5000/api/clubs/pending-requests', {
+        const pendingClubsResponse = await fetch(`${apiUrl}/api/clubs/pending-requests`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         

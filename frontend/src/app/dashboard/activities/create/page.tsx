@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { CalendarIcon, ClockIcon, PlusIcon } from '@radix-ui/react-icons';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function CreateActivityPage() {
   const router = useRouter();
@@ -23,7 +24,8 @@ export default function CreateActivityPage() {
     const fetchManagedClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/managed', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/managed`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -58,7 +60,8 @@ export default function CreateActivityPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/activities', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/activities`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function ClubDetailPage({
   params,
@@ -44,7 +45,8 @@ export default function ClubDetailPage({
     const fetchClub = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/clubs/${params.id}`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -73,7 +75,8 @@ export default function ClubDetailPage({
         setLoadingResources(true);
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/resources?clubId=${params.id}`, {
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/resources?clubId=${params.id}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (response.ok) {
@@ -97,7 +100,8 @@ export default function ClubDetailPage({
         setLoadingQuizzes(true);
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/quizzes?clubId=${params.id}`, {
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/quizzes?clubId=${params.id}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (response.ok) {
@@ -121,7 +125,8 @@ export default function ClubDetailPage({
         setLoadingActivities(true);
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/activities?clubId=${params.id}`, {
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/activities?clubId=${params.id}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (response.ok) {
@@ -142,7 +147,8 @@ export default function ClubDetailPage({
     setJoiningClub(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${params.id}/join`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${params.id}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -151,7 +157,7 @@ export default function ClubDetailPage({
 
       if (response.ok) {
         // Refresh club data to update membership status
-        const clubResponse = await fetch(`http://localhost:5000/api/clubs/${params.id}`, {
+        const clubResponse = await fetch(`${apiUrl}/api/clubs/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -184,7 +190,8 @@ export default function ClubDetailPage({
     setApplyingCoordinator(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${params.id}/apply-coordinator`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${params.id}/apply-coordinator`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -217,7 +224,8 @@ export default function ClubDetailPage({
     setLeavingClub(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${params.id}/leave`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${params.id}/leave`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -571,7 +579,7 @@ export default function ClubDetailPage({
                   <span>{(resource.fileSize / 1024 / 1024).toFixed(2)} MB</span>
                 </div>
                 <a
-                  href={`http://localhost:5000/api/resources/${resource.id}/download`}
+                  href={`${getApiUrl()}/api/resources/${resource.id}/download`}
                   className="btn btn-outline text-sm w-full"
                 >
                   Download

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { getApiUrl } from '@/lib/apiUrl';
 
 interface Question {
   text: string;
@@ -47,7 +48,8 @@ export default function CreateQuizPage({ searchParams }: Props) {
     const fetchMyClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/managed', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/managed`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (response.ok) {
@@ -136,7 +138,8 @@ export default function CreateQuizPage({ searchParams }: Props) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/quizzes', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -273,10 +276,11 @@ export default function CreateQuizPage({ searchParams }: Props) {
                                             const formData = new FormData();
                                             formData.append('image', file);
                                             const token = localStorage.getItem('token');
+                                            const apiUrl = getApiUrl();
                                             
                                             // Optimistic update to show loading status if needed, 
                                             // or just block UI. For now, simple alert on error.
-                                            const res = await fetch('http://localhost:5000/api/upload/quiz-image', {
+                                            const res = await fetch(`${apiUrl}/api/upload/quiz-image`, {
                                               method: 'POST',
                                               headers: { 'Authorization': `Bearer ${token}` },
                                               body: formData

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trophy, Medal, Award, Users, TrendingUp, Target } from 'lucide-react';
 import { useAuthStore } from '@/context/AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 interface LeaderboardEntry {
   rank: number;
@@ -45,7 +46,8 @@ export default function LeaderboardPage() {
 
   const fetchGlobalLeaderboard = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/leaderboards/global?limit=50');
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/global?limit=50`);
       if (response.ok) {
         const data = await response.json();
         setGlobalLeaderboard(data);
@@ -60,7 +62,8 @@ export default function LeaderboardPage() {
   const fetchMyRank = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/leaderboards/my-rank', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/my-rank`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -77,7 +80,8 @@ export default function LeaderboardPage() {
   const fetchMyClubs = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -96,7 +100,8 @@ export default function LeaderboardPage() {
 
   const fetchClubLeaderboard = async (clubId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/leaderboards/club/${clubId}?limit=30`);
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/club/${clubId}?limit=30`);
       if (response.ok) {
         const data = await response.json();
         setClubLeaderboard(data);
@@ -109,7 +114,8 @@ export default function LeaderboardPage() {
   const handleExportGlobal = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/leaderboards/global/export', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/global/export`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -135,7 +141,8 @@ export default function LeaderboardPage() {
   const handleExportClub = async (clubId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/leaderboards/club/${clubId}/export`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/club/${clubId}/export`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

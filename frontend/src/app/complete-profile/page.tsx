@@ -3,6 +3,7 @@
 import { useAuthStore, UserRole } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -57,7 +58,8 @@ export default function CompleteProfilePage() {
         approvalStatus: 'APPROVED', // Uppercase to match Prisma enum
       };
 
-      const response = await fetch('http://localhost:5000/api/users/me', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

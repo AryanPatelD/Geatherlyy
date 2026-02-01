@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function QuizzesPage() {
   const router = useRouter();
@@ -12,7 +13,8 @@ export default function QuizzesPage() {
     const fetchQuizzes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/quizzes', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/quizzes`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

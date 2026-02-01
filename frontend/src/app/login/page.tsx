@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 import { LockClosedIcon, EnvelopeClosedIcon, PersonIcon, EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
 
 export default function LoginPage() {
@@ -23,7 +24,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
+    const apiUrl = getApiUrl();
+    window.location.href = `${apiUrl}/api/auth/google`;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -32,7 +34,8 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +85,8 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

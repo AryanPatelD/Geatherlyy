@@ -5,6 +5,7 @@ import { useAuthStore } from '@/context/AuthContext';
 import { DashboardIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export function Navbar() {
   const { user, logout } = useAuthStore();
@@ -48,18 +49,19 @@ export function Navbar() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
       
       const [clubsRes, activitiesRes, quizzesRes, resourcesRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/clubs?search=${encodeURIComponent(query)}`, {
+        fetch(`${apiUrl}/api/clubs?search=${encodeURIComponent(query)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`http://localhost:5000/api/activities?search=${encodeURIComponent(query)}`, {
+        fetch(`${apiUrl}/api/activities?search=${encodeURIComponent(query)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`http://localhost:5000/api/quizzes?search=${encodeURIComponent(query)}`, {
+        fetch(`${apiUrl}/api/quizzes?search=${encodeURIComponent(query)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`http://localhost:5000/api/resources?search=${encodeURIComponent(query)}`, {
+        fetch(`${apiUrl}/api/resources?search=${encodeURIComponent(query)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
       ]);

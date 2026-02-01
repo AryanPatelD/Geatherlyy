@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/context/AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -27,7 +28,8 @@ function AuthCallbackContent() {
     // Fetch full user data from backend using the token
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

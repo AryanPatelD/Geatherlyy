@@ -4,6 +4,7 @@ import { useAuthStore } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { PersonIcon, EnvelopeClosedIcon, MobileIcon, BackpackIcon, IdCardIcon } from '@radix-ui/react-icons';
+import { getApiUrl } from '@/lib/apiUrl';
 
 interface QuizAttempt {
   id: number;
@@ -53,7 +54,8 @@ export default function ProfilePage() {
       const fetchStats = async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch('http://localhost:5000/api/users/me/stats', {
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/users/me/stats`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -75,8 +77,9 @@ export default function ProfilePage() {
       const fetchQuizHistory = async () => {
         try {
           const token = localStorage.getItem('token');
+          const apiUrl = getApiUrl();
           // Fetch all quiz attempts for the user
-          const response = await fetch(`http://localhost:5000/api/quizzes`, {
+          const response = await fetch(`${apiUrl}/api/quizzes`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -90,7 +93,7 @@ export default function ProfilePage() {
             for (const quiz of quizzes) {
               try {
                 const attemptResponse = await fetch(
-                  `http://localhost:5000/api/quizzes/${quiz.id}/my-attempt`,
+                  `${apiUrl}/api/quizzes/${quiz.id}/my-attempt`,
                   {
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -148,7 +151,8 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/me', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

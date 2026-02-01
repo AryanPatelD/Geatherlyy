@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function ApprovalsPage() {
   const [activeTab, setActiveTab] = useState('pending');
@@ -13,7 +14,8 @@ export default function ApprovalsPage() {
     const fetchApprovals = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/approvals', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/approvals`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -26,7 +28,7 @@ export default function ApprovalsPage() {
         }
 
         // Fetch Removal Requests
-        const removalResponse = await fetch('http://localhost:5000/api/removal-requests?status=PENDING', {
+        const removalResponse = await fetch(`${apiUrl}/api/removal-requests?status=PENDING`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -49,7 +51,8 @@ export default function ApprovalsPage() {
   const handleApprove = async (id: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/approvals/${id}/review`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/approvals/${id}/review`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -74,7 +77,8 @@ export default function ApprovalsPage() {
   const handleReject = async (id: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/approvals/${id}/review`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/approvals/${id}/review`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -94,7 +98,8 @@ export default function ApprovalsPage() {
   const handleReviewRemoval = async (id: number, status: 'APPROVED' | 'REJECTED') => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/removal-requests/${id}/review`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/removal-requests/${id}/review`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

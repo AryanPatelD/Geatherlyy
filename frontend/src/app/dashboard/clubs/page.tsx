@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function ClubsPage() {
   const { user } = useAuthStore();
@@ -14,7 +15,8 @@ export default function ClubsPage() {
     const fetchMyClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

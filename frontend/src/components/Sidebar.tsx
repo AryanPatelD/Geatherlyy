@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 import {
   DashboardIcon,
   MagnifyingGlassIcon,
@@ -36,7 +37,8 @@ export function Sidebar() {
 
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/managed', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/managed`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/context/AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 interface QuizQuestion {
   id: number;
@@ -50,7 +51,8 @@ export default function QuizPage({
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/quizzes/${params.id}`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/quizzes/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -217,7 +219,8 @@ export default function QuizPage({
     setSubmitting(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/quizzes/${params.id}/submit`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +243,7 @@ export default function QuizPage({
       }
 
       // Fetch leaderboard
-      const leaderboardResponse = await fetch(`http://localhost:5000/api/quizzes/${params.id}/leaderboard?limit=10`, {
+      const leaderboardResponse = await fetch(`${apiUrl}/api/quizzes/${params.id}/leaderboard?limit=10`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

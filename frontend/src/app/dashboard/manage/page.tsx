@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 function ManageClubContent() {
   const router = useRouter();
@@ -56,7 +57,8 @@ function ManageClubContent() {
     setSubmittingRemoval(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/removal-requests', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/removal-requests`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -91,7 +93,8 @@ function ManageClubContent() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quizzes?clubId=${selectedClub.id}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes?clubId=${selectedClub.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -112,7 +115,8 @@ function ManageClubContent() {
     setLoadingStats(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${selectedClub.id}/stats`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${selectedClub.id}/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -135,7 +139,8 @@ function ManageClubContent() {
     setLoadingResources(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/resources?clubId=${selectedClub.id}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/resources?clubId=${selectedClub.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -158,7 +163,8 @@ function ManageClubContent() {
     setLoadingComments(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/comments/club/${selectedClub.id}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/comments/club/${selectedClub.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -180,7 +186,8 @@ function ManageClubContent() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${selectedClub.id}/members/export`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${selectedClub.id}/members/export`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -227,7 +234,7 @@ function ManageClubContent() {
       formData.append('clubId', selectedClub.id.toString());
       formData.append('file', resourceData.file);
 
-      const response = await fetch('http://localhost:5000/api/resources', {
+      const response = await fetch(`${apiUrl}/api/resources`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -257,7 +264,8 @@ function ManageClubContent() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/resources/${resourceId}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/resources/${resourceId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -292,7 +300,8 @@ function ManageClubContent() {
     const fetchManagedClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/managed', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/managed`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -336,7 +345,8 @@ function ManageClubContent() {
     setCreatingQuiz(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/quizzes', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -380,7 +390,8 @@ function ManageClubContent() {
   const handleToggleQuizStatus = async (quizId: number, isActive: boolean) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quizzes/${quizId}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes/${quizId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -405,7 +416,8 @@ function ManageClubContent() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quizzes/${quizId}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes/${quizId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -923,7 +935,8 @@ function ManageClubContent() {
                             formData.append('image', file);
                             
                             const token = localStorage.getItem('token');
-                            const response = await fetch('http://localhost:5000/api/upload/quiz-image', {
+                            const apiUrl = getApiUrl();
+                            const response = await fetch(`${apiUrl}/api/upload/quiz-image`, {
                               method: 'POST',
                               headers: {
                                 'Authorization': `Bearer ${token}`,
@@ -1099,7 +1112,7 @@ function ManageClubContent() {
                       </div>
                       <div className="flex gap-2">
                         <a
-                          href={`http://localhost:5000/api/resources/${resource.id}/download`}
+                          href={`${getApiUrl()}/api/resources/${resource.id}/download`}
                           className="text-xs px-3 py-1 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/30"
                         >
                           {resource.type === 'PDF' ? 'Download' : 'Download'}

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react"
 import { Command } from "cmdk"
+import { getApiUrl } from '@/lib/apiUrl'
 
 // Self-contained simplified UI components
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -59,7 +60,8 @@ export function FacultySearch({
       setLoading(true)
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/search-faculty?query=${query}`, {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/users/search-faculty?query=${query}`, {
              headers: {
                 Authorization: `Bearer ${token}`
              }

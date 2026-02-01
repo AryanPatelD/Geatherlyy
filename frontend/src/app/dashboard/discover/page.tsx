@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function DiscoverPage() {
   const router = useRouter();
@@ -16,7 +17,8 @@ export default function DiscoverPage() {
     const fetchClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -41,7 +43,8 @@ export default function DiscoverPage() {
     const fetchMyClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -63,7 +66,8 @@ export default function DiscoverPage() {
     setJoiningClubId(clubId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/clubs/${clubId}/join`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${clubId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -72,7 +76,7 @@ export default function DiscoverPage() {
 
       if (response.ok) {
         // Refresh my clubs list
-        const myClubsResponse = await fetch('http://localhost:5000/api/clubs/my-clubs', {
+        const myClubsResponse = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

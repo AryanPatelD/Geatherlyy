@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { create } from 'zustand';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export type UserRole = 'member' | 'coordinator' | 'faculty' | 'admin';
 
@@ -63,7 +64,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

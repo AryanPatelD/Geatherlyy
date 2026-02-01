@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import { getApiUrl } from '@/lib/apiUrl';
 
 interface Question {
   id: number;
@@ -41,7 +42,8 @@ export default function QuizResultPage({
     const fetchAttempt = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/quizzes/${params.quizId}/my-attempt`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/quizzes/${params.quizId}/my-attempt`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

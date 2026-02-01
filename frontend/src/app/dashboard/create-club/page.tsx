@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { PlusIcon, ImageIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useAuthStore } from '@/context/AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function CreateClubPage() {
   const router = useRouter();
@@ -149,7 +150,8 @@ export default function CreateClubPage() {
         submitData.append('eventPhotos', file);
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/clubs`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

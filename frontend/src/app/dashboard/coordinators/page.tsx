@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { RocketIcon, PersonIcon, CalendarIcon, ReaderIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function CoordinatorsPage() {
   const { user, isLoading } = useAuthStore();
@@ -21,7 +22,8 @@ export default function CoordinatorsPage() {
     const fetchManagedClubs = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/clubs/managed', {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/clubs/managed`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

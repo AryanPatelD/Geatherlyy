@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export default function QuizTakePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -21,7 +22,8 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
     const fetchQuiz = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/quizzes/${params.id}`, {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/quizzes/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -65,7 +67,8 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quizzes/${params.id}/submit`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -89,7 +92,8 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/quizzes/${params.id}/leaderboard?limit=10`);
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/leaderboard?limit=10`);
       if (response.ok) {
         const data = await response.json();
         setLeaderboard(data);
