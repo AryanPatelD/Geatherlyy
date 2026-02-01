@@ -20,7 +20,7 @@ cd Gatherly
 chmod +x setup.sh && ./setup.sh
 ```
 
-The script will install dependencies, set up databases, and configure everything automatically.
+The script will install dependencies, set up databases, and configure everything automatically..
 
 ### Manual Setup
 
