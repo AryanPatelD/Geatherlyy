@@ -37,7 +37,12 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://geatherlyy.vercel.app',
+      'https://geatherlyy-git-main-heetmehta18s-projects.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true,
   });
 
