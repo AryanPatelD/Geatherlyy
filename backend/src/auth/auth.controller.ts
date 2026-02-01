@@ -48,7 +48,7 @@ export class AuthController {
     const { access_token, user } = await this.authService.login(req.user);
 
     // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://geatherlyy.vercel.app';
     res.redirect(
       `${frontendUrl}/auth/callback?token=${access_token}&profileComplete=${user.profileComplete}`,
     );
