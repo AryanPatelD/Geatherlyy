@@ -356,19 +356,35 @@ The project is ready for deployment on **Railway**.
 2. Login to [Railway](https://railway.app/).
 3. Create a **New Project** -> **Deploy from GitHub repo**.
 4. Select your forked repository.
-5. Railway will automatically detect the multiple services. If not, add them manually:
-    - **Service 1 (Backend)**:
-        - Root Directory: `/backend`
-        - Build Command: `npm install && npm run prisma:generate && npm run build`
-        - Start Command: `npm run start:prod`
-        - Variables: Add all variables from `backend/.env.example` (DATABASE_URL, JWT_SECRET, etc.).
-    - **Service 2 (Frontend)**:
-        - Root Directory: `/frontend`
-        - Build Command: `npm install && npm run build`
-        - Start Command: `npm start`
-        - Variables: `NEXT_PUBLIC_API_URL` (points to your backend domain), `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
-6. **Databases**:
-    - Add a **PostgreSQL** service in Railway and link it (use `DATABASE_URL` variable).
-    - Add a **Redis** service and link it (use `REDIS_HOST`, `REDIS_PORT` variables).
+### Deployment Steps (Railway)
 
-Your application should now be live! 🚀
+1. **Fork/Clone** this repository to your GitHub account.
+2. Login to [Railway](https://railway.app/).
+3. Create a **New Project** -> **Deploy from GitHub repo**.
+4. Select your forked repository.
+5. **Configure Services**:
+   Railway will deploy the repo. You need to configure it to use the Dockerfiles.
+   
+   **For the Backend:**
+   - Go to **Settings** -> **General** -> **Root Directory**, set it to `/backend`.
+   - Railway will detect `backend/Dockerfile`.
+   - Go to **Variables**, add: `DATABASE_URL`, `JWT_SECRET`, etc. (See `.env.example`).
+   - Add a **PostgreSQL** service and a **Redis** service in Railway. Link them variables.
+
+   **For the Frontend:**
+   - In the same project, click **+ New** -> **GitHub Repo** -> Select the same repo again.
+   - Go to **Settings** -> **General** -> **Root Directory**, set it to `/frontend`.
+   - Railway will detect `frontend/Dockerfile`.
+   - Go to **Variables**, add: `NEXT_PUBLIC_API_URL` (the backend's public domain).
+
+6. **Finalize**:
+   - Ensure the Backend service has a public domain (Settings -> Networking -> Generate Domain).
+   - Use that domain for the Frontend's `NEXT_PUBLIC_API_URL`.
+   - Success! 🚀
+
+## ♾️ Forever Free Deployment (Alternative)
+
+If you need a deployment that lasts longer than Railway's trial, we recommend the **Vercel + Render + Neon** stack.
+
+👉 **[Read the Forever Free Deployment Guide](./DEPLOYMENT.md)**
+
