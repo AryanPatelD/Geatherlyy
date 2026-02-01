@@ -1,9 +1,9 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
-export default function ViewPDFPage() {
+function ViewPDFContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get('url');
   const [error, setError] = useState(false);
@@ -53,5 +53,13 @@ export default function ViewPDFPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ViewPDFPage() {
+  return (
+    <Suspense fallback={<div>Loading PDF Viewer...</div>}>
+      <ViewPDFContent />
+    </Suspense>
   );
 }

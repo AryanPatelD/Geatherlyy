@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
 
-export default function ManageClubPage() {
+function ManageClubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialClubId = searchParams.get('clubId');
@@ -1354,5 +1354,20 @@ export default function ManageClubPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ManageClubPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ManageClubContent />
+    </Suspense>
   );
 }
