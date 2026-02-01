@@ -143,7 +143,7 @@ export default function CreateActivityPage() {
             </select>
             {!loading && managedClubs.length === 0 && (
               <p className="mt-2 text-sm text-red-500">
-                You don't manage any clubs. Only coordinators and faculty can create activities.
+                You are not a coordinator of any club. Only coordinators can create activities.
               </p>
             )}
           </div>

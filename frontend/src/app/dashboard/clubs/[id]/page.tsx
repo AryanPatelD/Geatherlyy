@@ -24,6 +24,7 @@ export default function ClubDetailPage({
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [joiningClub, setJoiningClub] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
 
   useEffect(() => {
     // Get current user ID and role from token
@@ -208,6 +209,39 @@ export default function ClubDetailPage({
     }
   };
 
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveStep, setLeaveStep] = useState(1);
+  const [leavingClub, setLeavingClub] = useState(false);
+
+  const handleLeaveClub = async () => {
+    setLeavingClub(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/clubs/${params.id}/leave`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert('You have successfully left the club.');
+        // Refresh to update UI
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to leave club');
+      }
+    } catch (error) {
+      console.error('Error leaving club:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setLeavingClub(false);
+      setShowLeaveModal(false);
+      setLeaveStep(1);
+    }
+  };
+
   const isUserMember = club?.members?.some((m: any) => m.userId === currentUserId) || false;
   const isUserCoordinator = club?.coordinators?.some((c: any) => c.userId === currentUserId) || false;
 
@@ -276,12 +310,23 @@ export default function ClubDetailPage({
 
         <div className="flex justify-end mb-6 gap-3">
           {isUserMember && !isUserCoordinator && userRole !== 'FACULTY' && userRole !== 'ADMIN' && (
-            <button 
-              onClick={() => setShowCoordinatorModal(true)}
-              className="btn btn-outline"
-            >
-              🎖️ Apply as Coordinator
-            </button>
+            <>
+              <button 
+                onClick={() => setShowCoordinatorModal(true)}
+                className="btn btn-outline"
+              >
+                🎖️ Apply as Coordinator
+              </button>
+              <button 
+                onClick={() => {
+                  setLeaveStep(1);
+                  setShowLeaveModal(true);
+                }}
+                className="btn btn-outline text-red-500 hover:bg-red-50 border-red-200 dark:border-red-900/30"
+              >
+                Leave Club
+              </button>
+            </>
           )}
           {!isUserMember && (
             <button 
@@ -297,11 +342,15 @@ export default function ClubDetailPage({
         <div className="grid md:grid-cols-4 gap-4 pt-6 border-t border-border">
           <div>
             <p className="text-muted-text text-sm">Members</p>
-            <p className="text-2xl font-bold">{club.memberCount || club._count?.members || 0}</p>
+            <p className="text-2xl font-bold">{club._count?.members ?? club.memberCount ?? 0}</p>
           </div>
           <div>
-            <p className="text-muted-text text-sm">Mentor</p>
-            <p className="text-lg font-medium">{club.mentor?.name || 'N/A'}</p>
+            <p className="text-muted-text text-sm">Mentors</p>
+            <p className="text-lg font-medium">
+               {club.mentors && club.mentors.length > 0 
+                  ? club.mentors.map((m: any) => m.name).join(', ') 
+                  : (club.mentor?.name || 'N/A')}
+            </p>
           </div>
           <div>
             <p className="text-muted-text text-sm">Founded</p>
@@ -323,14 +372,27 @@ export default function ClubDetailPage({
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`pb-4 px-2 font-medium transition-colors border-b-2 ${
+            onClick={() => {
+              if (tab.id === 'overview' || isUserMember || isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY') {
+                setActiveTab(tab.id);
+              } else {
+                alert('Join the club to access this section!');
+              }
+            }}
+            className={`pb-4 px-2 font-medium transition-colors border-b-2 flex items-center gap-2 ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-text hover:text-foreground'
+            } ${
+              !(tab.id === 'overview' || isUserMember || isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY')
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
             }`}
           >
             {tab.label}
+            {!(tab.id === 'overview' || isUserMember || isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY') && (
+              <span className="text-xs">🔒</span>
+            )}
           </button>
         ))}
       </div>
@@ -346,7 +408,7 @@ export default function ClubDetailPage({
           </div>
 
           {/* Event Photos Gallery */}
-          {club.eventPhotos && club.eventPhotos.length > 0 && (
+          {club.eventPhotos && club.eventPhotos.length > 0 ? (
             <div className="card">
               <h3 className="font-bold mb-4">Past Events 📸</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -364,15 +426,25 @@ export default function ClubDetailPage({
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="card">
               <h3 className="font-bold mb-4">Leadership</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-muted-text text-sm">Mentor</p>
-                  <p className="font-medium">{club.mentor?.name || 'N/A'}</p>
+                  <p className="text-muted-text text-sm">Convenor</p>
+                  <p className="font-medium">{club.convenor?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-text text-sm">Mentors</p>
+                  {club.mentors && club.mentors.length > 0 ? (
+                        club.mentors.map((m: any) => (
+                            <p key={m.id} className="font-medium">{m.name}</p>
+                        ))
+                  ) : (
+                      <p className="font-medium">{club.mentor?.name || 'N/A'}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-muted-text text-sm">Coordinators</p>
@@ -392,14 +464,11 @@ export default function ClubDetailPage({
             <div className="card">
               <h3 className="font-bold mb-4">Quick Links</h3>
               <div className="space-y-2">
-                <button className="w-full text-left px-3 py-2 rounded hover:bg-muted-bg transition-colors">
-                  📧 Contact Club
-                </button>
-                <button className="w-full text-left px-3 py-2 rounded hover:bg-muted-bg transition-colors">
-                  📋 View Members
-                </button>
-                <button className="w-full text-left px-3 py-2 rounded hover:bg-muted-bg transition-colors">
-                  📅 Club Calendar
+                <button 
+                  onClick={() => router.push(`mailto:${club.mentor?.email || ''}`)}
+                  className="w-full text-left px-3 py-2 rounded hover:bg-muted-bg transition-colors"
+                >
+                  📧 Contact Mentor
                 </button>
               </div>
             </div>
@@ -417,7 +486,11 @@ export default function ClubDetailPage({
             </div>
           ) : activities.length > 0 ? (
             activities.map((activity) => (
-              <div key={activity.id} className="card hover:shadow-lg transition-shadow cursor-pointer">
+              <div 
+                key={activity.id} 
+                className="card hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => setSelectedActivity(activity)}
+              >
                 <div className="flex justify-between">
                   <div>
                     <p className="font-medium">{activity.title}</p>
@@ -576,6 +649,146 @@ export default function ClubDetailPage({
               >
                 {applyingCoordinator ? 'Submitting...' : 'Submit Application'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Leave Club Modal */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6">
+            {leaveStep === 1 ? (
+              <>
+                <h3 className="text-xl font-bold mb-4 text-red-600">⚠ Warning: Leaving Club</h3>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-4 text-sm text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
+                  <p className="font-bold mb-2">Please read carefully:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>You will lose access to all club resources and quizzes.</li>
+                    <li>You will lose any "Member" status privileges.</li>
+                    <li>If this was a paid club, <strong>no refund</strong> will be issued.</li>
+                    <li>You will need to re-apply/re-pay to join again.</li>
+                  </ul>
+                </div>
+                <p className="mb-6 text-muted-text">Are you sure you want to proceed?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowLeaveModal(false)}
+                    className="btn btn-outline flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setLeaveStep(2)}
+                    className="btn btn-primary flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    I Understand, Continue
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold mb-4 text-red-600">Final Confirmation</h3>
+                <p className="mb-6 text-muted-text">
+                  This action is irreversible. Do you really want to leave <strong>{club.name}</strong>?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setLeaveStep(1)}
+                    className="btn btn-outline flex-1"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleLeaveClub}
+                    className="btn btn-primary flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    disabled={leavingClub}
+                  >
+                    {leavingClub ? 'Leaving...' : 'Confirm & Leave'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Activity Details Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedActivity(null)}>
+          <div className="bg-background rounded-xl shadow-xl max-w-lg w-full p-6 animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs px-2 py-1 rounded font-medium uppercase ${
+                    selectedActivity.activityType === 'WORKSHOP' ? 'bg-purple-100 text-purple-700' :
+                    selectedActivity.activityType === 'QUIZ' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    {selectedActivity.activityType}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded font-medium ${
+                    selectedActivity.status === 'UPCOMING' ? 'bg-green-100 text-green-700' :
+                    selectedActivity.status === 'ONGOING' ? 'bg-blue-100 text-blue-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {selectedActivity.status}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold">{selectedActivity.title}</h2>
+              </div>
+              <button 
+                onClick={() => setSelectedActivity(null)}
+                className="text-muted-text hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-muted-bg/50 p-4 rounded-lg space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📅</span>
+                  <div>
+                    <p className="text-sm text-muted-text">Date & Time</p>
+                    <p className="font-medium">
+                      {new Date(selectedActivity.startDate).toLocaleDateString(undefined, {
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-sm">
+                      at {new Date(selectedActivity.startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+                {selectedActivity.location && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">📍</span>
+                    <div>
+                      <p className="text-sm text-muted-text">Location</p>
+                      <p className="font-medium">{selectedActivity.location}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Description</h3>
+                <p className="text-muted-text whitespace-pre-wrap leading-relaxed">
+                  {selectedActivity.description}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border flex justify-end">
+                <button 
+                  onClick={() => setSelectedActivity(null)}
+                  className="btn btn-primary px-6"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

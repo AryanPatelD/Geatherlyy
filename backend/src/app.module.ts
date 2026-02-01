@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ClubsModule } from './clubs/clubs.module';
@@ -10,6 +11,7 @@ import { LeaderboardsModule } from './leaderboards/leaderboards.module';
 import { ResourcesModule } from './resources/resources.module';
 import { CommentsModule } from './comments/comments.module';
 import { ApprovalsModule } from './approvals/approvals.module';
+import { RemovalRequestsModule } from './removal-requests/removal-requests.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './cache/redis.module';
@@ -23,10 +25,10 @@ import { UploadModule } from './upload/upload.module';
       envFilePath: '.env',
     }),
 
-    // Rate limiting
+    // Rate limiting (Security: DoS Protection)
     ThrottlerModule.forRoot([{
       ttl: 60000, // 1 minute
-      limit: 100, // 100 requests per minute
+      limit: 1000, // 1000 requests per minute (High limit for shared University WiFi)
     }]),
 
     // Core modules
@@ -42,7 +44,16 @@ import { UploadModule } from './upload/upload.module';
     CommentsModule,
     ApprovalsModule,
     AnalyticsModule,
+    ApprovalsModule,
+    AnalyticsModule,
     UploadModule,
+    RemovalRequestsModule,
+  ],
+  providers: [
+    {
+      provide: 'APP_GUARD',
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

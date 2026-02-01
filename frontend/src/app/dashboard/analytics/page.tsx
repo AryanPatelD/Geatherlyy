@@ -111,17 +111,16 @@ export default function AnalyticsPage() {
           <h3 className="font-bold mb-4">Top Performing Clubs</h3>
           <table className="w-full text-sm">
             <tbody>
-              {[
-                { rank: 1, name: 'Coding Club', members: 145 },
-                { rank: 2, name: 'Web Dev', members: 98 },
-                { rank: 3, name: 'AI Club', members: 87 },
-              ].map((club) => (
-                <tr key={club.rank} className="border-b border-border hover:bg-muted-bg">
-                  <td className="py-2">{club.rank}.</td>
+              {analytics?.topClubs?.map((club: any, index: number) => (
+                <tr key={club.id} className="border-b border-border hover:bg-muted-bg">
+                  <td className="py-2">{index + 1}.</td>
                   <td className="py-2 font-medium">{club.name}</td>
                   <td className="py-2 text-right text-muted-text">{club.members}</td>
                 </tr>
               ))}
+              {(!analytics?.topClubs || analytics.topClubs.length === 0) && (
+                 <tr><td colSpan={3} className="text-center py-4 text-muted-text">No data available</td></tr>
+              )}
             </tbody>
           </table>
         </div>

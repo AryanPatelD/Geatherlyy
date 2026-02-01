@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { QuizzesService } from './quizzes.service';
@@ -90,12 +91,17 @@ export class QuizzesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.COORDINATOR, UserRole.FACULTY, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new quiz (Coordinator/Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Create a new quiz (Club Members/Coordinators/Admin)' })
   @ApiResponse({ status: 201, description: 'Quiz created successfully' })
-  async createQuiz(@Body() createData: any) {
+  async createQuiz(@Body() createData: any, @Request() req) {
+     // Check if user is allowed to create quiz for this club (Member or above)
+     const canCreate = await this.quizzesService.canUserCreateQuiz(req.user.id, createData.clubId);
+     if (!canCreate) {
+         throw new ForbiddenException('You must be a member of the club to create quizzes');
+     }
+
     return this.quizzesService.create(createData);
   }
 

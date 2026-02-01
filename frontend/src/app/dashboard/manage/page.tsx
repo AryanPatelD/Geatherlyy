@@ -1,15 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
 
 export default function ManageClubPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialClubId = searchParams.get('clubId');
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [clubs, setClubs] = useState<any[]>([]);
   const [selectedClub, setSelectedClub] = useState<any>(null);
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [quizTitle, setQuizTitle] = useState('');
@@ -37,6 +40,51 @@ export default function ManageClubPage() {
     description: '',
     file: null as File | null,
   });
+  
+  // Removal Request State
+  const [showRemovalModal, setShowRemovalModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<any>(null);
+  const [removalReason, setRemovalReason] = useState('');
+  const [submittingRemoval, setSubmittingRemoval] = useState(false);
+
+  const handleRequestRemoval = async () => {
+    if (!memberToRemove || !removalReason.trim()) {
+      alert('Please provide a reason for removal');
+      return;
+    }
+
+    setSubmittingRemoval(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/removal-requests', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clubId: selectedClub.id,
+          memberId: memberToRemove.user?.id || memberToRemove.userId,
+          reason: removalReason,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Removal request submitted successfully. Waiting for faculty approval.');
+        setShowRemovalModal(false);
+        setMemberToRemove(null);
+        setRemovalReason('');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to submit removal request');
+      }
+    } catch (error) {
+      console.error('Error submitting removal request:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setSubmittingRemoval(false);
+    }
+  };
 
   const fetchQuizzes = async () => {
     if (!selectedClub) return;
@@ -163,13 +211,6 @@ export default function ManageClubPage() {
       return;
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'application/pdf'];
-    if (!allowedTypes.includes(resourceData.file.type)) {
-      alert('Only JPEG and PDF files are allowed');
-      return;
-    }
-
     // Validate file size (50MB)
     const maxSize = 50 * 1024 * 1024;
     if (resourceData.file.size > maxSize) {
@@ -260,7 +301,7 @@ export default function ManageClubPage() {
         if (response.ok) {
           const data = await response.json();
           setClubs(data);
-          if (data.length > 0) {
+          if (data.length === 1) {
             setSelectedClub(data[0]);
           }
         }
@@ -275,6 +316,16 @@ export default function ManageClubPage() {
       fetchManagedClubs();
     }
   }, [user]);
+
+  // Handle Initial Club Selection from URL
+  useEffect(() => {
+    if (initialClubId && clubs.length > 0 && !selectedClub) {
+      const club = clubs.find(c => c.id === Number(initialClubId));
+      if (club) {
+        setSelectedClub(club);
+      }
+    }
+  }, [initialClubId, clubs, selectedClub]);
 
   const handleCreateQuiz = async () => {
     if (!quizTitle || questions.length === 0 || !selectedClub) {
@@ -402,9 +453,67 @@ export default function ManageClubPage() {
     );
   }
 
+  if (!selectedClub) {
+     return (
+      <div className="p-8">
+        <h1 className="text-3xl font-bold mb-6">Club Management</h1>
+        <div className="text-center py-12 card bg-gradient-to-br from-background to-muted-bg border-dashed border-2">
+          <div className="text-6xl mb-4">👈</div>
+          <h3 className="text-xl font-semibold mb-2">Select a club to manage</h3>
+          <p className="text-muted-text mb-8">You are a coordinator for mulitple clubs. Please select one to proceed.</p>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+            {clubs.map(club => (
+              <div 
+                key={club.id}
+                onClick={() => setSelectedClub(club)}
+                className="card cursor-pointer hover:border-primary hover:shadow-lg transition-all"
+              >
+                <div className="flex items-center gap-4">
+                   {club.imageUrl ? (
+                      <img src={club.imageUrl} alt={club.name} className="w-12 h-12 rounded-full object-cover" />
+                   ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                        {club.name[0]}
+                      </div>
+                   )}
+                   <div>
+                     <h4 className="font-bold">{club.name}</h4>
+                     <p className="text-xs text-muted-text">{club.category}</p>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+     );
+  }
+
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Club Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Club Management</h1>
+        
+        {clubs.length > 1 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-text font-medium">Manage Club:</span>
+            <select
+              value={selectedClub?.id || ''}
+              onChange={(e) => {
+                const clubId = Number(e.target.value);
+                const club = clubs.find(c => c.id === clubId);
+                setSelectedClub(club);
+              }}
+              className="px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary font-medium min-w-[200px]"
+            >
+              {clubs.map(club => (
+                <option key={club.id} value={club.id}>{club.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
 
       {/* Tab Navigation */}
       <div className="flex gap-4 mb-6 border-b border-border">
@@ -531,6 +640,7 @@ export default function ManageClubPage() {
                 <th className="text-left py-3 px-4 text-sm font-semibold">Email</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold">Department</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold">Joined</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -540,10 +650,23 @@ export default function ManageClubPage() {
                   <td className="py-3 px-4 text-sm">{member.user?.email || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm">{member.user?.department || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm">{new Date(member.joinedAt).toLocaleDateString()}</td>
+                  <td className="py-3 px-4 text-sm text-right">
+                    <button
+                      onClick={() => {
+                        setMemberToRemove(member);
+                        setShowRemovalModal(true);
+                      }}
+                      className="text-red-500 hover:text-red-700 font-medium text-xs border border-red-200 dark:border-red-900/30 px-3 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+
         </div>
       )}
 
@@ -556,7 +679,11 @@ export default function ManageClubPage() {
             <div className="space-y-3">
               {selectedClub?.activities && selectedClub.activities.length > 0 ? (
                 selectedClub.activities.map((activity: any) => (
-                  <div key={activity.id} className="p-3 border border-border rounded hover:bg-muted-bg transition-colors">
+                  <div 
+                    key={activity.id} 
+                    className="p-3 border border-border rounded hover:bg-muted-bg transition-colors cursor-pointer"
+                    onClick={() => setSelectedActivity(activity)}
+                  >
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-medium">{activity.title}</p>
@@ -589,7 +716,7 @@ export default function ManageClubPage() {
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Quiz Management</h2>
             <button 
-              onClick={() => setShowQuizModal(true)}
+              onClick={() => router.push(`/dashboard/quizzes/create?clubId=${selectedClub.id}`)}
               className="btn btn-primary"
             >
               + Create New Quiz
@@ -1102,6 +1229,128 @@ export default function ManageClubPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+      {/* Removal Modal */}
+      {showRemovalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowRemovalModal(false)}>
+          <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-2 text-red-600">Remove Member</h3>
+            <p className="text-muted-text text-sm mb-4">
+              Request removal of <span className="font-bold text-foreground">{memberToRemove?.user?.name}</span> from <span className="font-bold text-foreground">{selectedClub?.name}</span>. This requires faculty approval.
+            </p>
+            
+            <textarea
+              value={removalReason}
+              onChange={(e) => setRemovalReason(e.target.value)}
+              placeholder="Reason for removal (required)..."
+              className="input h-32 mb-4 resize-none w-full"
+              disabled={submittingRemoval}
+            />
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRemovalModal(false);
+                  setMemberToRemove(null);
+                  setRemovalReason('');
+                }}
+                className="btn btn-outline flex-1"
+                disabled={submittingRemoval}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestRemoval}
+                className="btn bg-red-600 text-white hover:bg-red-700 flex-1"
+                disabled={submittingRemoval || !removalReason.trim()}
+              >
+                {submittingRemoval ? 'Submitting...' : 'Request Removal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Details Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedActivity(null)}>
+          <div className="bg-background rounded-xl shadow-xl max-w-lg w-full p-6 animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs px-2 py-1 rounded font-medium uppercase ${
+                    selectedActivity.activityType === 'WORKSHOP' ? 'bg-purple-100 text-purple-700' :
+                    selectedActivity.activityType === 'QUIZ' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    {selectedActivity.activityType || selectedActivity.type || 'EVENT'}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded font-medium ${
+                    selectedActivity.status === 'UPCOMING' ? 'bg-green-100 text-green-700' :
+                    selectedActivity.status === 'ONGOING' ? 'bg-blue-100 text-blue-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {selectedActivity.status}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold">{selectedActivity.title}</h2>
+              </div>
+              <button 
+                onClick={() => setSelectedActivity(null)}
+                className="text-muted-text hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-muted-bg/50 p-4 rounded-lg space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📅</span>
+                  <div>
+                    <p className="text-sm text-muted-text">Date & Time</p>
+                    <p className="font-medium">
+                      {new Date(selectedActivity.startDate).toLocaleDateString(undefined, {
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-sm">
+                      at {new Date(selectedActivity.startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+                {selectedActivity.location && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">📍</span>
+                    <div>
+                      <p className="text-sm text-muted-text">Location</p>
+                      <p className="font-medium">{selectedActivity.location}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Description</h3>
+                <p className="text-muted-text whitespace-pre-wrap leading-relaxed">
+                  {selectedActivity.description || 'No description provided.'}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border flex justify-end">
+                <button 
+                  onClick={() => setSelectedActivity(null)}
+                  className="btn btn-primary px-6"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

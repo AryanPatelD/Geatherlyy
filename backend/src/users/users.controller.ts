@@ -27,6 +27,35 @@ import { UserRole } from '@prisma/client';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('search-faculty')
+  @ApiOperation({ summary: 'Search for faculty members by name/email' })
+  async searchFaculty(@Query('query') query: string) {
+    if (!query || query.length < 2) return [];
+    
+    return this.usersService.findAll({
+      role: UserRole.FACULTY,
+      search: query,
+      take: 10,
+    });
+  }
+
+  @Get('check-email')
+  @ApiOperation({ summary: 'Check if user exists by email' })
+  async checkEmail(@Query('email') email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      return {
+        exists: true,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      };
+    }
+    return { exists: false };
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Returns current user' })
@@ -38,7 +67,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   async updateCurrentUser(@Request() req, @Body() updateData: any) {
-    return this.usersService.update(req.user.id, updateData);
+    // Prevent role escalation: remove sensitive fields
+    const { role, approvalStatus, ...safeData } = updateData;
+    return this.usersService.update(req.user.id, safeData);
   }
 
   @Get('me/stats')

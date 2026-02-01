@@ -345,3 +345,30 @@ docker-compose restart
 docker-compose down -v
 docker-compose up -d
 ```
+
+## 🚀 Deployment
+
+The project is ready for deployment on **Railway**.
+
+### Deployment Steps (Railway)
+
+1. **Fork/Clone** this repository to your GitHub account.
+2. Login to [Railway](https://railway.app/).
+3. Create a **New Project** -> **Deploy from GitHub repo**.
+4. Select your forked repository.
+5. Railway will automatically detect the multiple services. If not, add them manually:
+    - **Service 1 (Backend)**:
+        - Root Directory: `/backend`
+        - Build Command: `npm install && npm run prisma:generate && npm run build`
+        - Start Command: `npm run start:prod`
+        - Variables: Add all variables from `backend/.env.example` (DATABASE_URL, JWT_SECRET, etc.).
+    - **Service 2 (Frontend)**:
+        - Root Directory: `/frontend`
+        - Build Command: `npm install && npm run build`
+        - Start Command: `npm start`
+        - Variables: `NEXT_PUBLIC_API_URL` (points to your backend domain), `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+6. **Databases**:
+    - Add a **PostgreSQL** service in Railway and link it (use `DATABASE_URL` variable).
+    - Add a **Redis** service and link it (use `REDIS_HOST`, `REDIS_PORT` variables).
+
+Your application should now be live! 🚀

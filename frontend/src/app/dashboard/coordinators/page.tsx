@@ -212,7 +212,7 @@ export default function CoordinatorsPage() {
 
                     <div className="flex gap-2">
                       <Link
-                        href={`/dashboard/clubs/${club.id}`}
+                        href={`/dashboard/manage?clubId=${club.id}`}
                         className="flex-1 text-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                       >
                         Manage Club

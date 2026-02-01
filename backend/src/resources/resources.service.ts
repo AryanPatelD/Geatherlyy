@@ -180,6 +180,18 @@ export class ResourcesService {
       },
     });
   }
+
+  async isUserClubCoordinator(userId: number, clubId: number): Promise<boolean> {
+    const coordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId,
+          userId,
+        },
+      },
+    });
+    return !!coordinator;
+  }
 }
 
 

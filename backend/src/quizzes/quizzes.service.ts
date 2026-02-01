@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../cache/redis.service';
-import { Quiz, QuizAttempt, Prisma } from '@prisma/client';
+import { Quiz, QuizAttempt, Prisma, UserRole } from '@prisma/client';
 
 @Injectable()
 export class QuizzesService {
@@ -15,15 +15,19 @@ export class QuizzesService {
     const { questions, ...quizData } = data;
     
     // Convert questions to match Prisma schema
-    const formattedQuestions = questions?.map((q: any) => ({
-      ...q,
-      // Convert correctAnswer from integer index to string array
-      correctAnswer: typeof q.correctAnswer === 'number' 
-        ? [q.correctAnswer.toString()] 
-        : Array.isArray(q.correctAnswer) 
-          ? q.correctAnswer.map(String) 
-          : [String(q.correctAnswer)],
-    })) || [];
+    const formattedQuestions = questions?.map((q: any) => {
+      const { image, ...rest } = q;
+      return {
+        ...rest,
+        type: q.type === 'single' ? 'MCQ' : q.type === 'multiple' ? 'MULTIPLE_ANSWER' : 'MCQ',
+        // Convert correctAnswer from integer index to string array
+        correctAnswer: typeof q.correctAnswer === 'number' 
+          ? [q.correctAnswer.toString()] 
+          : Array.isArray(q.correctAnswer) 
+            ? q.correctAnswer.map(String) 
+            : [String(q.correctAnswer)],
+      };
+    }) || [];
     
     const quiz = await this.prisma.quiz.create({
       data: {
@@ -200,6 +204,18 @@ export class QuizzesService {
       }
     }
 
+
+    // Check attempt limits
+    if (existingAttempt) {
+      // Default maxAttempts to 1 if not set (though schema has default 1)
+      const maxAttempts = quiz.maxAttempts || 1;
+      const currentAttempts = existingAttempt.attemptCount || 1; // Handle legacy records with null/0
+
+      if (currentAttempts >= maxAttempts) {
+        throw new ForbiddenException(`You have reached the maximum number of attempts (${maxAttempts}) for this quiz.`);
+      }
+    }
+
     // Calculate score
     let score = 0;
     const results: any[] = [];
@@ -225,6 +241,10 @@ export class QuizzesService {
     const totalMarks = (quiz as any).totalMarks || 100;
     const percentage = totalMarks ? (score / totalMarks) * 100 : 0;
     const isPassed = score >= (quiz.passingMarks || 0);
+    
+    // Determine new attempt count
+    // If existing, increment. If new, start at 1.
+    const newAttemptCount = existingAttempt ? (existingAttempt.attemptCount || 1) + 1 : 1;
 
     // Create or update attempt
     const attempt = await this.prisma.quizAttempt.upsert({
@@ -241,6 +261,7 @@ export class QuizzesService {
         timeTaken,
         answers: answers as any,
         isPassed,
+        attemptCount: newAttemptCount,
         attemptedAt: new Date(),
       },
       create: {
@@ -252,6 +273,7 @@ export class QuizzesService {
         timeTaken,
         answers: answers as any,
         isPassed,
+        attemptCount: 1, // First attempt
         attemptedAt: new Date(),
       },
       include: {
@@ -294,6 +316,19 @@ export class QuizzesService {
             id: true,
             title: true,
             description: true,
+            questions: {
+              select: {
+                id: true,
+                text: true,
+                options: true,
+                correctAnswer: true,
+                marks: true,
+                order: true,
+              },
+              orderBy: {
+                order: 'asc',
+              },
+            },
           },
         },
       },
@@ -391,8 +426,26 @@ export class QuizzesService {
       maxScore: maxScore._max.score || 0,
     };
   }
+
+  async canUserCreateQuiz(userId: number, clubId: number): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return false;
+    }
+
+    // Admin and Faculty can create quiz for any club
+    if (([UserRole.ADMIN, UserRole.FACULTY] as UserRole[]).includes(user.role)) {
+      return true;
+    }
+
+    // Check if user is a coordinator of the club
+    const isCoordinator = await this.prisma.clubCoordinator.findFirst({
+      where: { userId, clubId },
+    });
+
+    return !!isCoordinator;
+  }
 }
-
-
-
-

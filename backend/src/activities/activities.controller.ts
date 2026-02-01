@@ -73,12 +73,17 @@ export class ActivitiesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.COORDINATOR, UserRole.FACULTY, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new activity (Coordinator/Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Create a new activity (Club Members/Coordinators/Admin)' })
   @ApiResponse({ status: 201, description: 'Activity created successfully' })
   async createActivity(@Body() createData: any, @Request() req) {
+    // Check if user is allowed to create activity for this club (Member or above)
+    const canCreate = await this.activitiesService.canUserCreateActivity(req.user.id, createData.clubId);
+    if (!canCreate) {
+        throw new ForbiddenException('You must be a member of the club to create activities');
+    }
+
     // Transform the incoming data to match Prisma's expected format
     const activityData = {
       title: createData.title,

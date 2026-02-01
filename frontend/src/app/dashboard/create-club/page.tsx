@@ -11,11 +11,16 @@ export default function CreateClubPage() {
   const [formData, setFormData] = useState({
     clubName: '',
     description: '',
-    coordinatorName: '',
-    mentorName: '',
+    category: 'Technical',
     clubPhoto: null as File | null,
     oldEventsPhotos: [] as File[],
   });
+  
+  // New State for simple inputs
+  const [mentorInput, setMentorInput] = useState('');
+  const [mentorIdentifiers, setMentorIdentifiers] = useState<string[]>([]);
+  const [convenorIdentifier, setConvenorIdentifier] = useState('');
+
   const [clubPhotoPreview, setClubPhotoPreview] = useState<string>('');
   const [eventPhotoPreviews, setEventPhotoPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,10 +48,21 @@ export default function CreateClubPage() {
   }
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddMentor = () => {
+    if (mentorInput.trim() && mentorIdentifiers.length < 3) {
+      setMentorIdentifiers([...mentorIdentifiers, mentorInput.trim()]);
+      setMentorInput('');
+    }
+  };
+
+  const handleRemoveMentor = (index: number) => {
+    setMentorIdentifiers(mentorIdentifiers.filter((_, i) => i !== index));
   };
 
   const handleClubPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +114,18 @@ export default function CreateClubPage() {
     setLoading(true);
     setError('');
 
+    // Validation
+    if (mentorIdentifiers.length < 2 || mentorIdentifiers.length > 3) {
+        setError('Please provide between 2 and 3 Faculty Mentors.');
+        setLoading(false);
+        return;
+    }
+    if (!convenorIdentifier.trim()) {
+        setError('Please provide a Club Convenor.');
+        setLoading(false);
+        return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       
@@ -105,10 +133,12 @@ export default function CreateClubPage() {
       const submitData = new FormData();
       submitData.append('name', formData.clubName);
       submitData.append('description', formData.description);
-      submitData.append('coordinatorName', formData.coordinatorName);
-      submitData.append('mentorName', formData.mentorName);
-      submitData.append('category', 'Other');
+      submitData.append('category', formData.category);
       
+      // Serialize mentors and convenor
+      submitData.append('mentorEmails', JSON.stringify(mentorIdentifiers));
+      submitData.append('convenorEmail', convenorIdentifier.trim());
+
       // Add club photo
       if (formData.clubPhoto) {
         submitData.append('clubPhoto', formData.clubPhoto);
@@ -119,7 +149,7 @@ export default function CreateClubPage() {
         submitData.append('eventPhotos', file);
       });
 
-      const response = await fetch('http://localhost:5000/api/clubs', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/clubs`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -132,9 +162,8 @@ export default function CreateClubPage() {
         throw new Error(data.message || 'Failed to create club');
       }
 
-      const result = await response.json();
-      alert('Club created successfully! It is now pending approval from faculty.');
-      router.push('/dashboard');
+      alert('Club created successfully! It is now pending approval.');
+      router.push('/dashboard/manage'); // Redirect to manage or clubs list
     } catch (error: any) {
       console.error('Failed to create club:', error);
       setError(error.message || 'Failed to create club. Please try again.');
@@ -149,8 +178,8 @@ export default function CreateClubPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold mb-2">Create New Club</h1>
-          <p className="text-muted-text">
-            Fill in the details to create a new club. Your request will be sent for faculty approval.
+          <p className="text-muted-foreground">
+            Fill in the details to create a new club.
           </p>
         </div>
 
@@ -175,6 +204,105 @@ export default function CreateClubPage() {
               onChange={handleChange}
               placeholder="e.g., Coding Club, Art Society"
               className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium mb-2">
+              Category *
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            >
+              <option value="Technical">Technical</option>
+              <option value="Non-Technical">Non-Technical</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Sports">Sports</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Faculty Mentors */}
+          <div>
+             <label className="block text-sm font-medium mb-2">
+               Faculty Mentors (Enter Name or Email) *
+             </label>
+             <div className="flex gap-2 mb-2">
+                <input 
+                    type="text"
+                    value={mentorInput}
+                    onChange={(e) => setMentorInput(e.target.value)}
+                    placeholder="e.g. Dr. Smith or smith@college.edu"
+                    className="flex-1 px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    disabled={mentorIdentifiers.length >= 3}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddMentor();
+                        }
+                    }}
+                />
+                <button
+                    type="button"
+                    onClick={handleAddMentor}
+                    disabled={!mentorInput.trim() || mentorIdentifiers.length >= 3}
+                    className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg disabled:opacity-50"
+                >
+                    Add
+                </button>
+             </div>
+             
+             {/* Mentor List */}
+             <div className="flex flex-wrap gap-2 mb-1">
+                {mentorIdentifiers.map((mentor, index) => (
+                    <div key={index} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm">
+                        <span>{mentor}</span>
+                        <button type="button" onClick={() => handleRemoveMentor(index)} className="text-muted-foreground hover:text-red-500">
+                            <Cross2Icon className="w-3 h-3" />
+                        </button>
+                    </div>
+                ))}
+             </div>
+             <p className="text-xs text-muted-foreground mt-1">
+                Min 2, Max 3 mentors required.
+             </p>
+          </div>
+
+          {/* Club Convenor */}
+          <div>
+             <label className="block text-sm font-medium mb-2">
+               Club Convenor (Name or Email) *
+             </label>
+             <input
+                type="text"
+                value={convenorIdentifier}
+                onChange={(e) => setConvenorIdentifier(e.target.value)}
+                placeholder="e.g. Prof. Johnson"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+             />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium mb-2">
+              Club Description *
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Describe the club's mission, activities, and what members will gain..."
+              rows={4}
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               required
             />
           </div>
@@ -205,9 +333,9 @@ export default function CreateClubPage() {
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <ImageIcon className="w-12 h-12 text-muted-text mb-2" />
-                  <span className="text-sm text-muted-text">Click to upload club photo</span>
-                  <span className="text-xs text-muted-text mt-1">PNG, JPG up to 5MB</span>
+                  <ImageIcon className="w-12 h-12 text-muted-foreground mb-2" />
+                  <span className="text-sm text-muted-foreground">Click to upload club photo</span>
+                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -220,63 +348,12 @@ export default function CreateClubPage() {
             </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-2">
-              Club Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe the club's mission, activities, and what members will gain..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              required
-            />
-          </div>
-
-          {/* Coordinator Name */}
-          <div>
-            <label htmlFor="coordinatorName" className="block text-sm font-medium mb-2">
-              Coordinator Name *
-            </label>
-            <input
-              id="coordinatorName"
-              name="coordinatorName"
-              type="text"
-              value={formData.coordinatorName}
-              onChange={handleChange}
-              placeholder="Your name as club coordinator"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-          </div>
-
-          {/* Mentor Name */}
-          <div>
-            <label htmlFor="mentorName" className="block text-sm font-medium mb-2">
-              Faculty Mentor Name *
-            </label>
-            <input
-              id="mentorName"
-              name="mentorName"
-              type="text"
-              value={formData.mentorName}
-              onChange={handleChange}
-              placeholder="Faculty member who will mentor this club"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-          </div>
-
           {/* Old Events Photos */}
           <div>
             <label className="block text-sm font-medium mb-2">
               Previous Events Photos (Optional, 3-5 photos)
             </label>
-            <p className="text-xs text-muted-text mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Upload photos from past events to showcase your club's activities
             </p>
 
@@ -300,11 +377,12 @@ export default function CreateClubPage() {
               ))}
 
               {/* Add More Button */}
-              {formData.oldEventsPhotos.length < 5 && (
+              {/* Limit is 5 */}
+              {(formData.oldEventsPhotos.length < 5) && (
                 <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <PlusIcon className="w-8 h-8 text-muted-text mb-1" />
-                  <span className="text-xs text-muted-text">Add Photo</span>
-                  <span className="text-xs text-muted-text">
+                  <PlusIcon className="w-8 h-8 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">Add Photo</span>
+                  <span className="text-xs text-muted-foreground">
                     ({formData.oldEventsPhotos.length}/5)
                   </span>
                   <input
@@ -317,11 +395,10 @@ export default function CreateClubPage() {
                 </label>
               )}
             </div>
-
-            {formData.oldEventsPhotos.length >= 3 && formData.oldEventsPhotos.length < 5 && (
-              <p className="text-xs text-green-600 dark:text-green-400">
-                ✓ Good! You can add {5 - formData.oldEventsPhotos.length} more photo(s)
-              </p>
+            {formData.oldEventsPhotos.length > 0 && formData.oldEventsPhotos.length < 3 && (
+                 <p className="text-xs text-amber-500">
+                    Recommended: 3 or more photos.
+                 </p>
             )}
           </div>
 

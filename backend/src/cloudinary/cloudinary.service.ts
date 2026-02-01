@@ -39,10 +39,9 @@ export class CloudinaryService {
     return Promise.all(uploadPromises);
   }
 
-  async uploadFile(file: Express.Multer.File, folder: string = 'gatherly'): Promise<any> {
+  async uploadFile(file: Express.Multer.File, folder: string = 'gatherly', resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto'): Promise<any> {
     return new Promise((resolve, reject) => {
-      // Use 'raw' for PDFs and 'image' for images
-      const resourceType = file.mimetype === 'application/pdf' ? 'raw' : 'image';
+      // Use provided resourceType, or fallback to auto logic if needed (though current caller provides it)
       
       const upload = cloudinary.uploader.upload_stream(
         {

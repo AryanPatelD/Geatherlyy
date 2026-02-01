@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function DiscoverPage() {
@@ -133,14 +134,10 @@ export default function DiscoverPage() {
             const isJoining = joiningClubId === club.id;
             
             return (
-              <div
+              <Link
                 key={club.id}
-                className="card group cursor-pointer hover:scale-105 transition-transform duration-300"
-                onClick={() => {
-                  if (!isJoining) {
-                    router.push(`/dashboard/clubs/${club.id}`);
-                  }
-                }}
+                href={!isJoining ? `/dashboard/clubs/${club.id}` : '#'}
+                className="card group cursor-pointer hover:scale-105 transition-transform duration-300 block"
               >
                 <div className="relative -m-6 mb-4 h-32 rounded-t-xl bg-gradient-to-br from-primary to-secondary overflow-hidden">
                   {club.imageUrl && (
@@ -191,7 +188,7 @@ export default function DiscoverPage() {
                     {isJoining ? 'Joining...' : isMember ? 'View Club →' : 'Join Club →'}
                   </button>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

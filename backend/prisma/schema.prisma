@@ -48,7 +48,8 @@ model User {
   memberOfClubs     ClubMember[]
   coordinatedClubs  ClubCoordinator[]
   createdClubs      Club[]          @relation("ClubCreator")
-  mentoredClubs     Club[]          @relation("ClubMentor")
+  mentoredClubs     Club[]          @relation("ClubMentors")
+  convenedClubs     Club[]          @relation("ClubConvenor")
   quizAttempts      QuizAttempt[]
   comments          Comment[]
   uploadedResources Resource[]
@@ -104,7 +105,7 @@ model Club {
   description     String
   category        String
   createdBy       Int
-  mentorId        Int?
+  convenorId      Int?
   approvalStatus  ClubApprovalStatus  @default(PENDING)
   rejectionReason String?
   reviewedAt      DateTime?
@@ -113,12 +114,18 @@ model Club {
   isActive        Boolean             @default(true)
   memberCount     Int                 @default(0)
   maxMembers      Int                 @default(100)
+  
+  // Role Limits
+  maxMentors      Int                 @default(3)
+  maxCoordinators Int                 @default(4)
+  
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
   // Relations
   creator         User                @relation("ClubCreator", fields: [createdBy], references: [id])
-  mentor          User?               @relation("ClubMentor", fields: [mentorId], references: [id])
+  convenor        User?               @relation("ClubConvenor", fields: [convenorId], references: [id])
+  mentors         User[]              @relation("ClubMentors")
   members         ClubMember[]
   coordinators    ClubCoordinator[]
   activities      Activity[]
@@ -129,7 +136,7 @@ model Club {
   approvalRequests ApprovalRequest[] @relation("ClubApprovalRequests")
 
   @@index([createdBy])
-  @@index([mentorId])
+  @@index([convenorId])
   @@index([approvalStatus])
   @@index([category])
   @@index([isActive])
@@ -269,6 +276,7 @@ model QuizAttempt {
   timeTaken   Int
   answers     Json
   isPassed    Boolean   @default(false)
+  attemptCount Int      @default(0)
   attemptedAt DateTime  @default(now())
 
   quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
@@ -289,6 +297,8 @@ enum ResourceType {
   IMAGE
   LINK
   VIDEO
+  ZIP
+  OTHER
 }
 
 model Resource {

@@ -59,6 +59,7 @@ export function Sidebar() {
     { label: 'Leaderboard', href: '/dashboard/leaderboard', roles: ['member', 'coordinator', 'faculty', 'admin'], icon: <TrophyIcon className="w-5 h-5" /> },
     { label: 'My Hub', href: '/dashboard/coordinators', roles: ['coordinator', 'admin'], icon: <RocketIcon className="w-5 h-5" /> },
     { label: 'Create Club', href: '/dashboard/create-club', roles: ['faculty', 'admin'], icon: <PlusCircledIcon className="w-5 h-5" /> },
+    { label: 'Create Activity', href: '/dashboard/activities/create', roles: ['coordinator', 'admin'], icon: <PlusCircledIcon className="w-5 h-5" /> },
     { label: 'Manage Club', href: '/dashboard/manage', roles: ['coordinator', 'admin'], icon: <GearIcon className="w-5 h-5" /> },
     { label: 'Approvals', href: '/dashboard/approvals', roles: ['faculty', 'admin'], icon: <CheckCircledIcon className="w-5 h-5" /> },
     { label: 'Analytics', href: '/dashboard/analytics', roles: ['faculty', 'admin'], icon: <BarChartIcon className="w-5 h-5" /> },
@@ -86,10 +87,12 @@ export function Sidebar() {
         {menuItems.map((item) => {
           // Check if user should see this item
           const hasRoleAccess = user && item.roles.includes(user.role);
-          // Only allow "Manage Club" for coordinators who manage clubs, but not "My Hub" for faculty
-          const hasCoordinatorAccess = (item.label === 'Manage Club') && isCoordinator && user?.role !== 'faculty';
+          // Only allow "Manage Club" and "My Hub" for coordinators who manage clubs, but not for faculty
+          const hasCoordinatorAccess = (item.label === 'Manage Club' || item.label === 'My Hub') && isCoordinator && user?.role !== 'faculty';
+          // Allow Create Activity for coordinators
+          const hasActivityAccess = (item.label === 'Create Activity') && isCoordinator;
 
-          if (!user || !(hasRoleAccess || hasCoordinatorAccess)) {
+          if (!user || !(hasRoleAccess || hasCoordinatorAccess || hasActivityAccess)) {
             return null;
           }
 
@@ -121,19 +124,6 @@ export function Sidebar() {
           >
             {settingsItem.icon}
             <span>{settingsItem.label}</span>
-          </Link>
-        </div>
-      )}
-
-      {/* Create Activity Button */}
-      {user && (isCoordinator || user.role === 'admin') && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <Link
-            href="/dashboard/activities/create"
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
-          >
-            <PlusCircledIcon className="w-5 h-5" />
-            Create Activity
           </Link>
         </div>
       )}

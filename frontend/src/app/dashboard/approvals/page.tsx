@@ -6,6 +6,7 @@ export default function ApprovalsPage() {
   const [activeTab, setActiveTab] = useState('pending');
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [approvedRequests, setApprovedRequests] = useState<any[]>([]);
+  const [removalRequests, setRemovalRequests] = useState<any[]>([]); // New state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +23,18 @@ export default function ApprovalsPage() {
           const data = await response.json();
           setPendingRequests(data.filter((req: any) => req.status === 'PENDING'));
           setApprovedRequests(data.filter((req: any) => req.status === 'APPROVED'));
+        }
+
+        // Fetch Removal Requests
+        const removalResponse = await fetch('http://localhost:5000/api/removal-requests?status=PENDING', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (removalResponse.ok) {
+          const removalData = await removalResponse.json();
+          setRemovalRequests(removalData);
         }
       } catch (error) {
         console.error('Failed to fetch approvals:', error);
@@ -78,6 +91,29 @@ export default function ApprovalsPage() {
     }
   };
 
+  const handleReviewRemoval = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/removal-requests/${id}/review`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      
+      if (response.ok) {
+        setRemovalRequests(removalRequests.filter(r => r.id !== id));
+        alert(`Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`);
+      } else {
+        alert('Failed to review request');
+      }
+    } catch (error) {
+      console.error('Failed to review removal request:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
@@ -109,11 +145,11 @@ export default function ApprovalsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-border">
         {[
-          { id: 'pending', label: 'Pending' },
-          { id: 'approved', label: 'Approved' },
+          { id: 'pending', label: 'Pending Roles' },
+          { id: 'removals', label: 'Removal Requests' },
+          { id: 'approved', label: 'History' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -201,6 +237,52 @@ export default function ApprovalsPage() {
           {pendingRequests.length === 0 && (
             <div className="card text-center py-12">
               <p className="text-muted-text">No pending approvals</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Removal Requests */}
+      {activeTab === 'removals' && (
+        <div className="space-y-4">
+          {removalRequests.map((request) => (
+            <div key={request.id} className="card border-l-4 border-l-red-500">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Removal Request</h3>
+                  <p className="text-sm">
+                    <strong>Member:</strong> {request.member?.name} ({request.member?.email})
+                  </p>
+                  <p className="text-sm">
+                    <strong>Club:</strong> {request.club?.name}
+                  </p>
+                  <div className="mt-3 bg-muted/30 p-3 rounded text-sm">
+                    <strong>Reason:</strong> {request.reason}
+                  </div>
+                  <p className="text-xs text-muted-text mt-2">
+                    Requested by Coordinator on {new Date(request.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleReviewRemoval(request.id, 'APPROVED')}
+                    className="btn bg-red-600 text-white hover:bg-red-700 text-sm"
+                  >
+                    Approve Removal
+                  </button>
+                  <button 
+                    onClick={() => handleReviewRemoval(request.id, 'REJECTED')}
+                    className="btn btn-outline text-sm"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {removalRequests.length === 0 && (
+            <div className="card text-center py-12">
+              <p className="text-muted-text">No pending removal requests</p>
             </div>
           )}
         </div>

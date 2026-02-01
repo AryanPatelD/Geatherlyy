@@ -44,15 +44,29 @@ export class UsersService {
     });
   }
 
+  async findByUniversityId(universityId: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { universityId },
+    });
+  }
+
   async findAll(filters?: {
     role?: UserRole;
+    search?: string;
     skip?: number;
     take?: number;
-  }): Promise<User[]> {
+  }): Promise<Partial<User>[]> {
     const where: Prisma.UserWhereInput = {};
 
     if (filters?.role) {
       where.role = filters.role;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+      ];
     }
 
     return this.prisma.user.findMany({
@@ -62,6 +76,15 @@ export class UsersService {
       orderBy: {
         createdAt: 'desc',
       },
+      select: { // Select only public info for search safety
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatar: true,
+        department: true,
+        createdAt: true,
+      }
     });
   }
 

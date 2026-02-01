@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '@prisma/client';
@@ -15,7 +15,14 @@ export class AuthService {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(registerDto.email);
     if (existingUser) {
-      throw new UnauthorizedException('User with this email already exists');
+      throw new ConflictException('User with this email already exists');
+    }
+
+    if (registerDto.universityId) {
+      const existingUniId = await this.usersService.findByUniversityId(registerDto.universityId);
+      if (existingUniId) {
+        throw new ConflictException('User with this University ID already exists');
+      }
     }
 
     // Hash password

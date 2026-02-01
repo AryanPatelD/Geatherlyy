@@ -48,10 +48,10 @@ export default function CompleteProfilePage() {
         throw new Error("No auth token found");
       }
 
-      const { password, confirmPassword, ...profileData } = formData;
+      const { password, confirmPassword, role, ...profileData } = formData;
       const apiData = {
         ...profileData,
-        role: 'MEMBER', // Uppercase to match Prisma enum
+        // Role is NOT sent, so backend preserves existing role (e.g. FACULTY)
         password: password,
         profileComplete: true,
         approvalStatus: 'APPROVED', // Uppercase to match Prisma enum
@@ -189,7 +189,6 @@ export default function CompleteProfilePage() {
                   <option value="2nd">2nd Year</option>
                   <option value="3rd">3rd Year</option>
                   <option value="4th">4th Year</option>
-                  <option value="faculty">Faculty</option>
                 </select>
               </div>
 

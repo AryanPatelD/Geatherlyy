@@ -412,7 +412,7 @@ export default function ProfilePage() {
                 <div
                   key={attempt.id}
                   className="p-4 border border-border rounded-lg hover:bg-muted-bg transition-colors cursor-pointer"
-                  onClick={() => router.push(`/dashboard/clubs/${attempt.quiz.club.id}`)}
+                  onClick={() => router.push(`/dashboard/quiz/results/${attempt.quiz.id}`)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">

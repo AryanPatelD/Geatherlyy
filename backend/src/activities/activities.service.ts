@@ -204,6 +204,33 @@ export class ActivitiesService {
 
     return false;
   }
+
+  async canUserCreateActivity(userId: number, clubId: number): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return false;
+    }
+
+    // Admin and Faculty can create activity for any club
+    if (([UserRole.ADMIN, UserRole.FACULTY] as UserRole[]).includes(user.role)) {
+      return true;
+    }
+
+    // Check if user is a member or coordinator of the club
+    const [isMember, isCoordinator] = await Promise.all([
+      this.prisma.clubMember.findFirst({
+        where: { userId, clubId },
+      }),
+      this.prisma.clubCoordinator.findFirst({
+        where: { userId, clubId },
+      }),
+    ]);
+
+    return !!(isMember || isCoordinator);
+  }
 }
 
 

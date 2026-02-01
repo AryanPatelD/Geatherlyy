@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../cache/redis.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { Club, Prisma, UserRole } from '@prisma/client';
+import { Club, Prisma, UserRole, User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ClubsService {
@@ -11,6 +12,59 @@ export class ClubsService {
     private redis: RedisService,
     private cloudinary: CloudinaryService,
   ) {}
+
+  async findOrCreateFaculty(identifier: string): Promise<User> {
+    const trimmedId = identifier.trim();
+    
+    // Try to find existing user
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: { equals: trimmedId, mode: 'insensitive' } },
+          { name: { equals: trimmedId, mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    if (user) {
+      // Validate role if user exists
+      if (user.role !== UserRole.FACULTY && user.role !== UserRole.ADMIN) {
+        throw new ForbiddenException(`User '${trimmedId}' found but is not a Faculty member`);
+      }
+      return user;
+    }
+
+    // Create new faculty user if not found
+    const isEmail = trimmedId.includes('@');
+    // Generate a unique email if input is just a name
+    const email = isEmail 
+      ? trimmedId 
+      : `${trimmedId.toLowerCase().replace(/\s+/g, '.')}@gatherly.internal`;
+
+    // Ensure email is unique (in case generated one conflicts)
+    const existingEmail = await this.prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
+       // Append random numbers if conflict
+       const randomSuffix = Math.floor(Math.random() * 10000);
+       return this.findOrCreateFaculty(`${trimmedId}${randomSuffix}`);
+    }
+
+
+    // Hash default password
+    const hashedPassword = await bcrypt.hash('GatherlyFaculty123!', 10);
+
+    return this.prisma.user.create({
+      data: {
+        name: isEmail ? trimmedId.split('@')[0] : trimmedId,
+        email: email,
+        role: UserRole.FACULTY,
+        department: 'General', // Default department
+        password: hashedPassword, // Default password
+        profileComplete: false,
+        approvalStatus: 'APPROVED' 
+      }
+    });
+  }
 
   async create(
     data: any,
@@ -21,7 +75,7 @@ export class ClubsService {
     const clubName = data.name || data.clubName;
     
     if (!clubName) {
-      throw new Error('Club name is required');
+      throw new BadRequestException('Club name is required');
     }
 
     // Check if club with this name already exists
@@ -54,11 +108,55 @@ export class ClubsService {
         where: { id: creatorId },
         select: { role: true },
       });
+      
+      if (!creator || (creator.role !== UserRole.FACULTY && creator.role !== UserRole.ADMIN)) {
+        throw new ForbiddenException('Only Faculty and Admins can create clubs.');
+      }
+
       // Admins can auto-approve their clubs
       if (creator?.role === UserRole.ADMIN) {
         approvalStatus = 'APPROVED';
       }
     }
+
+    // 1. Process Mentors (2-3 Limit)
+    let mentorIdentifiers: string[] = [];
+    try {
+      mentorIdentifiers = data.mentorEmails ? JSON.parse(data.mentorEmails) : [];
+    } catch (e) {
+      if (Array.isArray(data.mentorEmails)) mentorIdentifiers = data.mentorEmails;
+      else if (typeof data.mentorEmails === 'string') mentorIdentifiers = [data.mentorEmails];
+    }
+
+    if (mentorIdentifiers.length < 2 || mentorIdentifiers.length > 3) {
+      throw new BadRequestException('A club must have between 2 and 3 Mentors.');
+    }
+
+    const mentorIds: number[] = [];
+    for (const identifier of mentorIdentifiers) {
+      if (!identifier.trim()) continue;
+      const mentorUser = await this.findOrCreateFaculty(identifier);
+      mentorIds.push(mentorUser.id);
+    }
+
+    // 2. Process Convenor (1 Required)
+    let convenorId: number | undefined;
+    if (data.convenorEmail) {
+      const convenorUser = await this.findOrCreateFaculty(data.convenorEmail);
+      convenorId = convenorUser.id;
+    } else {
+      throw new BadRequestException('A club Convenor is required.');
+    }
+
+    // 3. Process Coordinators (3-4 Limit in Total Club, but 1 at creation)
+    // The requirement "3-4 coordinator limit" applies to the *active* club. 
+    // At creation, only the creator (who must be a faculty/admin/approved user) is the coordinator.
+    // Others are added later.
+    
+    // We already check if creator exists.
+
+    // Validate if creator is valid for coordinator?
+    // (Assuming Role Guards handled this, but good to be safe)
 
     const clubData: Prisma.ClubCreateInput = {
       name: clubName,
@@ -70,27 +168,32 @@ export class ClubsService {
       creator: creatorId ? {
         connect: { id: creatorId }
       } : undefined,
+      convenor: convenorId ? {
+        connect: { id: convenorId }
+      } : undefined,
+      mentors: {
+        connect: mentorIds.map(id => ({ id }))
+      },
+      coordinators: {
+        create: { userId: creatorId! } // Start with creator
+      },
+      members: {
+        create: { userId: creatorId! } // Creator is also a member
+      }
     };
 
     const club = await this.prisma.club.create({
       data: clubData,
       include: {
-        coordinators: {
-          include: {
-            user: true,
-          },
-        },
-        members: {
-          include: {
-            user: true,
-          },
-        },
-      },
+          mentors: true,
+          convenor: true,
+          coordinators: true
+      }
     });
 
     // Invalidate clubs cache (non-blocking)
     this.redis.del('clubs:all').catch(() => {});
-
+    
     return club;
   }
 
@@ -172,11 +275,22 @@ export class ClubsService {
   async findUserClubs(userId: number): Promise<Club[]> {
     const clubs = await this.prisma.club.findMany({
       where: {
-        members: {
-          some: {
-            userId: userId,
+        OR: [
+          {
+            members: {
+              some: {
+                userId: userId,
+              },
+            },
           },
-        },
+          {
+            coordinators: {
+              some: {
+                userId: userId,
+              },
+            },
+          },
+        ],
       },
       include: {
         coordinators: {
@@ -278,19 +392,6 @@ export class ClubsService {
     const club = await this.prisma.club.findUnique({
       where: { id },
       include: {
-        coordinators: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                role: true,
-              },
-            },
-          },
-        },
         members: {
           include: {
             user: {
@@ -299,25 +400,59 @@ export class ClubsService {
                 name: true,
                 email: true,
                 avatar: true,
+                department: true,
               },
             },
           },
-          orderBy: {
-            joinedAt: 'desc',
+        },
+        coordinators: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                department: true,
+              },
+            },
           },
         },
         activities: {
-          orderBy: {
-            startDate: 'desc',
+          orderBy: { startDate: 'asc' },
+        },
+        mentors: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            department: true,
           },
-          take: 10,
+        },
+        convenor: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatar: true,
+            department: true 
+          }
+        },
+        // Creator
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
         },
         _count: {
           select: {
             members: true,
             activities: true,
-          },
-        },
+          }
+        }
       },
     });
 
@@ -495,11 +630,47 @@ export class ClubsService {
       throw new ForbiddenException('User is already a coordinator');
     }
 
-    await this.prisma.clubCoordinator.create({
-      data: {
-        clubId,
-        userId,
-      },
+    await this.prisma.$transaction(async (prisma) => {
+      await prisma.clubCoordinator.create({
+        data: {
+          clubId,
+          userId,
+        },
+      });
+
+      // Upgrade user role to COORDINATOR if they are currently MEMBER
+      const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (targetUser && targetUser.role === UserRole.MEMBER) {
+          await prisma.user.update({
+              where: { id: userId },
+              data: { role: UserRole.COORDINATOR }
+          });
+      }
+
+      // Ensure user is also a member
+      const existingMember = await prisma.clubMember.findUnique({
+        where: {
+          clubId_userId: {
+            clubId,
+            userId,
+          },
+        },
+      });
+
+      if (!existingMember) {
+        await prisma.clubMember.create({
+          data: {
+            clubId,
+            userId,
+          },
+        });
+        
+        // Increment member count
+        await prisma.club.update({
+          where: { id: clubId },
+          data: { memberCount: { increment: 1 } }
+        });
+      }
     });
 
     // Invalidate cache

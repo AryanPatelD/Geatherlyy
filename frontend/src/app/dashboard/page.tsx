@@ -169,14 +169,28 @@ export default function DashboardPage() {
 
   if (!user.profileComplete) {
     return (
-      <div className="p-8">
-        <div className="card bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800">
-          <div className="flex items-center gap-2">
-            <ExclamationTriangleIcon className="w-5 h-5 text-blue-700 dark:text-blue-300" />
-            <p className="text-blue-900 dark:text-blue-100">
-              Please complete your profile to continue
+      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-border p-8 text-center space-y-6">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto">
+            <PersonIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Complete Your Profile</h2>
+            <p className="text-muted-text">
+              Please complete your profile details to access the dashboard and join clubs.
             </p>
           </div>
+
+          <button
+            onClick={() => router.push('/complete-profile')}
+            className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            Complete Profile
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -442,21 +456,21 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <PersonIcon className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-2xl font-bold">{selectedClub.members || 0}</p>
+                    <p className="text-2xl font-bold">{selectedClub._count?.members ?? selectedClub.members?.length ?? 0}</p>
                     <p className="text-sm text-muted-text">Members</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <svg className="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-2xl font-bold">{selectedClub.activities || 0}</p>
+                    <p className="text-2xl font-bold">{selectedClub._count?.activities ?? selectedClub.activities?.length ?? 0}</p>
                     <p className="text-sm text-muted-text">Activities</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <svg className="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <p className="text-2xl font-bold">{selectedClub.resources || 0}</p>
+                    <p className="text-2xl font-bold">{selectedClub._count?.resources ?? selectedClub.resources?.length ?? 0}</p>
                     <p className="text-sm text-muted-text">Resources</p>
                   </div>
                 </div>
