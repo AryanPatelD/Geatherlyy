@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { getApiUrl } from '@/lib/apiUrl';
 import { LockClosedIcon, EnvelopeClosedIcon, PersonIcon, EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
+import JSEncrypt from 'jsencrypt';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,6 +24,16 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
 
+  const encryptPassword = (password: string) => {
+    const publicKey = process.env.NEXT_PUBLIC_RSA_PUBLIC_KEY;
+    if (!publicKey) return password;
+    
+    const encrypt = new JSEncrypt();
+    encrypt.setPublicKey(Buffer.from(publicKey, 'base64').toString('utf-8'));
+    const encrypted = encrypt.encrypt(password);
+    return encrypted || password;
+  };
+
   const handleGoogleLogin = () => {
     const apiUrl = getApiUrl();
     window.location.href = `${apiUrl}/api/auth/google`;
@@ -35,6 +46,7 @@ export default function LoginPage() {
     
     try {
       const apiUrl = getApiUrl();
+      const encryptedPassword = encryptPassword(formData.password);
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -42,7 +54,7 @@ export default function LoginPage() {
         },
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password,
+          password: encryptedPassword,
         }),
       });
 

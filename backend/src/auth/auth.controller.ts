@@ -3,6 +3,21 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
+import * as NodeRSA from 'node-rsa';
+
+const decrypt = (text: string) => {
+  if (!process.env.PRIVATE_KEY) return text;
+  try {
+    const key = new NodeRSA();
+    key.importKey(Buffer.from(process.env.PRIVATE_KEY, 'base64'), 'private');
+    key.setOptions({encryptionScheme: 'pkcs1'});
+    const decrypted = key.decrypt(text, 'utf8');
+    return decrypted || text;
+  } catch (e) {
+    console.error('Decryption failed:', e.message);
+    return text;
+  }
+};
 
 @ApiTags('auth')
 @Controller('auth')
@@ -42,7 +57,8 @@ export class AuthController {
   async login(
     @Body() loginDto: { email: string; password: string },
   ) {
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    const decryptedPassword = decrypt(loginDto.password);
+    const user = await this.authService.validateUser(loginDto.email, decryptedPassword);
     return this.authService.login(user);
   }
 
