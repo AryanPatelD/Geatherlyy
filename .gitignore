@@ -101,3 +101,8 @@ concurrency_test.ts
 # LOAD_TEST_REPORT.md
 # security_report.md
 # verification_report.md
+# verification_report.md
+
+# Keys
+backend/keys.json
+keys.json
