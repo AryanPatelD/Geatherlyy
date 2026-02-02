@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
 import { apiUrl } from '@/lib/apiUrl';
 import { getApiUrl } from '@/lib/apiUrl';
+import { toast } from 'sonner';
 
 function ManageClubContent() {
   const router = useRouter();
@@ -51,7 +52,7 @@ function ManageClubContent() {
 
   const handleRequestRemoval = async () => {
     if (!memberToRemove || !removalReason.trim()) {
-      alert('Please provide a reason for removal');
+      toast.error('Please provide a reason for removal');
       return;
     }
 
@@ -73,17 +74,17 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert('Removal request submitted successfully. Waiting for faculty approval.');
+        toast.success('Removal request submitted successfully. Waiting for faculty approval.');
         setShowRemovalModal(false);
         setMemberToRemove(null);
         setRemovalReason('');
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to submit removal request');
+        toast.error(error.message || 'Failed to submit removal request');
       }
     } catch (error) {
       console.error('Error submitting removal request:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setSubmittingRemoval(false);
     }
@@ -205,24 +206,24 @@ function ManageClubContent() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('Failed to export members');
+        toast.error('Failed to export members');
       }
     } catch (error) {
       console.error('Failed to export members:', error);
-      alert('An error occurred while exporting members');
+      toast.error('An error occurred while exporting members');
     }
   };
 
   const handleUploadResource = async () => {
     if (!resourceData.title || !resourceData.file || !selectedClub) {
-      alert('Please provide a title and select a file');
+      toast.error('Please provide a title and select a file');
       return;
     }
 
     // Validate file size (50MB)
     const maxSize = 50 * 1024 * 1024;
     if (resourceData.file.size > maxSize) {
-      alert('File size must be less than 50MB');
+      toast.error('File size must be less than 50MB');
       return;
     }
 
@@ -244,17 +245,17 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert('Resource uploaded successfully!');
+        toast.success('Resource uploaded successfully!');
         setShowResourceModal(false);
         setResourceData({ title: '', description: '', file: null });
         fetchResources();
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to upload resource');
+        toast.error(error.message || 'Failed to upload resource');
       }
     } catch (error) {
       console.error('Error uploading resource:', error);
-      alert('An error occurred while uploading the resource');
+      toast.error('An error occurred while uploading the resource');
     } finally {
       setUploadingResource(false);
     }
@@ -274,14 +275,14 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert('Resource deleted successfully');
+        toast.success('Resource deleted successfully');
         fetchResources();
       } else {
-        alert('Failed to delete resource');
+        toast.error('Failed to delete resource');
       }
     } catch (error) {
       console.error('Error deleting resource:', error);
-      alert('An error occurred while deleting the resource');
+      toast.error('An error occurred while deleting the resource');
     }
   };
 
@@ -339,7 +340,7 @@ function ManageClubContent() {
 
   const handleCreateQuiz = async () => {
     if (!quizTitle || questions.length === 0 || !selectedClub) {
-      alert('Please add a title and at least one question');
+      toast.error('Please add a title and at least one question');
       return;
     }
 
@@ -370,7 +371,7 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert(`Quiz "${quizTitle}" created successfully!`);
+        toast.success(`Quiz "${quizTitle}" created successfully!`);
         setShowQuizModal(false);
         setQuizTitle('');
         setQuizDescription('');
@@ -378,11 +379,11 @@ function ManageClubContent() {
         fetchQuizzes();
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to create quiz');
+        toast.error(error.message || 'Failed to create quiz');
       }
     } catch (error) {
       console.error('Error creating quiz:', error);
-      alert('An error occurred while creating the quiz');
+      toast.error('An error occurred while creating the quiz');
     } finally {
       setCreatingQuiz(false);
     }
@@ -404,7 +405,7 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert(isActive ? 'Quiz stopped' : 'Quiz started');
+        toast.success(isActive ? 'Quiz stopped' : 'Quiz started');
         fetchQuizzes();
       }
     } catch (error) {
@@ -426,7 +427,7 @@ function ManageClubContent() {
       });
 
       if (response.ok) {
-        alert('Quiz deleted successfully');
+        toast.success('Quiz deleted successfully');
         fetchQuizzes();
       }
     } catch (error) {

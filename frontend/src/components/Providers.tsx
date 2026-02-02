@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from 'next-themes';
 import { ReactNode } from 'react';
+import { Toaster } from 'sonner';
 import { useInitializeAuth } from '@/context/AuthContext';
 
 function AuthInitializer() {
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthInitializer />
       {children}
+      <Toaster position="top-center" richColors />
     </ThemeProvider>
   );
 }
