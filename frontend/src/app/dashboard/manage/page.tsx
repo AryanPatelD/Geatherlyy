@@ -447,7 +447,7 @@ function ManageClubContent() {
 
   if (clubs.length === 0) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <h1 className="text-3xl font-bold mb-6">Club Management</h1>
         <div className="text-center py-12 card">
           <div className="text-6xl mb-4">📋</div>
@@ -468,7 +468,7 @@ function ManageClubContent() {
 
   if (!selectedClub) {
      return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <h1 className="text-3xl font-bold mb-6">Club Management</h1>
         <div className="text-center py-12 card bg-gradient-to-br from-background to-muted-bg border-dashed border-2">
           <div className="text-6xl mb-4">👈</div>
@@ -504,9 +504,9 @@ function ManageClubContent() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Club Management</h1>
+    <div className="p-4 md:p-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Club Management</h1>
         
         {clubs.length > 1 && (
           <div className="flex items-center gap-3">
@@ -529,7 +529,7 @@ function ManageClubContent() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-4 mb-6 border-b border-border">
+      <div className="flex gap-4 mb-6 border-b border-border overflow-x-auto scrollbar-hide">
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'members', label: 'Members' },
@@ -541,7 +541,7 @@ function ManageClubContent() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`pb-4 px-2 font-medium transition-colors border-b-2 ${
+            className={`pb-4 px-2 font-medium transition-colors border-b-2 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-text hover:text-foreground'
@@ -646,7 +646,8 @@ function ManageClubContent() {
               📥 Export to Excel
             </button>
           </div>
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 text-sm font-semibold">Name</th>
@@ -678,6 +679,7 @@ function ManageClubContent() {
               ))}
             </tbody>
           </table>
+          </div>
 
 
         </div>

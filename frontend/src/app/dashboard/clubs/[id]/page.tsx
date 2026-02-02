@@ -290,19 +290,19 @@ export default function ClubDetailPage({
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Club Header with Photo */}
       {club.imageUrl && (
-        <div className="relative h-64 -mx-8 -mt-8 mb-6 overflow-hidden">
+        <div className="relative h-48 md:h-64 -mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-6 overflow-hidden">
           <img
             src={club.imageUrl}
             alt={club.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-6 left-8">
-            <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">{club.name}</h1>
-            <p className="text-white/90 text-lg drop-shadow">{club.description}</p>
+          <div className="absolute bottom-4 left-4 md:bottom-6 md:left-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg mb-1 md:mb-2">{club.name}</h1>
+            <p className="text-white/90 text-sm md:text-lg drop-shadow line-clamp-2">{club.description}</p>
           </div>
         </div>
       )}
@@ -347,7 +347,7 @@ export default function ClubDetailPage({
           )}
         </div>
 
-        <div className="grid md:grid-cols-4 gap-4 pt-6 border-t border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-border">
           <div>
             <p className="text-muted-text text-sm">Members</p>
             <p className="text-2xl font-bold">{club._count?.members ?? club.memberCount ?? 0}</p>
@@ -376,7 +376,7 @@ export default function ClubDetailPage({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-border">
+      <div className="flex gap-4 mb-6 border-b border-border overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -387,7 +387,7 @@ export default function ClubDetailPage({
                 alert('Join the club to access this section!');
               }
             }}
-            className={`pb-4 px-2 font-medium transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-4 px-2 font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-text hover:text-foreground'

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../common/notifications/notification.service';
 import { ClubMemberRemovalRequest, Prisma, RemovalApprovalStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class RemovalRequestsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async create(
     userId: number,
@@ -153,13 +157,65 @@ export class RemovalRequestsService {
         updateData.finalizedAt = new Date();
     }
 
-    return this.prisma.clubMemberRemovalRequest.update({
+    const updatedRequest = await this.prisma.clubMemberRemovalRequest.update({
       where: { id: requestId },
       data: updateData,
       include: {
         member: true,
         club: true,
+        coordinator: true,
       },
     });
+
+    // Send notifications based on the status
+    await this.sendRemovalNotifications(updatedRequest, status);
+
+    return updatedRequest;
+  }
+
+  /**
+   * Send notifications to member and coordinator about removal request status
+   */
+  private async sendRemovalNotifications(
+    request: any,
+    status: RemovalApprovalStatus
+  ): Promise<void> {
+    try {
+      if (status === RemovalApprovalStatus.APPROVED) {
+        // Notify the removed member
+        this.notificationService.sendRemovalNotification({
+          userName: request.member.name,
+          userEmail: request.member.email,
+          clubName: request.club.name,
+          clubId: request.club.id,
+          reason: request.reason,
+        });
+
+        // Notify the coordinator that the removal was approved
+        if (request.coordinator) {
+          this.notificationService.sendRemovalRequestUpdateToCoordinator({
+            userName: request.coordinator.name,
+            userEmail: request.coordinator.email,
+            clubName: request.club.name,
+            clubId: request.club.id,
+            status: 'APPROVED',
+          });
+        }
+      } else if (status === RemovalApprovalStatus.REJECTED) {
+        // Notify the coordinator that the removal was rejected
+        if (request.coordinator) {
+          this.notificationService.sendRemovalRequestUpdateToCoordinator({
+            userName: request.coordinator.name,
+            userEmail: request.coordinator.email,
+            clubName: request.club.name,
+            clubId: request.club.id,
+            status: 'REJECTED',
+            additionalMessage: request.mentorReviewNotes || request.adminReviewNotes,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send removal notifications:', error);
+    }
   }
 }

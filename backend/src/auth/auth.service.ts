@@ -1,14 +1,19 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { MailerService } from '../common/mailer/mailer.service';
+import { NotificationService } from '../common/notifications/notification.service';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private mailerService: MailerService,
+    private notificationService: NotificationService,
   ) { }
 
   async register(registerDto: { email: string; password: string; name: string; universityId?: string; department: string; year?: string; phone?: string }) {
@@ -127,9 +132,78 @@ export class AuthService {
         role: user.role,
         profileComplete: user.profileComplete,
         approvalStatus: user.approvalStatus,
+        mustChangePassword: user.mustChangePassword,
         avatar: user.avatar,
       },
     };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      // Don't reveal if user exists
+      return { message: 'If a user with this email exists, a password reset link has been sent.' };
+    }
+
+    if (!user.password && user.googleId) {
+       // Optional: Send email saying they use Google Login
+       return { message: 'If a user with this email exists, a password reset link has been sent.' };
+    }
+
+    // Generate token
+    const token = crypto.randomBytes(32).toString('hex');
+    const hashedToken = await bcrypt.hash(token, 10);
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    // Save to user
+    await this.usersService.update(user.id, {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: expires,
+    });
+
+    // Send styled email using NotificationService
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    
+    await this.notificationService.sendPasswordResetEmail({
+      userName: user.name,
+      userEmail: email,
+      resetUrl: resetUrl,
+      expiresInHours: 1,
+    });
+
+    return { message: 'If a user with this email exists, a password reset link has been sent.' };
+  }
+
+  async resetPassword(token: string, email: string, newPassword: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.resetPasswordToken || !user.resetPasswordExpires) {
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+
+    // Check if expired
+    if (new Date() > user.resetPasswordExpires) {
+        throw new UnauthorizedException('Token has expired.');
+    }
+
+    // Prepare for comparison (Prisma saves as hash, but we might need to compare carefully)
+    // The previous implementation plan said "Store hashed token". 
+    // If we store hashed token, we need to compare the incoming clear text token with the stored hash.
+    const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
+    
+    if (!isTokenValid) {
+        throw new UnauthorizedException('Invalid token.');
+    }
+
+    // Update user (UsersService handles hashing)
+    await this.usersService.update(user.id, {
+      password: newPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+      mustChangePassword: false
+    });
+
+    return { message: 'Password has been reset successfully.' };
   }
 
   async validateJwtPayload(payload: any) {
@@ -143,6 +217,15 @@ export class AuthService {
   async refreshToken(userId: number) {
     const user = await this.usersService.findById(userId);
     return this.login(user);
+  }
+
+  async changePassword(userId: number, newPassword: string) {
+    // UsersService handles hashing
+    await this.usersService.update(userId, {
+      password: newPassword,
+      mustChangePassword: false,
+    });
+    return { message: 'Password changed successfully' };
   }
 }
 

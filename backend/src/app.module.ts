@@ -16,6 +16,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './cache/redis.module';
 import { UploadModule } from './upload/upload.module';
+import { MailerModule } from './common/mailer/mailer.module';
+import { NotificationModule } from './common/notifications/notification.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { UploadModule } from './upload/upload.module';
     AnalyticsModule,
     UploadModule,
     RemovalRequestsModule,
+    MailerModule,
+    NotificationModule,
   ],
   providers: [
     {

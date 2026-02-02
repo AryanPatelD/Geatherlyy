@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/context/AuthContext';
-import { DashboardIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { DashboardIcon, MagnifyingGlassIcon, HamburgerMenuIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/apiUrl';
 
-export function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any>({
@@ -116,8 +120,18 @@ export function Navbar() {
                      searchResults.resources.length > 0;
 
   return (
-    <nav className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-md z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+    <nav className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-md z-30 shadow-sm w-full">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-2 md:gap-4 w-full">
+        
+        {/* Mobile Menu Button */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-2 -ml-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Open menu"
+        >
+          <HamburgerMenuIcon className="w-6 h-6" />
+        </button>
+
         {/* Search Bar - Only show when user is logged in */}
         {user && (
           <div ref={searchRef} className="flex-1 max-w-2xl relative">
@@ -263,30 +277,35 @@ export function Navbar() {
           </div>
         )}
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {user ? (
             <>
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted-bg">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold">
+              <Link 
+                href="/dashboard/profile"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold shadow-sm shrink-0">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm font-medium">{user.name}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium capitalize">
-                  {user.role}
-                </span>
-              </div>
+                <div className="hidden lg:block text-left">
+                  <div className="text-sm font-medium leading-none mb-0.5">{user.name}</div>
+                  <div className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium capitalize inline-block">
+                    {user.role}
+                  </div>
+                </div>
+              </Link>
               <Link
                 href="/dashboard"
-                className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-muted-bg"
+                className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <DashboardIcon className="w-4 h-4" />
-                Dashboard
+                <span className="hidden lg:inline">Dashboard</span>
               </Link>
             </>
           ) : (
             <Link 
               href="/login" 
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-medium hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-medium hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
             >
               Login
             </Link>

@@ -9,6 +9,18 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset email' })
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password' })
+  async resetPassword(@Body() body: { token: string; email: string; password: string }) {
+    return this.authService.resetPassword(body.token, body.email, body.password);
+  }
+
   @Post('register')
   @ApiOperation({ summary: 'Register with email and password' })
   async register(
@@ -66,6 +78,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh JWT token' })
   async refreshToken(@Req() req) {
     return this.authService.refreshToken(req.user.id);
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Change password' })
+  async changePassword(@Req() req, @Body() body: { password: string }) {
+    return this.authService.changePassword(req.user.id, body.password);
   }
 }
 

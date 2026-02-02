@@ -4,6 +4,7 @@ import { RedisService } from '../cache/redis.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Club, Prisma, UserRole, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { NotificationService } from '../common/mailer/notification.service';
 
 @Injectable()
 export class ClubsService {
@@ -11,6 +12,7 @@ export class ClubsService {
     private prisma: PrismaService,
     private redis: RedisService,
     private cloudinary: CloudinaryService,
+    private notificationService: NotificationService,
   ) {}
 
   async findOrCreateFaculty(identifier: string): Promise<User> {
@@ -570,6 +572,17 @@ export class ClubsService {
 
     // Invalidate cache
     await this.redis.del(`club:${clubId}`);
+
+    // Send Welcome Email
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user && user.email) {
+      this.notificationService.sendWelcomeEmail({
+        userEmail: user.email,
+        userName: user.name,
+        clubName: club.name,
+        clubId: club.id
+      }).catch(err => console.error('Failed to send welcome email', err));
+    }
   }
 
   async leaveClub(clubId: number, userId: number): Promise<void> {

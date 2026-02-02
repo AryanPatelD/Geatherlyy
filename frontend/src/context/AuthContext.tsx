@@ -18,6 +18,7 @@ export interface User {
   profileComplete: boolean;
   approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   avatar?: string;
+  mustChangePassword?: boolean;
 }
 
 interface AuthState {
@@ -89,6 +90,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
         profileComplete: userData.profileComplete || false,
         approvalStatus: userData.approvalStatus,
         avatar: userData.avatar,
+        mustChangePassword: userData.mustChangePassword || false,
       };
 
       set({

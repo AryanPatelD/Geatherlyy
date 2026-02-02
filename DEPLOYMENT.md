@@ -27,7 +27,7 @@ This guide describes how to deploy the **Gatherly** project using a "Forever Fre
 ## Step 3: Backend Deployment (Render)
 1. Go to [Render.com](https://render.com/) and sign up.
 2. Click **New +** -> **Web Service**.
-3. Connect your GitHub repository (`Geatherlyy`).
+3. Connect your GitHub repository (`Geatherlyyy`).
 4. **Configuration**:
    - **Name**: `gatherly-backend`
    - **Root Directory**: `backend` (Important!)
@@ -52,7 +52,7 @@ This guide describes how to deploy the **Gatherly** project using a "Forever Fre
 ## Step 4: Frontend Deployment (Vercel)
 1. Go to [Vercel.com](https://vercel.com/) and sign up.
 2. Click **Add New ...** -> **Project**.
-3. Import your `Geatherlyy` repository.
+3. Import your `Geatherlyyy` repository.
 4. **Project Settings**:
    - **Framework Preset**: Next.js (Auto-detected).
    - **Root Directory**: Click "Edit" and select `frontend`.

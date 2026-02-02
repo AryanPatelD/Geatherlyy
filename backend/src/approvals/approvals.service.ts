@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { NotificationService } from '../common/notifications/notification.service';
 import { ApprovalRequest, Prisma, ApprovalStatus, UserRole } from '@prisma/client';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class ApprovalsService {
   constructor(
     private prisma: PrismaService,
     private usersService: UsersService,
+    private notificationService: NotificationService,
   ) { }
 
   async create(data: Prisma.ApprovalRequestCreateInput): Promise<ApprovalRequest> {
@@ -218,7 +220,44 @@ export class ApprovalsService {
       }
     }
 
+    // Send notification to the user about the approval/rejection
+    this.sendApprovalNotification(updatedRequest, status);
+
     return updatedRequest;
+  }
+
+  /**
+   * Send notification about approval/rejection to the user
+   */
+  private async sendApprovalNotification(request: any, status: ApprovalStatus): Promise<void> {
+    try {
+      const notificationStatus = status === ApprovalStatus.APPROVED ? 'APPROVED' : 'REJECTED';
+      
+      if (request.requestedRole === 'COORDINATOR' && request.club) {
+        // Coordinator application notification
+        this.notificationService.sendCoordinatorApplicationNotification({
+          userName: request.user.name,
+          userEmail: request.user.email,
+          clubName: request.club.name,
+          clubId: request.club.id,
+          status: notificationStatus,
+          reviewerName: request.reviewer?.name,
+        });
+      } else {
+        // General approval notification
+        this.notificationService.sendApprovalNotification({
+          userName: request.user.name,
+          userEmail: request.user.email,
+          requestType: `${request.requestedRole} Role Request`,
+          status: notificationStatus,
+          clubName: request.club?.name,
+          clubId: request.club?.id,
+          reviewerName: request.reviewer?.name,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send approval notification:', error);
+    }
   }
 
   async getPendingRequests(): Promise<ApprovalRequest[]> {

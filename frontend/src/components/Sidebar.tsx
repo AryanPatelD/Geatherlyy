@@ -16,13 +16,26 @@ import {
   PersonIcon,
   RocketIcon,
   FileTextIcon,
-  BarChartIcon as TrophyIcon
+  BarChartIcon as TrophyIcon,
+  Cross2Icon
 } from '@radix-ui/react-icons';
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { user } = useAuthStore();
   const pathname = usePathname();
   const [isCoordinator, setIsCoordinator] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    if (onClose) {
+      onClose();
+    }
+  }, [pathname]);
 
   // Check if user is a coordinator
   useEffect(() => {
@@ -71,64 +84,82 @@ export function Sidebar() {
   const settingsItem = { label: 'Settings', href: '/dashboard/settings', roles: ['member', 'coordinator', 'faculty', 'admin'], icon: <GearIcon className="w-5 h-5" /> };
 
   return (
-    <aside className="w-64 h-screen border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col shadow-sm">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-lg">G</span>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={`
+        fixed top-0 left-0 z-50 h-[100dvh] w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700
+        flex flex-col shadow-xl transition-transform duration-300 ease-in-out
+        md:translate-x-0 md:static md:h-screen md:shadow-sm
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-lg">G</span>
+            </div>
+            <div>
+              <h2 className="font-bold text-base text-gray-900 dark:text-white">Gatherly</h2>
+            </div>
           </div>
-          <div>
-            <h2 className="font-bold text-base text-gray-900 dark:text-white">Gatherly</h2>
-          </div>
+          <button 
+            onClick={onClose}
+            className="md:hidden p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+          >
+            <Cross2Icon className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
-      {/* Menu Items */}
-      <div className="p-4 space-y-2 flex-1 overflow-y-auto">
-        {menuItems.map((item) => {
-          // Check if user should see this item
-          const hasRoleAccess = user && item.roles.includes(user.role);
-          // Only allow "Manage Club" and "My Hub" for coordinators who manage clubs, but not for faculty
-          const hasCoordinatorAccess = (item.label === 'Manage Club' || item.label === 'My Hub') && isCoordinator && user?.role !== 'faculty';
-          // Allow Create Activity for coordinators
-          const hasActivityAccess = (item.label === 'Create Activity') && isCoordinator;
+        {/* Menu Items */}
+        <div className="p-4 space-y-2 flex-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const hasRoleAccess = user && item.roles.includes(user.role);
+            const hasCoordinatorAccess = (item.label === 'Manage Club' || item.label === 'My Hub') && isCoordinator && user?.role !== 'faculty';
+            const hasActivityAccess = (item.label === 'Create Activity') && isCoordinator;
 
-          if (!user || !(hasRoleAccess || hasCoordinatorAccess || hasActivityAccess)) {
-            return null;
-          }
+            if (!user || !(hasRoleAccess || hasCoordinatorAccess || hasActivityAccess)) {
+              return null;
+            }
 
-          return (
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 text-sm ${pathname === item.href
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
+                  }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Settings at Bottom */}
+        {user && settingsItem.roles.includes(user.role) && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 text-sm ${pathname === item.href
+              href={settingsItem.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 text-sm ${pathname === settingsItem.href
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
                 }`}
             >
-              {item.icon}
-              <span>{item.label}</span>
+              {settingsItem.icon}
+              <span>{settingsItem.label}</span>
             </Link>
-          );
-        })}
-      </div>
-
-      {/* Settings at Bottom */}
-      {user && settingsItem.roles.includes(user.role) && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <Link
-            href={settingsItem.href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 text-sm ${pathname === settingsItem.href
-              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
-              }`}
-          >
-            {settingsItem.icon}
-            <span>{settingsItem.label}</span>
-          </Link>
-        </div>
-      )}
-    </aside>
+          </div>
+        )}
+      </aside>
+    </>
   );
 }

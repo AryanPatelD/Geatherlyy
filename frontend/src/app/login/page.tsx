@@ -394,7 +394,7 @@ export default function LoginPage() {
 
             {!isRegister && (
               <div className="text-center">
-                <a href="#" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                <a href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                   Forgot your password?
                 </a>
               </div>

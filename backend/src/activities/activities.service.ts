@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Activity, Prisma, UserRole, ActivityType, ActivityStatus } from '@prisma/client';
+import { NotificationService } from '../common/mailer/notification.service';
 
 @Injectable()
 export class ActivitiesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async create(data: Prisma.ActivityCreateInput): Promise<Activity> {
-    return this.prisma.activity.create({
+    const activity = await this.prisma.activity.create({
       data,
       include: {
         club: {
@@ -19,6 +23,45 @@ export class ActivitiesService {
         },
       },
     });
+
+    // Notify all club members about the new activity
+    // Fire and forget - don't await to avoid blocking response
+    this.notifyClubMembersAboutActivity(activity);
+
+    return activity;
+  }
+
+  /**
+   * Notify all club members about a new activity
+   */
+  private async notifyClubMembersAboutActivity(activity: any): Promise<void> {
+    try {
+      const clubMembers = await this.prisma.clubMember.findMany({
+        where: { clubId: activity.clubId },
+        include: {
+          user: {
+            select: { name: true, email: true }
+          }
+        }
+      });
+
+      for (const member of clubMembers) {
+        this.notificationService.sendActivityNotification({
+          userName: member.user.name,
+          userEmail: member.user.email,
+          clubName: activity.club?.name || 'Your Club',
+          clubId: activity.clubId,
+          activityTitle: activity.title,
+          activityDate: activity.startDate,
+          activityLocation: activity.location,
+          activityType: activity.type,
+          additionalMessage: activity.description,
+        });
+      }
+    } catch (error) {
+      // Log error but don't fail the activity creation
+      console.error('Failed to send activity notifications:', error);
+    }
   }
 
   async findAll(filters?: {

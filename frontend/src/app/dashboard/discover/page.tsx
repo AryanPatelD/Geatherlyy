@@ -110,7 +110,7 @@ export default function DiscoverPage() {
   const isUserMember = (clubId: number) => myClubs.some(c => c.id === clubId);
 
   return (
-    <div className="p-8 bg-gradient-to-br from-background via-background to-muted-bg/30 min-h-screen">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-background via-background to-muted-bg/30 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">

@@ -76,3 +76,28 @@ temp/
 .turbo
 *.tsbuildinfo
 next-env.d.ts
+
+# Sensitive/Credentials
+FACULTY_CREDENTIALS.md
+*_CREDENTIALS.md
+*.credentials
+
+# Test/Debug scripts (keep these locally but not in git)
+check_*.ts
+repro_*.ts
+reset_*.ts
+*-test-*.ts
+concurrency_test.ts
+
+# Temporary images
+*.jpeg
+*.png
+!public/**/*.jpeg
+!public/**/*.png
+!frontend/public/**/*.jpeg
+!frontend/public/**/*.png
+
+# Report files (optional - remove if you want them tracked)
+# LOAD_TEST_REPORT.md
+# security_report.md
+# verification_report.md

@@ -203,18 +203,18 @@ export default function DashboardPage() {
     <div className="p-8 bg-background min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Available Clubs</h1>
-            <p className="text-muted-text">
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">Available Clubs</h1>
+            <p className="text-sm md:text-base text-muted-text">
               {stats.availableClubs} clubs available, {stats.joinedClubs} clubs joined
             </p>
           </div>
           {user && ['faculty', 'admin'].includes(user.role) && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <button 
                 onClick={() => router.push('/dashboard/create-club')}
-                className="px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+                className="w-full md:w-auto px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
               >
                 <PlusIcon className="w-4 h-4" />
                 New Clubs
@@ -259,10 +259,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-6 border-b border-border">
+        <div className="flex items-center gap-4 md:gap-6 border-b border-border overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('all')}
-            className={`pb-3 px-2 font-medium transition-colors relative ${
+            className={`pb-3 px-2 font-medium transition-colors relative whitespace-nowrap ${
               activeTab === 'all'
                 ? 'text-primary'
                 : 'text-muted-text hover:text-foreground'
@@ -275,7 +275,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('my-clubs')}
-            className={`pb-3 px-2 font-medium transition-colors relative ${
+            className={`pb-3 px-2 font-medium transition-colors relative whitespace-nowrap ${
               activeTab === 'my-clubs'
                 ? 'text-primary'
                 : 'text-muted-text hover:text-foreground'
@@ -288,7 +288,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`pb-3 px-2 font-medium transition-colors relative ${
+            className={`pb-3 px-2 font-medium transition-colors relative whitespace-nowrap ${
               activeTab === 'pending'
                 ? 'text-primary'
                 : 'text-muted-text hover:text-foreground'
