@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 export default function ClubDetailPage({
@@ -168,14 +169,14 @@ export default function ClubDetailPage({
           setClub(data);
         }
         
-        alert('Successfully joined the club!');
+        toast.success('Successfully joined the club!');
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to join club');
+        toast.error(errorData.message || 'Failed to join club');
       }
     } catch (error) {
       console.error('Error joining club:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setJoiningClub(false);
     }
@@ -183,7 +184,7 @@ export default function ClubDetailPage({
 
   const handleApplyAsCoordinator = async () => {
     if (!coordinatorReason.trim()) {
-      alert('Please provide a reason for your application');
+      toast.error('Please provide a reason for your application');
       return;
     }
 
@@ -201,16 +202,16 @@ export default function ClubDetailPage({
       });
 
       if (response.ok) {
-        alert('Your coordinator application has been submitted! Wait for admin/faculty approval.');
+        toast.success('Your coordinator application has been submitted! Wait for admin/faculty approval.');
         setShowCoordinatorModal(false);
         setCoordinatorReason('');
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to apply as coordinator');
+        toast.error(errorData.message || 'Failed to apply as coordinator');
       }
     } catch (error) {
       console.error('Error applying as coordinator:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setApplyingCoordinator(false);
     }
@@ -233,16 +234,16 @@ export default function ClubDetailPage({
       });
 
       if (response.ok) {
-        alert('You have successfully left the club.');
+        toast.success('You have successfully left the club.');
         // Refresh to update UI
         window.location.reload();
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to leave club');
+        toast.error(error.message || 'Failed to leave club');
       }
     } catch (error) {
       console.error('Error leaving club:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLeavingClub(false);
       setShowLeaveModal(false);
@@ -384,7 +385,7 @@ export default function ClubDetailPage({
               if (tab.id === 'overview' || isUserMember || isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY') {
                 setActiveTab(tab.id);
               } else {
-                alert('Join the club to access this section!');
+                toast.error('Join the club to access this section!');
               }
             }}
             className={`pb-4 px-2 font-medium transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${

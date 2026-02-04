@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { getApiUrl } from '@/lib/apiUrl';
 import { LockClosedIcon, EnvelopeClosedIcon, PersonIcon, EyeOpenIcon, EyeNoneIcon } from '@radix-ui/react-icons';
-import JSEncrypt from 'jsencrypt';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,14 +23,65 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
 
-  const encryptPassword = (password: string) => {
-    const publicKey = process.env.NEXT_PUBLIC_RSA_PUBLIC_KEY;
-    if (!publicKey) return password;
+  // Helper to import PEM public key
+  const importPublicKey = async (pem: string) => {
+    // 1. Decode base64 to get the original PEM string
+    const pemString = atob(pem);
     
-    const encrypt = new JSEncrypt();
-    encrypt.setPublicKey(Buffer.from(publicKey, 'base64').toString('utf-8'));
-    const encrypted = encrypt.encrypt(password);
-    return encrypted || password;
+    // 2. Remove headers/footers and newlines to get the base64 body
+    const pemBody = pemString
+      .replace(/-----BEGIN PUBLIC KEY-----/g, '')
+      .replace(/-----END PUBLIC KEY-----/g, '')
+      .replace(/\s/g, '');
+      
+    // 3. Decode base64 body to binary string
+    const binaryDerString = atob(pemBody);
+    
+    // 4. Convert binary string to ArrayBuffer
+    const binaryDer = new Uint8Array(binaryDerString.length);
+    for (let i = 0; i < binaryDerString.length; i++) {
+        binaryDer[i] = binaryDerString.charCodeAt(i);
+    }
+
+    return window.crypto.subtle.importKey(
+      "spki",
+      binaryDer.buffer,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      false,
+      ["encrypt"]
+    );
+  };
+
+  const encryptPassword = async (password: string) => {
+    const publicKeyBase64 = process.env.NEXT_PUBLIC_RSA_PUBLIC_KEY;
+    if (!publicKeyBase64) return password;
+    
+    try {
+        const key = await importPublicKey(publicKeyBase64);
+        const encoded = new TextEncoder().encode(password);
+        
+        const encrypted = await window.crypto.subtle.encrypt(
+            {
+                name: "RSA-OAEP",
+            },
+            key,
+            encoded
+        );
+        
+        // Convert ArrayBuffer to Base64
+        const encryptedArray = new Uint8Array(encrypted);
+        let binaryString = '';
+        for (let i = 0; i < encryptedArray.length; i++) {
+            binaryString += String.fromCharCode(encryptedArray[i]);
+        }
+        return btoa(binaryString);
+    } catch (e) {
+        console.error("Encryption error:", e);
+        return password; // Fallback (though backend will likely fail if expecting encrypted)
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -46,7 +96,9 @@ export default function LoginPage() {
     
     try {
       const apiUrl = getApiUrl();
-      const encryptedPassword = encryptPassword(formData.password);
+      // Ensure we await encryption now
+      const encryptedPassword = await encryptPassword(formData.password);
+      
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {

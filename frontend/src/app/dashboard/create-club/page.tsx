@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { PlusIcon, ImageIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/context/AuthContext';
 import { getApiUrl } from '@/lib/apiUrl';
 
@@ -164,7 +165,7 @@ export default function CreateClubPage() {
         throw new Error(data.message || 'Failed to create club');
       }
 
-      alert('Club created successfully! It is now pending approval.');
+      toast.success('Club created successfully! It is now pending approval.');
       router.push('/dashboard/manage'); // Redirect to manage or clubs list
     } catch (error: any) {
       console.error('Failed to create club:', error);

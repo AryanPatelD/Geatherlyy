@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trophy, Medal, Award, Users, TrendingUp, Target } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/context/AuthContext';
 import { getApiUrl } from '@/lib/apiUrl';
 
@@ -134,7 +135,7 @@ export default function LeaderboardPage() {
       }
     } catch (error) {
       console.error('Failed to export global leaderboard:', error);
-      alert('Failed to export leaderboard');
+      toast.error('Failed to export leaderboard');
     }
   };
 
@@ -162,7 +163,7 @@ export default function LeaderboardPage() {
       }
     } catch (error) {
       console.error('Failed to export club leaderboard:', error);
-      alert('Failed to export leaderboard');
+      toast.error('Failed to export leaderboard');
     }
   };
 

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/apiUrl';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -40,7 +41,8 @@ function ResetPasswordForm() {
     setMessage(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/reset-password`, {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { PlusIcon, TrashIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 interface Question {
@@ -124,15 +125,15 @@ export default function CreateQuizPage({ searchParams }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.clubId) {
-        alert('Please select a club');
+        toast.error('Please select a club');
         return;
     }
 
     // Validate questions
     for (const q of questions) {
-        if (!q.text) { alert('All questions must have text'); return; }
+        if (!q.text) { toast.error('All questions must have text'); return; }
         if (q.type === 'multiple' && (q.correctAnswer as number[]).length === 0) {
-            alert('Multiple choice questions must have at least one correct answer'); return;
+            toast.error('Multiple choice questions must have at least one correct answer'); return;
         }
     }
 
@@ -157,15 +158,15 @@ export default function CreateQuizPage({ searchParams }: Props) {
       });
 
       if (response.ok) {
-        alert('Quiz created successfully!');
+        toast.success('Quiz created successfully!');
         router.back();
       } else {
         const err = await response.json();
-        alert(`Failed: ${err.message || 'Unknown error'}`);
+        toast.error(`Failed: ${err.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error creating quiz:', error);
-      alert('Error creating quiz');
+      toast.error('Error creating quiz');
     }
   };
 
@@ -290,11 +291,11 @@ export default function CreateQuizPage({ searchParams }: Props) {
                                               const data = await res.json();
                                               handleQuestionChange(qIndex, 'image', data.url);
                                             } else {
-                                                alert('Image upload failed');
+                                                toast.error('Image upload failed');
                                             }
                                           } catch (err) {
                                               console.error(err);
-                                              alert('Image upload error');
+                                              toast.error('Image upload error');
                                           }
                                         }
                                       }}

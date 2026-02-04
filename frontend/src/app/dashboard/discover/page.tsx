@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 export default function DiscoverPage() {
@@ -91,11 +92,11 @@ export default function DiscoverPage() {
         router.push(`/dashboard/clubs/${clubId}`);
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to join club');
+        toast.error(errorData.message || 'Failed to join club');
       }
     } catch (error) {
       console.error('Failed to join club:', error);
-      alert('Failed to join club. Please try again.');
+      toast.error('Failed to join club. Please try again.');
     } finally {
       setJoiningClubId(null);
     }

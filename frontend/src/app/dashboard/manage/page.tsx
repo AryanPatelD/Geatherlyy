@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
+import { TrashIcon, Pencil1Icon, PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { apiUrl } from '@/lib/apiUrl';
 import { getApiUrl } from '@/lib/apiUrl';
 import { toast } from 'sonner';
@@ -952,12 +953,12 @@ function ManageClubContent() {
                               const { url } = await response.json();
                               setCurrentQuestion({...currentQuestion, image: url});
                             } else {
-                              alert('Failed to upload image');
+                              toast.error('Failed to upload image');
                               setCurrentQuestion({...currentQuestion, image: null});
                             }
                           } catch (error) {
                             console.error('Error uploading image:', error);
-                            alert('Error uploading image');
+                            toast.error('Error uploading image');
                             setCurrentQuestion({...currentQuestion, image: null});
                           }
                         }
@@ -1019,7 +1020,7 @@ function ManageClubContent() {
                           image: null,
                         });
                       } else {
-                        alert('Please fill in the question and all options');
+                        toast.error('Please fill in the question and all options');
                       }
                     }}
                     className="btn btn-outline w-full"

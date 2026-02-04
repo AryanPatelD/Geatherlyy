@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 export default function ApprovalsPage() {
@@ -110,9 +111,9 @@ export default function ApprovalsPage() {
       
       if (response.ok) {
         setRemovalRequests(removalRequests.filter(r => r.id !== id));
-        alert(`Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`);
+        toast.success(`Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`);
       } else {
-        alert('Failed to review request');
+        toast.error('Failed to review request');
       }
     } catch (error) {
       console.error('Failed to review removal request:', error);

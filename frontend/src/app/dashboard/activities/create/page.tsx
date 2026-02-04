@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { CalendarIcon, ClockIcon, PlusIcon } from '@radix-ui/react-icons';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 export default function CreateActivityPage() {
@@ -54,8 +55,10 @@ export default function CreateActivityPage() {
     e.preventDefault();
 
     if (!formData.clubId) {
-      alert('Please select a club');
+    if (!formData.clubId) {
+      toast.error('Please select a club');
       return;
+    }
     }
 
     try {
@@ -81,11 +84,11 @@ export default function CreateActivityPage() {
         throw new Error('Failed to create activity');
       }
 
-      alert('Activity created successfully!');
+      toast.success('Activity created successfully!');
       router.push('/dashboard/manage');
     } catch (error) {
       console.error('Error creating activity:', error);
-      alert('Failed to create activity. Please try again.');
+      toast.error('Failed to create activity. Please try again.');
     }
   };
 

@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiUrl';
 
 export default function AnalyticsPage() {
@@ -33,6 +34,7 @@ export default function AnalyticsPage() {
         }
       } catch (error) {
         console.error('Failed to fetch analytics:', error);
+        toast.error('Failed to load analytics data');
       } finally {
         setLoading(false);
       }
@@ -67,7 +69,7 @@ export default function AnalyticsPage() {
       <h1 className="text-3xl font-bold mb-6">Platform Analytics</h1>
 
       {/* Key Metrics */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
+      <div className="grid md:grid-cols-5 gap-4 mb-6">
         <div className="card">
           <p className="text-muted-text text-sm">Total Users</p>
           <p className="text-3xl font-bold text-primary">{analytics?.totalUsers || 0}</p>
@@ -82,6 +84,11 @@ export default function AnalyticsPage() {
           <p className="text-muted-text text-sm">Total Activities</p>
           <p className="text-3xl font-bold text-primary">{analytics?.totalActivities || 0}</p>
           <p className="text-xs text-muted-text mt-2">Avg attendance: {analytics?.avgAttendance || 0}%</p>
+        </div>
+        <div className="card">
+          <p className="text-muted-text text-sm">Pending Clubs</p>
+          <p className="text-3xl font-bold text-orange-500">{analytics?.pendingClubs || 0}</p>
+          <p className="text-xs text-muted-text mt-2">Awaiting approval</p>
         </div>
         <div className="card">
           <p className="text-muted-text text-sm">Engagement Rate</p>

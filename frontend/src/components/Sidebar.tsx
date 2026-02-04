@@ -106,7 +106,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               <span className="text-white font-bold text-lg">G</span>
             </div>
             <div>
-              <h2 className="font-bold text-base text-gray-900 dark:text-white">Gatherly</h2>
+              <h2 className="font-bold text-base text-gray-900 dark:text-white">Geatherlyy</h2>
             </div>
           </div>
           <button 

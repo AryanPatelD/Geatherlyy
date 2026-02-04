@@ -3,7 +3,7 @@ import { Providers } from '@/components/Providers';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Gatherly - Club Management',
+  title: 'Geatherlyy - Club Management',
   description: 'Centralized Club Management System',
 };
 

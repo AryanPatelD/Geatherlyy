@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/context/AuthContext';
 import { getApiUrl } from '@/lib/apiUrl';
 
@@ -67,7 +68,7 @@ export default function QuizPage({
         setTimeLeft(data.timeLimit * 60);
       } catch (error) {
         console.error('Error fetching quiz:', error);
-        alert('Failed to load quiz. Please try again.');
+        toast.error('Failed to load quiz. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -95,10 +96,10 @@ export default function QuizPage({
         setCheatingWarnings(prev => {
           const newCount = prev + 1;
           if (newCount >= 3) {
-            alert('Multiple fullscreen exits detected. Quiz will be auto-submitted.');
+            toast.error('Multiple fullscreen exits detected. Quiz will be auto-submitted.');
             handleSubmit();
           } else {
-            alert(`Warning ${newCount}/3: Please stay in fullscreen mode. Exiting fullscreen is considered cheating.`);
+            toast.warning(`Warning ${newCount}/3: Please stay in fullscreen mode. Exiting fullscreen is considered cheating.`);
             enterFullscreen();
           }
           return newCount;
@@ -111,10 +112,10 @@ export default function QuizPage({
         setCheatingWarnings(prev => {
           const newCount = prev + 1;
           if (newCount >= 3) {
-            alert('Multiple tab switches detected. Quiz will be auto-submitted.');
+            toast.error('Multiple tab switches detected. Quiz will be auto-submitted.');
             handleSubmit();
           } else {
-            alert(`Warning ${newCount}/3: Tab switching is not allowed during the quiz.`);
+            toast.warning(`Warning ${newCount}/3: Tab switching is not allowed during the quiz.`);
           }
           return newCount;
         });
@@ -126,7 +127,7 @@ export default function QuizPage({
         setCheatingWarnings(prev => {
           const newCount = prev + 1;
           if (newCount >= 2) {
-            alert('Multiple focus changes detected. Quiz will be auto-submitted.');
+            toast.error('Multiple focus changes detected. Quiz will be auto-submitted.');
             handleSubmit();
           }
           return newCount;
@@ -156,7 +157,7 @@ export default function QuizPage({
         (e.metaKey && e.altKey && e.key === 'i') // Mac DevTools
       ) {
         e.preventDefault();
-        alert('This action is not allowed during the quiz.');
+        toast.warning('This action is not allowed during the quiz.');
       }
     };
     document.addEventListener('keydown', preventShortcuts);
@@ -255,7 +256,7 @@ export default function QuizPage({
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
-      alert('Failed to submit quiz. Please try again.');
+      toast.error('Failed to submit quiz. Please try again.');
       setSubmitting(false);
     }
   };
