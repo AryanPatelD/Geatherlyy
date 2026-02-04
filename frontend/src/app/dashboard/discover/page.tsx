@@ -112,12 +112,12 @@ export default function DiscoverPage() {
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-background via-background to-muted-bg/30 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Discover Clubs 🔍
           </h1>
-          <p className="text-muted-text">Find and join clubs that match your interests</p>
+          <p className="text-muted-text text-sm md:text-base">Find and join clubs that match your interests</p>
         </div>
 
         <div className="card">
@@ -159,7 +159,7 @@ export default function DiscoverPage() {
                   </div>
                   <div className="absolute bottom-4 left-4 text-white font-semibold flex items-center gap-2 z-10">
                     <span>👥</span>
-                    <span>{club.memberCount || 0} members</span>
+                    <span>{club._count?.members ?? club.memberCount ?? 0} members</span>
                   </div>
                 </div>
 

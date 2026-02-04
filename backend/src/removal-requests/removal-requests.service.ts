@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotificationService } from '../common/notifications/notification.service';
+import { NotificationService } from '../common/mailer/notification.service';
 import { ClubMemberRemovalRequest, Prisma, RemovalApprovalStatus, UserRole } from '@prisma/client';
 
 @Injectable()

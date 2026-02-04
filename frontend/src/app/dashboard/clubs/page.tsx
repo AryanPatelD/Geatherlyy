@@ -74,7 +74,7 @@ export default function ClubsPage() {
                 <span className="text-muted-text">Mentor:</span> {club.mentor?.name || 'N/A'}
               </p>
               <p>
-                <span className="text-muted-text">Members:</span> {club.memberCount || club._count?.members || 0}
+                <span className="text-muted-text">Members:</span> {club._count?.members ?? club.memberCount ?? 0}
               </p>
             </div>
             <div className="flex gap-2 mt-4">

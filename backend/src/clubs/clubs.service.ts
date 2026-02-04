@@ -219,12 +219,19 @@ export class ClubsService {
     skip?: number;
     take?: number;
   }): Promise<Club[]> {
-    // Disable caching for now
-    // const cacheKey = `clubs:all:${JSON.stringify(filters || {})}`;
-    // const cached = await this.redis.getClubData(cacheKey);
-    // if (cached) {
-    //   return cached as Club[];
-    // }
+    // Enable caching for better performance
+    const cacheKey = `clubs:all:${JSON.stringify(filters || {})}`;
+    
+    // Try to get from cache first
+    try {
+      const cached = await this.redis.getClubData(cacheKey);
+      if (cached) {
+        return cached as Club[];
+      }
+    } catch (error) {
+      // Continue without cache if Redis fails
+      console.warn('Redis cache read failed:', error);
+    }
 
     const where: Prisma.ClubWhereInput = {};
 
@@ -268,8 +275,13 @@ export class ClubsService {
       },
     });
 
-    // Disable caching for now
-    // await this.redis.setClubData(cacheKey, clubs);
+    // Cache results for 60 seconds
+    try {
+      await this.redis.setClubData(cacheKey, clubs, 60);
+    } catch (error) {
+      // Continue without caching if Redis fails
+      console.warn('Redis cache write failed:', error);
+    }
 
     return clubs;
   }

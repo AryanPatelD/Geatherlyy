@@ -52,11 +52,11 @@ body {
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base;
   }
   
   .btn-primary {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base;
     background-color: var(--primary);
     color: white;
   }
@@ -66,7 +66,7 @@ body {
   }
   
   .btn-secondary {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base;
     background-color: var(--secondary);
     color: white;
   }
@@ -76,7 +76,7 @@ body {
   }
   
   .btn-outline {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base;
     border: 1px solid var(--primary);
     color: var(--primary);
   }
@@ -87,7 +87,7 @@ body {
   }
   
   .card {
-    @apply rounded-xl p-6 transition-all duration-300;
+    @apply rounded-xl p-4 md:p-6 transition-all duration-300;
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -165,6 +165,28 @@ body {
 .backdrop-blur-sm {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Show scrollbar on medium screens and up */
+@media (min-width: 768px) {
+  .md\:scrollbar-default {
+    -ms-overflow-style: auto;
+    scrollbar-width: auto;
+  }
+  .md\:scrollbar-default::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
 }
 
 /* Custom scrollbar */

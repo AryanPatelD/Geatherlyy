@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
-import { NotificationService } from '../common/notifications/notification.service';
+import { NotificationService } from '../common/mailer/notification.service';
 import { ApprovalRequest, Prisma, ApprovalStatus, UserRole } from '@prisma/client';
 
 @Injectable()
@@ -34,6 +34,8 @@ export class ApprovalsService {
     requestedRole?: UserRole;
     skip?: number;
     take?: number;
+    facultyUserId?: number; // For mentor filtering
+    isAdmin?: boolean; // Admin can see all
   }): Promise<ApprovalRequest[]> {
     const where: Prisma.ApprovalRequestWhereInput = {};
 
@@ -43,6 +45,32 @@ export class ApprovalsService {
 
     if (filters?.requestedRole) {
       where.requestedRole = filters.requestedRole;
+    }
+
+    // If faculty user is provided and not admin, filter to show only their mentored clubs' requests
+    if (filters?.facultyUserId && !filters?.isAdmin) {
+      // Get clubs where this faculty is a mentor
+      const mentoredClubs = await this.prisma.club.findMany({
+        where: {
+          mentors: {
+            some: {
+              id: filters.facultyUserId,
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      const mentoredClubIds = mentoredClubs.map(club => club.id);
+
+      // For coordinator requests, only show requests for clubs where this faculty is a mentor
+      // For other requests (non-club related), only admin should see them
+      where.OR = [
+        {
+          requestedRole: UserRole.COORDINATOR,
+          clubId: { in: mentoredClubIds },
+        },
+      ];
     }
 
     return this.prisma.approvalRequest.findMany({
@@ -182,11 +210,25 @@ export class ApprovalsService {
     requestId: number,
     reviewerId: number,
     status: ApprovalStatus,
+    isAdmin: boolean = false,
   ): Promise<ApprovalRequest> {
     const request = await this.findById(requestId);
 
     if (request.status !== ApprovalStatus.PENDING) {
       throw new BadRequestException('This request has already been reviewed');
+    }
+
+    // If not admin and this is a coordinator request, verify the faculty is a mentor of the club
+    if (!isAdmin && request.requestedRole === UserRole.COORDINATOR && request.clubId) {
+      const isMentor = await this.isMentorOfClub(reviewerId, request.clubId);
+      if (!isMentor) {
+        throw new ForbiddenException('You can only review coordinator requests for clubs you mentor');
+      }
+    }
+
+    // If not admin and this is NOT a coordinator request, only admin can review
+    if (!isAdmin && request.requestedRole !== UserRole.COORDINATOR) {
+      throw new ForbiddenException('Only administrators can review non-coordinator role requests');
     }
 
     // Update request
@@ -260,9 +302,11 @@ export class ApprovalsService {
     }
   }
 
-  async getPendingRequests(): Promise<ApprovalRequest[]> {
+  async getPendingRequests(facultyUserId?: number, isAdmin?: boolean): Promise<ApprovalRequest[]> {
     return this.findAll({
       status: ApprovalStatus.PENDING,
+      facultyUserId,
+      isAdmin,
     });
   }
 
@@ -284,16 +328,39 @@ export class ApprovalsService {
     });
   }
 
-  async getApprovalStats(): Promise<any> {
+  async getApprovalStats(facultyUserId?: number, isAdmin?: boolean): Promise<any> {
+    let whereClause: Prisma.ApprovalRequestWhereInput = {};
+
+    // If faculty user and not admin, only count requests for their mentored clubs
+    if (facultyUserId && !isAdmin) {
+      const mentoredClubs = await this.prisma.club.findMany({
+        where: {
+          mentors: {
+            some: {
+              id: facultyUserId,
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      const mentoredClubIds = mentoredClubs.map(club => club.id);
+      
+      whereClause = {
+        requestedRole: UserRole.COORDINATOR,
+        clubId: { in: mentoredClubIds },
+      };
+    }
+
     const [pending, approved, rejected] = await this.prisma.$transaction([
       this.prisma.approvalRequest.count({
-        where: { status: ApprovalStatus.PENDING },
+        where: { ...whereClause, status: ApprovalStatus.PENDING },
       }),
       this.prisma.approvalRequest.count({
-        where: { status: ApprovalStatus.APPROVED },
+        where: { ...whereClause, status: ApprovalStatus.APPROVED },
       }),
       this.prisma.approvalRequest.count({
-        where: { status: ApprovalStatus.REJECTED },
+        where: { ...whereClause, status: ApprovalStatus.REJECTED },
       }),
     ]);
 
@@ -303,6 +370,23 @@ export class ApprovalsService {
       rejected,
       total: pending + approved + rejected,
     };
+  }
+
+  /**
+   * Check if a faculty member is a mentor of the club associated with the request
+   */
+  async isMentorOfClub(facultyUserId: number, clubId: number): Promise<boolean> {
+    const club = await this.prisma.club.findFirst({
+      where: {
+        id: clubId,
+        mentors: {
+          some: {
+            id: facultyUserId,
+          },
+        },
+      },
+    });
+    return !!club;
   }
 }
 

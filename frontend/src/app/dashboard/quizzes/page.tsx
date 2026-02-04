@@ -46,9 +46,9 @@ export default function QuizzesPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Available Quizzes</h1>
+    <div className="p-4 md:p-8">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Available Quizzes</h1>
         <p className="text-muted-text">Test your knowledge with our quizzes</p>
       </div>
 

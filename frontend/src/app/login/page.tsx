@@ -211,7 +211,7 @@ export default function LoginPage() {
             <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
               <span className="text-2xl font-bold">G</span>
             </div>
-            <span className="text-2xl font-bold">Gatherly</span>
+            <span className="text-2xl font-bold">Geatherlyy</span>
           </div>
 
           <div className="mb-12">
@@ -247,23 +247,23 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-white/60 text-sm">
-          © 2026 Gatherly. All rights reserved.
+          © 2026 Geatherlyy. All rights reserved.
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900">
-        <div className="w-full max-w-md space-y-8">
-          <div className="lg:hidden text-center mb-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
+        <div className="w-full max-w-md space-y-6 md:space-y-8">
+          <div className="lg:hidden text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-2">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
                 <span className="text-white font-bold text-xl">G</span>
               </div>
-              <h1 className="text-2xl font-bold">Gatherly</h1>
+              <h1 className="text-2xl font-bold">Geatherlyy</h1>
             </div>
           </div>
 
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {isRegister ? 'Create Account' : 'Welcome Back'}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">

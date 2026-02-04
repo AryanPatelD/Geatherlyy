@@ -34,7 +34,7 @@ export default function CoordinatorsPage() {
           setClubs(data);
           
           // Calculate stats
-          const totalMembers = data.reduce((sum: number, club: any) => sum + (club.memberCount || 0), 0);
+          const totalMembers = data.reduce((sum: number, club: any) => sum + (club._count?.members ?? club.memberCount ?? 0), 0);
           const upcomingActivities = data.reduce((sum: number, club: any) => 
             sum + (club.activities?.filter((a: any) => new Date(a.startDate) > new Date()).length || 0), 0
           );
@@ -93,8 +93,8 @@ export default function CoordinatorsPage() {
   }
 
   return (
-    <div className="p-8 bg-background min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 bg-background min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
@@ -204,7 +204,7 @@ export default function CoordinatorsPage() {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-1 text-muted-text">
                         <PersonIcon className="w-4 h-4" />
-                        <span>{club.memberCount || 0} members</span>
+                        <span>{club._count?.members ?? club.memberCount ?? 0} members</span>
                       </div>
                       <div className="flex items-center gap-1 text-muted-text">
                         <CalendarIcon className="w-4 h-4" />

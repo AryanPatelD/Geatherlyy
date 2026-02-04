@@ -29,11 +29,11 @@ export default function DashboardLayout({
   }, [user, initialized, router, pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden w-full max-w-[100vw]">
+    <div className="flex h-screen w-full max-w-[100vw] overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="flex flex-col flex-1 w-full overflow-x-hidden">
+      <div className="flex flex-col flex-1 w-full min-w-0 overflow-hidden">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 w-full p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto scrollbar-hide md:scrollbar-default bg-gray-50 dark:bg-gray-900 w-full p-4 md:p-6">
           <ChangePasswordModal />
           <div className="max-w-7xl mx-auto w-full">
             {children}

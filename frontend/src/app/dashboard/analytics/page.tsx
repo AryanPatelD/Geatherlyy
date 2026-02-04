@@ -65,11 +65,11 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Platform Analytics</h1>
+    <div className="p-4 md:p-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Platform Analytics</h1>
 
       {/* Key Metrics */}
-      <div className="grid md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
         <div className="card">
           <p className="text-muted-text text-sm">Total Users</p>
           <p className="text-3xl font-bold text-primary">{analytics?.totalUsers || 0}</p>

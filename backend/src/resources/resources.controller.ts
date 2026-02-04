@@ -109,14 +109,26 @@ export class ResourcesController {
     // If file is uploaded, use Cloudinary
     if (file) {
       try {
-        // Use 'raw' resource_type for non-image/video files like ZIP
+        // Use 'raw' resource_type for non-image/video files like ZIP, PDF
         const isImage = file.mimetype.startsWith('image/');
-        console.log('Uploading to Cloudinary... isImage:', isImage);
+        const isPdfOrZip = file.mimetype === 'application/pdf' || 
+                           file.mimetype.includes('zip') || 
+                           file.mimetype.includes('compressed');
+        
+        // Determine resource type for Cloudinary
+        let resourceType: 'image' | 'raw' | 'auto' = 'auto';
+        if (isImage) {
+          resourceType = 'image';
+        } else if (isPdfOrZip) {
+          resourceType = 'raw';
+        }
+        
+        console.log('Uploading to Cloudinary... resourceType:', resourceType, 'mimetype:', file.mimetype);
         
         const uploadResult = await this.resourcesService['cloudinary'].uploadFile(
           file, 
           'gatherly/resources', 
-          isImage ? 'image' : 'auto' 
+          resourceType 
         );
         
         console.log('Cloudinary Result:', uploadResult);

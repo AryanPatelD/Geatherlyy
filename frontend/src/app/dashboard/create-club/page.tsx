@@ -176,8 +176,8 @@ export default function CreateClubPage() {
   };
 
   return (
-    <div className="p-8 bg-background min-h-screen">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 bg-background min-h-screen">
+      <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold mb-2">Create New Club</h1>

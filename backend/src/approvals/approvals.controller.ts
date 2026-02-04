@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ApprovalsService } from './approvals.service';
@@ -27,38 +28,44 @@ export class ApprovalsController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get all approval requests (Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Get all approval requests (Faculty/Admin only - Faculty only sees clubs they mentor)' })
   @ApiResponse({ status: 200, description: 'Returns list of approval requests' })
   async getAllRequests(
     @Query('status') status?: ApprovalStatus,
     @Query('requestedRole') requestedRole?: UserRole,
     @Query('skip') skip?: number,
     @Query('take') take?: number,
+    @Request() req?,
   ) {
+    const isAdmin = req?.user?.role === UserRole.ADMIN;
     return this.approvalsService.findAll({
       status,
       requestedRole,
       skip: skip ? parseInt(skip.toString()) : undefined,
       take: take ? parseInt(take.toString()) : undefined,
+      facultyUserId: req?.user?.id,
+      isAdmin,
     });
   }
 
   @Get('pending')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get pending approval requests (Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Get pending approval requests (Faculty/Admin only - Faculty only sees clubs they mentor)' })
   @ApiResponse({ status: 200, description: 'Returns pending requests' })
-  async getPendingRequests() {
-    return this.approvalsService.getPendingRequests();
+  async getPendingRequests(@Request() req) {
+    const isAdmin = req?.user?.role === UserRole.ADMIN;
+    return this.approvalsService.getPendingRequests(req?.user?.id, isAdmin);
   }
 
   @Get('stats')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get approval statistics (Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Get approval statistics (Faculty/Admin only - Faculty only sees stats for clubs they mentor)' })
   @ApiResponse({ status: 200, description: 'Returns approval statistics' })
-  async getApprovalStats() {
-    return this.approvalsService.getApprovalStats();
+  async getApprovalStats(@Request() req) {
+    const isAdmin = req?.user?.role === UserRole.ADMIN;
+    return this.approvalsService.getApprovalStats(req?.user?.id, isAdmin);
   }
 
   @Get('my-requests')
@@ -104,14 +111,16 @@ export class ApprovalsController {
   @Put(':id/review')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Review approval request (Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Review approval request (Faculty can only review for clubs they mentor)' })
   @ApiResponse({ status: 200, description: 'Request reviewed successfully' })
+  @ApiResponse({ status: 403, description: 'Faculty can only review requests for clubs they mentor' })
   async reviewRequest(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: ApprovalStatus,
     @Request() req,
   ) {
-    return this.approvalsService.reviewRequest(id, req.user.id, status);
+    const isAdmin = req.user.role === UserRole.ADMIN;
+    return this.approvalsService.reviewRequest(id, req.user.id, status, isAdmin);
   }
 }
 

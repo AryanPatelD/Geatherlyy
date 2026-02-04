@@ -538,7 +538,7 @@ function ManageClubContent() {
           { id: 'activities', label: 'Activities' },
           { id: 'quizzes', label: 'Quizzes' },
           { id: 'resources', label: 'Resources' },
-          { id: 'comments', label: 'Comments' },
+          { id: 'comments', label: 'Feedback' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1104,7 +1104,7 @@ function ManageClubContent() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-2xl">{resource.type === 'PDF' ? '📄' : '🖼️'}</span>
+                          <span className="text-2xl">{resource.type === 'PDF' ? '📄' : resource.type === 'ZIP' ? '📦' : '🖼️'}</span>
                           <p className="font-medium">{resource.title}</p>
                         </div>
                         <p className="text-sm text-muted-text mt-1">{resource.description}</p>
@@ -1185,10 +1185,10 @@ function ManageClubContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">File (JPEG or PDF, max 50MB) *</label>
+                <label className="block text-sm font-medium mb-2">File (JPEG, PDF, or ZIP, max 50MB) *</label>
                 <input
                   type="file"
-                  accept=".jpg,.jpeg,.pdf"
+                  accept=".jpg,.jpeg,.pdf,.zip"
                   onChange={(e) => setResourceData({ ...resourceData, file: e.target.files?.[0] || null })}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 />
@@ -1220,10 +1220,10 @@ function ManageClubContent() {
         </div>
       )}
 
-      {/* Comments Tab */}
+      {/* Comments Tab - Now Anonymous Feedback */}
       {activeTab === 'comments' && (
         <div className="card">
-          <h3 className="font-bold mb-4">Comments & Feedback</h3>
+          <h3 className="font-bold mb-4">Anonymous Feedback</h3>
           {loadingComments ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1234,7 +1234,7 @@ function ManageClubContent() {
                 comments.map((comment) => (
                   <div key={comment.id} className="p-3 border border-border rounded">
                     <p className="text-sm text-muted-text font-medium">
-                      {comment.isAnonymous ? 'Anonymous' : comment.user?.name}
+                      Anonymous Feedback
                     </p>
                     <p className="text-sm mt-2">{comment.content}</p>
                     <p className="text-xs text-muted-text mt-2">
@@ -1243,7 +1243,7 @@ function ManageClubContent() {
                   </div>
                 ))
               ) : (
-                <p className="text-center py-8 text-muted-text">No comments yet</p>
+                <p className="text-center py-8 text-muted-text">No feedback yet</p>
               )}
             </div>
           )}

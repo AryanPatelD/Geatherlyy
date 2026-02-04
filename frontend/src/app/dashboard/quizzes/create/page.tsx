@@ -173,13 +173,13 @@ export default function CreateQuizPage({ searchParams }: Props) {
   };
 
   return (
-    <div className="p-8 bg-background min-h-screen">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold">Create New Quiz</h1>
+    <div className="p-4 md:p-8 bg-background min-h-screen">
+      <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Create New Quiz</h1>
         
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
             {/* Quiz Details */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-border space-y-4">
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl border border-border space-y-4">
                 <h2 className="text-xl font-semibold">Quiz Details</h2>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>

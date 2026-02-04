@@ -200,16 +200,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 bg-background min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-1">Available Clubs</h1>
-            <p className="text-sm md:text-base text-muted-text">
-              {stats.availableClubs} clubs available, {stats.joinedClubs} clubs joined
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">Available Clubs</h1>
+          <p className="text-sm md:text-base text-muted-text">
+            {stats.availableClubs} clubs available, {stats.joinedClubs} clubs joined
+          </p>
+        </div>
           {user && ['faculty', 'admin'].includes(user.role) && (
             <div className="flex items-center gap-3 w-full md:w-auto">
               <button 
@@ -224,7 +223,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
           <span className="text-sm font-medium text-muted-text whitespace-nowrap">Filter by:</span>
           <button
             onClick={() => setSelectedCategory('all')}
@@ -381,7 +380,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 text-muted-text">
                     <PersonIcon className="w-4 h-4" />
                     <span className="text-sm">
-                      {club.memberCount || club.members || 0} / {club.maxMembers || 100} Members
+                      {club._count?.members ?? club.memberCount ?? club.members ?? 0} / {club.maxMembers || 100} Members
                     </span>
                   </div>
 
@@ -421,10 +420,10 @@ export default function DashboardPage() {
 
         {/* Club Details Modal */}
         {selectedClub && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedClub(null)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 md:p-4" onClick={() => setSelectedClub(null)}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               {/* Modal Header */}
-              <div className="relative h-48 bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden">
+              <div className="relative h-36 md:h-48 bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden">
                 {selectedClub.imageUrl && (
                   <img
                     src={selectedClub.imageUrl}
@@ -440,7 +439,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                <div className="absolute bottom-6 left-6 z-10">
+                <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 z-10">
                   <div className="flex items-center gap-3 mb-2">
                     <span className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${
                       selectedClub.badge === 'ADMIN' ? 'bg-red-500' :
@@ -449,32 +448,32 @@ export default function DashboardPage() {
                       {selectedClub.badge}
                     </span>
                   </div>
-                  <h2 className="text-3xl font-bold text-white drop-shadow-lg">{selectedClub.name}</h2>
+                  <h2 className="text-xl md:text-3xl font-bold text-white drop-shadow-lg">{selectedClub.name}</h2>
                 </div>
               </div>
 
               {/* Modal Content */}
-              <div className="p-6 space-y-6">
+              <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <PersonIcon className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-2xl font-bold">{selectedClub._count?.members ?? selectedClub.members?.length ?? 0}</p>
-                    <p className="text-sm text-muted-text">Members</p>
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
+                  <div className="text-center p-2 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <PersonIcon className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-1 md:mb-2 text-primary" />
+                    <p className="text-lg md:text-2xl font-bold">{selectedClub._count?.members ?? selectedClub.members?.length ?? 0}</p>
+                    <p className="text-xs md:text-sm text-muted-text">Members</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <svg className="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-center p-2 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-1 md:mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-2xl font-bold">{selectedClub._count?.activities ?? selectedClub.activities?.length ?? 0}</p>
-                    <p className="text-sm text-muted-text">Activities</p>
+                    <p className="text-lg md:text-2xl font-bold">{selectedClub._count?.activities ?? selectedClub.activities?.length ?? 0}</p>
+                    <p className="text-xs md:text-sm text-muted-text">Activities</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <svg className="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-center p-2 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-1 md:mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <p className="text-2xl font-bold">{selectedClub._count?.resources ?? selectedClub.resources?.length ?? 0}</p>
-                    <p className="text-sm text-muted-text">Resources</p>
+                    <p className="text-lg md:text-2xl font-bold">{selectedClub._count?.resources ?? selectedClub.resources?.length ?? 0}</p>
+                    <p className="text-xs md:text-sm text-muted-text">Resources</p>
                   </div>
                 </div>
 

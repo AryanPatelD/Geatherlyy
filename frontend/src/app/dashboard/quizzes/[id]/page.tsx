@@ -138,8 +138,10 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
           if (newCount >= MAX_VIOLATIONS) {
             setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
             setShowWarningModal(true);
-            setTimeout(() => {
-              handleSubmit();
+            setTimeout(async () => {
+              await handleSubmit();
+              // Redirect to dashboard after violation limit exceeded
+              router.push('/dashboard');
             }, 2000);
           } else {
             setWarningMessage(`Warning: You exited fullscreen mode. Violation ${newCount}/${MAX_VIOLATIONS}. Please return to fullscreen to continue.`);
@@ -165,8 +167,10 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             if (newCount >= MAX_VIOLATIONS) {
               setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
               setShowWarningModal(true);
-              setTimeout(() => {
-                handleSubmit();
+              setTimeout(async () => {
+                await handleSubmit();
+                // Redirect to dashboard after violation limit exceeded
+                router.push('/dashboard');
               }, 2000);
             } else {
               setWarningMessage(`Warning: Tab switching detected! Violation ${newCount}/${MAX_VIOLATIONS}. Stay on this page.`);
@@ -188,8 +192,10 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             if (newCount >= MAX_VIOLATIONS) {
               setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
               setShowWarningModal(true);
-              setTimeout(() => {
-                handleSubmit();
+              setTimeout(async () => {
+                await handleSubmit();
+                // Redirect to dashboard after violation limit exceeded
+                router.push('/dashboard');
               }, 2000);
             } else {
               setWarningMessage(`Warning: Window focus lost! Violation ${newCount}/${MAX_VIOLATIONS}. Do not switch windows.`);
@@ -412,30 +418,30 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
   if (quizSubmitted && result) {
     return (
-      <div className="p-8 max-w-5xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-6">
+      <div className="p-4 md:p-8 max-w-5xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
           {/* Results Card */}
           <div className="card text-center">
-            <div className="text-6xl mb-4">🎉</div>
-            <h1 className="text-3xl font-bold mb-2">Quiz Completed!</h1>
-            <p className="text-muted-text mb-6">Your answers have been recorded</p>
+            <div className="text-4xl md:text-6xl mb-4">🎉</div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Quiz Completed!</h1>
+            <p className="text-muted-text text-sm md:text-base mb-4 md:mb-6">Your answers have been recorded</p>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-3xl font-bold text-green-600">{result.score || 0}</p>
-                <p className="text-sm text-muted-text">Your Score</p>
+            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
+              <div className="p-2 md:p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p className="text-xl md:text-3xl font-bold text-green-600">{result.score || 0}</p>
+                <p className="text-xs md:text-sm text-muted-text">Score</p>
               </div>
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-3xl font-bold text-blue-600">{result.correctAnswers || 0}/{quiz.questions?.length || 0}</p>
-                <p className="text-sm text-muted-text">Correct</p>
+              <div className="p-2 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-xl md:text-3xl font-bold text-blue-600">{result.correctAnswers || 0}/{quiz.questions?.length || 0}</p>
+                <p className="text-xs md:text-sm text-muted-text">Correct</p>
               </div>
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <p className="text-3xl font-bold text-purple-600">{result.percentage || 0}%</p>
-                <p className="text-sm text-muted-text">Accuracy</p>
+              <div className="p-2 md:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <p className="text-xl md:text-3xl font-bold text-purple-600">{result.percentage || 0}%</p>
+                <p className="text-xs md:text-sm text-muted-text">Accuracy</p>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-3">
               <button
                 onClick={() => router.push('/dashboard/quizzes')}
                 className="flex-1 btn btn-outline"
@@ -702,6 +708,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
               
               return (
                 <button
+                  type="button"
                   key={index}
                   onClick={handleOptionClick}
                   className={`w-full text-left p-5 rounded-xl border-2 transition-all transform hover:scale-[1.01] ${
