@@ -32,6 +32,8 @@ export default function CreateQuizPage({ searchParams }: Props) {
     passingMarks: 40,
     totalMarks: 100,
     clubId: searchParams.clubId || '',
+    maxAttempts: 1,
+    maxParticipants: 0, // 0 means unlimited
   });
 
   const [questions, setQuestions] = useState<Question[]>([
@@ -236,6 +238,26 @@ export default function CreateQuizPage({ searchParams }: Props) {
                             type="number"
                             value={formData.passingMarks}
                             onChange={e => setFormData({...formData, passingMarks: parseInt(e.target.value)})}
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                         />
+                    </div>
+                    <div>
+                         <label className="block text-sm font-medium mb-1">Max Attempts</label>
+                         <input 
+                            type="number"
+                            min={1}
+                            value={formData.maxAttempts}
+                            onChange={e => setFormData({...formData, maxAttempts: parseInt(e.target.value) || 1})}
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                         />
+                    </div>
+                    <div>
+                         <label className="block text-sm font-medium mb-1">Max Participants (0 = unlimited)</label>
+                         <input 
+                            type="number"
+                            min={0}
+                            value={formData.maxParticipants}
+                            onChange={e => setFormData({...formData, maxParticipants: parseInt(e.target.value) || 0})}
                             className="w-full px-4 py-2 rounded-lg border border-border bg-background"
                          />
                     </div>

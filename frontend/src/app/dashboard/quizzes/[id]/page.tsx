@@ -339,18 +339,18 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar - Shows answered questions */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-6xl mx-auto px-6 py-3">
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
               <div
-                className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
               />
             </div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[60px] text-right">
-              {Math.round(((currentQuestion + 1) / totalQuestions) * 100)}%
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[80px] text-right">
+              {answeredCount}/{totalQuestions} answered
             </span>
           </div>
         </div>

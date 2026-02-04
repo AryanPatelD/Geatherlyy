@@ -163,22 +163,23 @@ model Activity {
 }
 
 model Quiz {
-  id           Int           @id @default(autoincrement())
-  clubId       Int
-  title        String
-  description  String?
-  timeLimit    Int
-  totalMarks   Int           @default(0)
-  passingMarks Int           @default(0)
-  maxAttempts  Int           @default(1)
-  isActive     Boolean       @default(true)
-  startDate    DateTime?
-  endDate      DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  questions    Question[]
-  attempts     QuizAttempt[]
-  club         Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  id              Int           @id @default(autoincrement())
+  clubId          Int
+  title           String
+  description     String?
+  timeLimit       Int
+  totalMarks      Int           @default(0)
+  passingMarks    Int           @default(0)
+  maxAttempts     Int           @default(1)
+  maxParticipants Int           @default(0) // 0 means unlimited
+  isActive        Boolean       @default(true)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  questions       Question[]
+  attempts        QuizAttempt[]
+  club            Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   @@index([clubId])
   @@index([isActive])

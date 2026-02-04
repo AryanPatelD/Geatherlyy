@@ -16,9 +16,10 @@ export class QuizzesService {
     
     // Convert questions to match Prisma schema
     const formattedQuestions = questions?.map((q: any) => {
-      const { image, ...rest } = q;
+      const { image, imageUrl, ...rest } = q;
       return {
         ...rest,
+        imageUrl: imageUrl || image || null, // Support both image and imageUrl field names
         type: q.type === 'single' ? 'MCQ' : q.type === 'multiple' ? 'MULTIPLE_ANSWER' : 'MCQ',
         // Convert correctAnswer from integer index to string array
         correctAnswer: typeof q.correctAnswer === 'number' 
@@ -117,6 +118,7 @@ export class QuizzesService {
             correctAnswer: includeAnswers, // Only include if allowed
             marks: true,
             order: true,
+            imageUrl: true, // Include question image
           },
           orderBy: {
             order: 'asc',
@@ -183,6 +185,24 @@ export class QuizzesService {
   ): Promise<QuizAttempt> {
     const quiz = await this.findById(quizId, true);
 
+    // Check if quiz has participant limit
+    if ((quiz as any).maxParticipants && (quiz as any).maxParticipants > 0) {
+      const participantCount = await this.prisma.quizAttempt.count({
+        where: { quizId },
+      });
+      
+      // Check if user already has an attempt (they don't count against the new limit)
+      const userHasAttempt = await this.prisma.quizAttempt.findUnique({
+        where: {
+          quizId_userId: { quizId, userId },
+        },
+      });
+      
+      if (!userHasAttempt && participantCount >= (quiz as any).maxParticipants) {
+        throw new ForbiddenException('This quiz has reached its maximum number of participants.');
+      }
+    }
+
     // Check if quiz has time limit and if user has ongoing attempt
     const existingAttempt = await this.prisma.quizAttempt.findFirst({
       where: {
@@ -218,6 +238,7 @@ export class QuizzesService {
 
     // Calculate score
     let score = 0;
+    let correctAnswersCount = 0;
     const results: any[] = [];
 
     for (const question of (quiz as any).questions) {
@@ -227,6 +248,7 @@ export class QuizzesService {
 
       if (isCorrect) {
         score += question.marks;
+        correctAnswersCount++;
       }
 
       results.push({
@@ -299,7 +321,12 @@ export class QuizzesService {
     await this.redis.del('leaderboard:global');
     await this.redis.del(`leaderboard:club:${quiz.clubId}`);
 
-    return attempt;
+    // Return attempt with correctAnswers count
+    return {
+      ...attempt,
+      correctAnswers: correctAnswersCount,
+      totalQuestions: (quiz as any).questions.length,
+    };
   }
 
   async getUserAttempt(quizId: number, userId: number): Promise<QuizAttempt | null> {
