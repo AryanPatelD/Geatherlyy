@@ -41,7 +41,9 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5000',
       'https://geatherlyy.vercel.app',
+      'https://getherlyy.vercel.app',
       'https://geatherlyy-git-main-heetmehta18s-projects.vercel.app',
+      'https://getherlyy-git-main-heetmehta18s-projects.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean),
     credentials: true,
