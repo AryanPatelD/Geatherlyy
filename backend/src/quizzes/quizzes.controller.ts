@@ -113,10 +113,23 @@ export class QuizzesController {
   @ApiResponse({ status: 200, description: 'Quiz submitted successfully' })
   async submitQuiz(
     @Param('id', ParseIntPipe) id: number,
-    @Body('answers') answers: Record<number, number>,
+    @Body() body: { answers: Record<string, number> },
     @Request() req,
   ) {
-    return this.quizzesService.submitQuizAttempt(id, req.user.id, answers);
+    console.log(`[QuizSubmit] User ${req.user.id} submitting quiz ${id}`);
+    console.log(`[QuizSubmit] Answers received:`, JSON.stringify(body.answers || {}));
+    
+    const answers = body.answers || {};
+    
+    // Convert string keys to number keys if needed
+    const normalizedAnswers: Record<number, number> = {};
+    for (const [key, value] of Object.entries(answers)) {
+      normalizedAnswers[parseInt(key)] = value;
+    }
+    
+    console.log(`[QuizSubmit] Normalized answers:`, JSON.stringify(normalizedAnswers));
+    
+    return this.quizzesService.submitQuizAttempt(id, req.user.id, normalizedAnswers);
   }
 
   @Put(':id')

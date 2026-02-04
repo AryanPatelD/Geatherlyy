@@ -1,22 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import { getApiUrl } from '@/lib/apiUrl';
+
+// Cookie helper functions
+const setCookie = (name: string, value: string, hours: number) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + hours * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
+
+const getCookie = (name: string): string | null => {
+  const nameEQ = name + '=';
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+};
 
 export default function QuizTakePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [quiz, setQuiz] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: number]: number }>({});
+  const [answers, setAnswers] = useState<{ [key: number]: number | number[] }>({});
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
+  
+  // Fullscreen and anti-cheat states
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [violations, setViolations] = useState(0);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+  const quizContainerRef = useRef<HTMLDivElement>(null);
+  const MAX_VIOLATIONS = 3;
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -62,12 +92,176 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
     }
   }, [quizStarted, timeRemaining, quizSubmitted]);
 
+  // Fullscreen and anti-cheat effect
+  useEffect(() => {
+    if (!quizStarted || quizSubmitted) return;
+
+    // Set cookie when quiz starts
+    setCookie(`quiz_in_progress_${params.id}`, 'true', 2);
+
+    // Enter fullscreen
+    const enterFullscreen = async () => {
+      try {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if ((elem as any).webkitRequestFullscreen) {
+          await (elem as any).webkitRequestFullscreen();
+        } else if ((elem as any).msRequestFullscreen) {
+          await (elem as any).msRequestFullscreen();
+        }
+        setIsFullscreen(true);
+      } catch (err) {
+        console.error('Could not enter fullscreen:', err);
+      }
+    };
+
+    enterFullscreen();
+
+    // Handle fullscreen change
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // Check if cookie still exists (if destroyed, allow exit)
+      const cookieExists = getCookie(`quiz_in_progress_${params.id}`);
+      
+      if (!isCurrentlyFullscreen && !quizSubmitted && cookieExists) {
+        // User exited fullscreen - record violation
+        setViolations(prev => {
+          const newCount = prev + 1;
+          if (newCount >= MAX_VIOLATIONS) {
+            setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
+            setShowWarningModal(true);
+            setTimeout(() => {
+              handleSubmit();
+            }, 2000);
+          } else {
+            setWarningMessage(`Warning: You exited fullscreen mode. Violation ${newCount}/${MAX_VIOLATIONS}. Please return to fullscreen to continue.`);
+            setShowWarningModal(true);
+          }
+          return newCount;
+        });
+        
+        // Try to re-enter fullscreen
+        setTimeout(() => {
+          enterFullscreen();
+        }, 1000);
+      }
+    };
+
+    // Handle visibility change (tab switching)
+    const handleVisibilityChange = () => {
+      if (document.hidden && !quizSubmitted) {
+        const cookieExists = getCookie(`quiz_in_progress_${params.id}`);
+        if (cookieExists) {
+          setViolations(prev => {
+            const newCount = prev + 1;
+            if (newCount >= MAX_VIOLATIONS) {
+              setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
+              setShowWarningModal(true);
+              setTimeout(() => {
+                handleSubmit();
+              }, 2000);
+            } else {
+              setWarningMessage(`Warning: Tab switching detected! Violation ${newCount}/${MAX_VIOLATIONS}. Stay on this page.`);
+              setShowWarningModal(true);
+            }
+            return newCount;
+          });
+        }
+      }
+    };
+
+    // Handle window blur (losing focus)
+    const handleWindowBlur = () => {
+      if (!quizSubmitted) {
+        const cookieExists = getCookie(`quiz_in_progress_${params.id}`);
+        if (cookieExists) {
+          setViolations(prev => {
+            const newCount = prev + 1;
+            if (newCount >= MAX_VIOLATIONS) {
+              setWarningMessage(`You have exceeded the maximum number of violations (${MAX_VIOLATIONS}). Your quiz will be submitted automatically.`);
+              setShowWarningModal(true);
+              setTimeout(() => {
+                handleSubmit();
+              }, 2000);
+            } else {
+              setWarningMessage(`Warning: Window focus lost! Violation ${newCount}/${MAX_VIOLATIONS}. Do not switch windows.`);
+              setShowWarningModal(true);
+            }
+            return newCount;
+          });
+        }
+      }
+    };
+
+    // Prevent keyboard shortcuts for tab switching
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Alt+Tab, Ctrl+Tab, etc.
+      if (
+        (e.altKey && e.key === 'Tab') ||
+        (e.ctrlKey && e.key === 'Tab') ||
+        (e.key === 'Escape') ||
+        (e.key === 'F11')
+      ) {
+        e.preventDefault();
+        setWarningMessage('Keyboard shortcuts are disabled during the quiz.');
+        setShowWarningModal(true);
+      }
+    };
+
+    // Prevent right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [quizStarted, quizSubmitted, params.id]);
+
+  // Exit fullscreen when quiz is submitted
+  useEffect(() => {
+    if (quizSubmitted) {
+      // Delete the cookie
+      deleteCookie(`quiz_in_progress_${params.id}`);
+      
+      // Exit fullscreen
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => console.error('Could not exit fullscreen:', err));
+      }
+    }
+  }, [quizSubmitted, params.id]);
+
   const handleSubmit = async () => {
     if (quizSubmitted) return;
 
     try {
       const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
+      
+      console.log('Submitting quiz answers:', answers);
+      
       const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',
         headers: {
@@ -84,9 +278,14 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         
         // Fetch leaderboard after submission
         fetchLeaderboard();
+      } else {
+        const errorData = await response.json();
+        console.error('Quiz submission failed:', errorData);
+        alert(`Failed to submit quiz: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
+      alert('Error submitting quiz. Please try again.');
     }
   };
 
@@ -186,11 +385,25 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
+          {/* Fullscreen and Anti-Cheat Notice */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-2">
+              <span>⚠️</span> Important Quiz Rules
+            </h4>
+            <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+              <li>• The quiz will open in <strong>fullscreen mode</strong></li>
+              <li>• <strong>Do not switch tabs</strong> or windows during the quiz</li>
+              <li>• <strong>Do not exit fullscreen</strong> until the quiz is submitted</li>
+              <li>• You have <strong>3 violations</strong> before auto-submission</li>
+              <li>• Right-click and keyboard shortcuts are disabled</li>
+            </ul>
+          </div>
+
           <button
             onClick={() => setQuizStarted(true)}
             className="w-full btn btn-primary py-3 text-lg"
           >
-            Start Quiz
+            🚀 Start Quiz in Fullscreen
           </button>
         </div>
       </div>
@@ -298,10 +511,72 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
   const question = quiz.questions?.[currentQuestion];
   const totalQuestions = quiz.questions?.length || 0;
-  const answeredCount = Object.keys(answers).length;
+  // Count answered questions - for multiple choice, only count if at least one option is selected
+  const answeredCount = Object.entries(answers).filter(([_, value]) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    return value !== undefined;
+  }).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div ref={quizContainerRef} className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-pulse">
+            <div className="text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
+                Violation Detected!
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
+                {warningMessage}
+              </p>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {Array.from({ length: MAX_VIOLATIONS }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`w-4 h-4 rounded-full ${
+                      i < violations ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all"
+              >
+                I Understand - Continue Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Violation Counter - Always visible during quiz */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <div className={`px-4 py-2 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 ${
+          violations === 0 
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : violations < MAX_VIOLATIONS
+            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+        }`}>
+          <span>🛡️</span>
+          Violations: {violations}/{MAX_VIOLATIONS}
+        </div>
+      </div>
+
+      {/* Fullscreen status indicator */}
+      {!isFullscreen && quizStarted && !quizSubmitted && (
+        <div className="fixed top-4 left-4 z-40">
+          <div className="px-4 py-2 rounded-xl shadow-lg text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 animate-pulse">
+            ⛶ Not in Fullscreen
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -390,15 +665,45 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             </div>
           )}
 
+          {/* Show question type indicator */}
+          {question?.type === 'MULTIPLE_ANSWER' && (
+            <div className="mb-4 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+              ℹ️ This question allows multiple answers. Select all that apply.
+            </div>
+          )}
+
           <div className="space-y-3">
             {question?.options?.map((option: string, index: number) => {
               const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
-              const isSelected = answers[question.id] === index;
+              const isMultipleChoice = question?.type === 'MULTIPLE_ANSWER';
+              
+              // Check if this option is selected
+              const currentAnswer = answers[question.id];
+              const isSelected = isMultipleChoice
+                ? Array.isArray(currentAnswer) && currentAnswer.includes(index)
+                : currentAnswer === index;
+              
+              const handleOptionClick = () => {
+                if (isMultipleChoice) {
+                  // Multiple choice: toggle the option
+                  const currentSelections = Array.isArray(currentAnswer) ? currentAnswer : [];
+                  if (currentSelections.includes(index)) {
+                    // Remove the option
+                    setAnswers({ ...answers, [question.id]: currentSelections.filter(i => i !== index) });
+                  } else {
+                    // Add the option
+                    setAnswers({ ...answers, [question.id]: [...currentSelections, index] });
+                  }
+                } else {
+                  // Single choice: select only this option
+                  setAnswers({ ...answers, [question.id]: index });
+                }
+              };
               
               return (
                 <button
                   key={index}
-                  onClick={() => setAnswers({ ...answers, [question.id]: index })}
+                  onClick={handleOptionClick}
                   className={`w-full text-left p-5 rounded-xl border-2 transition-all transform hover:scale-[1.01] ${
                     isSelected
                       ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-md'
@@ -406,7 +711,8 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-sm ${
+                    {/* Show checkbox for multiple choice, radio for single */}
+                    <div className={`w-10 h-10 ${isMultipleChoice ? 'rounded-lg' : 'rounded-full'} border-2 flex items-center justify-center font-bold text-sm ${
                       isSelected
                         ? 'border-blue-600 bg-blue-600 text-white'
                         : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
@@ -437,7 +743,10 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             <div className="grid grid-cols-10 gap-2">
               {Array.from({ length: totalQuestions }, (_, i) => {
                 const questionId = quiz.questions[i]?.id;
-                const isAnswered = answers[questionId] !== undefined;
+                const questionAnswer = answers[questionId];
+                // Check if answered: for single choice it's a number, for multiple choice it's an array with at least one item
+                const isAnswered = questionAnswer !== undefined && 
+                  (Array.isArray(questionAnswer) ? questionAnswer.length > 0 : true);
                 const isCurrent = i === currentQuestion;
                 const isFlagged = flaggedQuestions.has(questionId);
                 

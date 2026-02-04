@@ -160,6 +160,11 @@ export class AuthService {
     const hashedToken = await bcrypt.hash(token, 10);
     const expires = new Date(Date.now() + 3600000); // 1 hour
 
+    console.log(`[ForgotPassword] Generated token for ${email} (first 10 chars): ${token.substring(0, 10)}...`);
+    console.log(`[ForgotPassword] Token length: ${token.length}`);
+    console.log(`[ForgotPassword] Hashed token length: ${hashedToken.length}`);
+    console.log(`[ForgotPassword] Expires at: ${expires.toISOString()}`);
+
     // Save to user
     await this.usersService.update(user.id, {
       resetPasswordToken: hashedToken,
@@ -169,6 +174,8 @@ export class AuthService {
     // Send styled email using NotificationService
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    
+    console.log(`[ForgotPassword] Reset URL: ${resetUrl}`);
     
     await this.notificationService.sendPasswordResetEmail({
       userName: user.name,
@@ -181,36 +188,43 @@ export class AuthService {
   }
 
   async resetPassword(token: string, email: string, newPassword: string) {
-    console.log(`[ResetPassword] Attempting password reset for email: ${email}`);
+    // URL decode the email in case it was encoded
+    const decodedEmail = decodeURIComponent(email);
+    console.log(`[ResetPassword] Attempting password reset for email: ${decodedEmail}`);
+    console.log(`[ResetPassword] Token received (first 10 chars): ${token?.substring(0, 10)}...`);
     
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmail(decodedEmail);
     if (!user) {
-      console.log(`[ResetPassword] User not found for email: ${email}`);
+      console.log(`[ResetPassword] User not found for email: ${decodedEmail}`);
       throw new UnauthorizedException('Invalid or expired token.');
     }
     
     if (!user.resetPasswordToken || !user.resetPasswordExpires) {
-      console.log(`[ResetPassword] No reset token found for user: ${email}`);
+      console.log(`[ResetPassword] No reset token found for user: ${decodedEmail}`);
+      console.log(`[ResetPassword] Token in DB: ${user.resetPasswordToken ? 'exists' : 'null'}`);
+      console.log(`[ResetPassword] Expires in DB: ${user.resetPasswordExpires ? user.resetPasswordExpires.toISOString() : 'null'}`);
       throw new UnauthorizedException('Invalid or expired token.');
     }
 
     // Check if expired
     if (new Date() > user.resetPasswordExpires) {
-      console.log(`[ResetPassword] Token expired for user: ${email}`);
+      console.log(`[ResetPassword] Token expired for user: ${decodedEmail}`);
+      console.log(`[ResetPassword] Expired at: ${user.resetPasswordExpires.toISOString()}, Now: ${new Date().toISOString()}`);
       throw new UnauthorizedException('Token has expired.');
     }
 
-    // Prepare for comparison (Prisma saves as hash, but we might need to compare carefully)
-    // The previous implementation plan said "Store hashed token". 
-    // If we store hashed token, we need to compare the incoming clear text token with the stored hash.
+    // Compare the incoming clear text token with the stored hash
+    console.log(`[ResetPassword] Comparing token...`);
+    console.log(`[ResetPassword] Token length: ${token?.length}, Stored hash length: ${user.resetPasswordToken?.length}`);
+    
     const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
     
     if (!isTokenValid) {
-      console.log(`[ResetPassword] Invalid token for user: ${email}`);
+      console.log(`[ResetPassword] Invalid token for user: ${decodedEmail}`);
       throw new UnauthorizedException('Invalid token.');
     }
 
-    console.log(`[ResetPassword] Token validated, updating password for user: ${email}`);
+    console.log(`[ResetPassword] Token validated, updating password for user: ${decodedEmail}`);
     
     // Update user (UsersService handles hashing)
     const updatedUser = await this.usersService.update(user.id, {

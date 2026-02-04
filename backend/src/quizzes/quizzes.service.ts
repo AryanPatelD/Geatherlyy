@@ -115,10 +115,11 @@ export class QuizzesService {
             id: true,
             text: true,
             options: true,
-            correctAnswer: includeAnswers, // Only include if allowed
+            correctAnswer: true, // Always include, filter on frontend if needed
             marks: true,
             order: true,
-            imageUrl: true, // Include question image
+            imageUrl: true,
+            type: true, // Include question type (MCQ or MULTIPLE_ANSWER)
           },
           orderBy: {
             order: 'asc',
@@ -134,6 +135,19 @@ export class QuizzesService {
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with ID ${id} not found`);
+    }
+
+    // If correctAnswer should not be included, strip it from the response
+    if (!includeAnswers) {
+      const quizWithoutAnswers = {
+        ...quiz,
+        questions: quiz.questions.map((q: any) => {
+          const { correctAnswer, ...rest } = q;
+          return rest;
+        }),
+      };
+      await this.redis.setQuizData(cacheKey, quizWithoutAnswers);
+      return quizWithoutAnswers as any;
     }
 
     await this.redis.setQuizData(cacheKey, quiz);
@@ -371,10 +385,10 @@ export class QuizzesService {
     }
 
     // Ranking: Higher score first, then faster completion time
+    // Note: We don't filter by attemptedAt since all attempts should have a timestamp
     const leaderboard = await this.prisma.quizAttempt.findMany({
       where: {
         quizId,
-        attemptedAt: { not: null },
       },
       take: limit,
       orderBy: [
