@@ -209,18 +209,18 @@ export default function DashboardPage() {
             {stats.availableClubs} clubs available, {stats.joinedClubs} clubs joined
           </p>
         </div>
-          {user && ['faculty', 'admin'].includes(user.role) && (
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <button 
-                onClick={() => router.push('/dashboard/create-club')}
-                className="w-full md:w-auto px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-              >
-                <PlusIcon className="w-4 h-4" />
-                New Clubs
-              </button>
-            </div>
-          )}
-        </div>
+        {user && ['faculty', 'admin'].includes(user.role) && (
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button 
+              onClick={() => router.push('/dashboard/create-club')}
+              className="w-full md:w-auto px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              New Clubs
+            </button>
+          </div>
+        )}
+      </div>
 
         {/* Category Filter */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
