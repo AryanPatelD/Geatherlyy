@@ -39,7 +39,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'localhost:5000',
+      'http://localhost:5000',
+      'https://geatherlyy.vercel.app',
       'https://geatherlyy-git-main-heetmehta18s-projects.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -67,7 +68,7 @@ async function bootstrap() {
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Gatherly API')
+      .setTitle('Geatherlyy API')
       .setDescription('Centralized Club Management System API')
       .setVersion('1.0')
       .addBearerAuth()
@@ -91,7 +92,7 @@ async function bootstrap() {
   console.log(`
     ╔═══════════════════════════════════════╗
     ║                                       ║
-    ║     🚀 Gatherly API Server 🚀        ║
+    ║     🚀 Geatherlyy API Server 🚀        ║
     ║                                       ║
     ║     Environment: ${process.env.NODE_ENV || 'development'}            ║
     ║     Port: ${port}                          ║

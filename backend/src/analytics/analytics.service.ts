@@ -18,6 +18,7 @@ export class AnalyticsService {
       totalActivities,
       pendingApprovals,
       quizAttempts,
+      pendingClubs,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { createdAt: { gte: lastMonth } } }),
@@ -26,6 +27,7 @@ export class AnalyticsService {
       this.prisma.activity.count(),
       this.prisma.approvalRequest.count({ where: { status: 'PENDING' } }),
       this.prisma.quizAttempt.count(),
+      this.prisma.club.count({ where: { approvalStatus: 'PENDING' } }),
     ]);
 
     // Calculate user growth percentage
@@ -67,10 +69,11 @@ export class AnalyticsService {
       totalActivities,
       pendingApprovals,
       newClubs,
+      pendingClubs,
       userGrowth: `↑ ${userGrowth}%`,
-      avgAttendance: 0, // Needs attendance Table
+      avgAttendance: 0, 
       engagementRate,
-      engagementChange: '↑ 0%', // Requires historical data snapshot
+      engagementChange: '↑ 0%', 
       topClubs: topClubs.map((club) => ({
         id: club.id,
         name: club.name,

@@ -3,18 +3,28 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import * as NodeRSA from 'node-rsa';
+import * as crypto from 'crypto';
 
 const decrypt = (text: string) => {
   if (!process.env.PRIVATE_KEY) return text;
   try {
-    const key = new NodeRSA();
-    key.importKey(Buffer.from(process.env.PRIVATE_KEY, 'base64'), 'private');
-    key.setOptions({encryptionScheme: 'pkcs1'});
-    const decrypted = key.decrypt(text, 'utf8');
-    return decrypted || text;
+    const buffer = Buffer.from(text, 'base64');
+    const privateKey = Buffer.from(process.env.PRIVATE_KEY, 'base64');
+    
+    // Decrypt using native module with OAEP padding (required for Node 22+ / OpenSSL 3 private decryption)
+    const decrypted = crypto.privateDecrypt(
+      {
+        key: privateKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256',
+      },
+      buffer,
+    );
+    return decrypted.toString('utf8');
   } catch (e) {
     console.error('Decryption failed:', e.message);
+    // On error, return text or throw. 
+    // If it's not base64 or decryption fails, we'll assume it's plaintext for debugging or fallback.
     return text;
   }
 };
@@ -57,9 +67,18 @@ export class AuthController {
   async login(
     @Body() loginDto: { email: string; password: string },
   ) {
+    console.log('Login attempt for:', loginDto.email);
     const decryptedPassword = decrypt(loginDto.password);
-    const user = await this.authService.validateUser(loginDto.email, decryptedPassword);
-    return this.authService.login(user);
+    console.log('Decryption result (length):', decryptedPassword.length);
+    console.log('Is decrypted same as original?', decryptedPassword === loginDto.password);
+    
+    try {
+      const user = await this.authService.validateUser(loginDto.email, decryptedPassword);
+      return this.authService.login(user);
+    } catch (error) {
+      console.error('ValidateUser failed:', error.message);
+      throw error;
+    }
   }
 
   @Get('google')

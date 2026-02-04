@@ -51,20 +51,25 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
+      console.log('User not found:', email);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Check if user signed up with Google (no password)
     if (!user.password && user.googleId) {
+      console.log('User has googleId but no password');
       throw new UnauthorizedException('This account uses Google Sign-In. Please use "Continue with Google" button.');
     }
 
     if (!user.password) {
+      console.log('User has no password');
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('Password mismatch for user:', email);
+      console.log('Provided (decrypted) password:', password); // Be careful with logs in prod
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -176,14 +181,23 @@ export class AuthService {
   }
 
   async resetPassword(token: string, email: string, newPassword: string) {
+    console.log(`[ResetPassword] Attempting password reset for email: ${email}`);
+    
     const user = await this.usersService.findByEmail(email);
-    if (!user || !user.resetPasswordToken || !user.resetPasswordExpires) {
+    if (!user) {
+      console.log(`[ResetPassword] User not found for email: ${email}`);
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+    
+    if (!user.resetPasswordToken || !user.resetPasswordExpires) {
+      console.log(`[ResetPassword] No reset token found for user: ${email}`);
       throw new UnauthorizedException('Invalid or expired token.');
     }
 
     // Check if expired
     if (new Date() > user.resetPasswordExpires) {
-        throw new UnauthorizedException('Token has expired.');
+      console.log(`[ResetPassword] Token expired for user: ${email}`);
+      throw new UnauthorizedException('Token has expired.');
     }
 
     // Prepare for comparison (Prisma saves as hash, but we might need to compare carefully)
@@ -192,16 +206,21 @@ export class AuthService {
     const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
     
     if (!isTokenValid) {
-        throw new UnauthorizedException('Invalid token.');
+      console.log(`[ResetPassword] Invalid token for user: ${email}`);
+      throw new UnauthorizedException('Invalid token.');
     }
 
+    console.log(`[ResetPassword] Token validated, updating password for user: ${email}`);
+    
     // Update user (UsersService handles hashing)
-    await this.usersService.update(user.id, {
+    const updatedUser = await this.usersService.update(user.id, {
       password: newPassword,
       resetPasswordToken: null,
       resetPasswordExpires: null,
       mustChangePassword: false
     });
+
+    console.log(`[ResetPassword] Password updated successfully for user: ${email}, userId: ${updatedUser.id}`);
 
     return { message: 'Password has been reset successfully.' };
   }
