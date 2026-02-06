@@ -490,9 +490,13 @@ function ManageClubContent() {
       if (response.ok) {
         toast.success('Quiz deleted successfully');
         fetchQuizzes();
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to delete quiz');
       }
     } catch (error) {
       console.error('Error deleting quiz:', error);
+      toast.error('An error occurred while deleting the quiz');
     }
   };
 

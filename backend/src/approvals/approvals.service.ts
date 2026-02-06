@@ -263,6 +263,7 @@ export class ApprovalsService {
     }
 
     // Send notification to the user about the approval/rejection
+    console.log(`[ApprovalsService] Review complete. Status: ${status}, Sending notification for request ${requestId}`);
     this.sendApprovalNotification(updatedRequest, status);
 
     return updatedRequest;

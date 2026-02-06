@@ -633,25 +633,23 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
-        <Card3D>
-          <div className={`text-center p-6 sm:p-8 md:p-12 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20 dark:border-slate-700/50 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
-              Ready to get started?
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-text max-w-xl mx-auto mb-6 sm:mb-8">
-              Join thousands of students and faculty already using Geatherlyy to build thriving campus communities.
-            </p>
-            <Link 
-              href="/login" 
-              className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm sm:text-base md:text-lg rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-1 hover:scale-105"
-            >
-              <span>Start Your Journey</span>
-              <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-        </Card3D>
+        <div className={`text-center p-6 sm:p-8 md:p-12 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20 dark:border-slate-700/50 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+            Ready to get started?
+          </h2>
+          <p className="text-sm sm:text-base md:text-lg text-muted-text max-w-xl mx-auto mb-6 sm:mb-8">
+            Join thousands of students and faculty already using Geatherlyy to build thriving campus communities.
+          </p>
+          <Link 
+            href="/login" 
+            className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm sm:text-base md:text-lg rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-1 hover:scale-105"
+          >
+            <span>Start Your Journey</span>
+            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
       </section>
 
       {/* Footer */}

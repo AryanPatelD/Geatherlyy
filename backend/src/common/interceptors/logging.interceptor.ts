@@ -14,7 +14,13 @@ export class LoggingInterceptor implements NestInterceptor {
     this.logger.log(`Incoming Request: ${method} ${url}`);
     if (body && Object.keys(body).length > 0) {
       const sanitizedBody = this.sanitize(body);
-      this.logger.debug(`Payload: ${JSON.stringify(sanitizedBody)}`);
+      const bodyString = JSON.stringify(sanitizedBody);
+      // Truncate if too long (e.g., > 2KB)
+      if (bodyString.length > 2048) {
+        this.logger.debug(`Payload: ${bodyString.substring(0, 2048)}... (truncated)`);
+      } else {
+        this.logger.debug(`Payload: ${bodyString}`);
+      }
     }
 
     const now = Date.now();

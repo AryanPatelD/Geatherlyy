@@ -176,9 +176,7 @@ export class ClubsService {
       mentors: {
         connect: mentorIds.map(id => ({ id }))
       },
-      coordinators: {
-        create: { userId: creatorId! } // Start with creator
-      },
+      // Removed automatic coordinator assignment for creator
       members: {
         create: [
           { userId: creatorId! }, // Creator

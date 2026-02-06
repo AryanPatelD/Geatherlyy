@@ -10,7 +10,15 @@ export class QuizzesService {
     private redis: RedisService,
   ) {}
 
-  async create(data: any): Promise<Quiz> {
+  async create(data: any, userId: number): Promise<Quiz> {
+    // Check for cooldown
+    const cooldownKey = `quiz_creation_cooldown:${userId}`;
+    const isInCooldown = await this.redis.get(cooldownKey);
+    
+    if (isInCooldown) {
+      throw new ForbiddenException('Please wait 2 minutes before creating another quiz to prevent duplicates.');
+    }
+
     // Extract questions from data and format them properly
     const { questions, ...quizData } = data;
     
@@ -48,6 +56,9 @@ export class QuizzesService {
         questions: true,
       },
     });
+
+    // Set cooldown for 2 minutes (120 seconds)
+    await this.redis.set(cooldownKey, 'true', 120);
 
     // Invalidate cache
     await this.redis.del(`club:${quiz.clubId}:quizzes`);
@@ -196,7 +207,7 @@ export class QuizzesService {
     quizId: number,
     userId: number,
     answers: Record<number, number>, // questionId -> selectedOption
-  ): Promise<QuizAttempt> {
+  ): Promise<any> { // Changing return type to any to support extra fields
     const quiz = await this.findById(quizId, true);
 
     // Check if quiz has participant limit
@@ -332,15 +343,17 @@ export class QuizzesService {
     });
 
     // Invalidate leaderboard cache
-    await this.redis.del('leaderboard:global');
-    await this.redis.del(`leaderboard:club:${quiz.clubId}`);
+    // OPTIMIZATION: Removed aggressive invalidation to prevent cache thrashing during mass submissions.
+    // Leaderboards will update when their TTL expires (e.g. 5 minutes).
+    // await this.redis.del('leaderboard:global');
+    // await this.redis.del(`leaderboard:club:${quiz.clubId}`);
 
     // Return attempt with correctAnswers count
     return {
       ...attempt,
       correctAnswers: correctAnswersCount,
       totalQuestions: (quiz as any).questions.length,
-    };
+    } as any;
   }
 
   async getUserAttempt(quizId: number, userId: number): Promise<QuizAttempt | null> {
@@ -434,6 +447,13 @@ export class QuizzesService {
   }
 
   async getQuizStats(quizId: number): Promise<any> {
+    const cacheKey = `quiz:${quizId}:stats`;
+    const cachedStats = await this.redis.get(cacheKey);
+
+    if (cachedStats) {
+      return JSON.parse(cachedStats as string);
+    }
+
     const [totalAttempts, avgScore, maxScore] = await this.prisma.$transaction([
       this.prisma.quizAttempt.count({
         where: {
@@ -461,11 +481,16 @@ export class QuizzesService {
       }),
     ]);
 
-    return {
+    const stats = {
       totalAttempts,
       averageScore: avgScore._avg.score || 0,
       maxScore: maxScore._max.score || 0,
     };
+
+    // Cache for 60 seconds to allow frequent updates but protect DB
+    await this.redis.set(cacheKey, JSON.stringify(stats), 60);
+
+    return stats;
   }
 
   async canUserCreateQuiz(userId: number, clubId: number): Promise<boolean> {

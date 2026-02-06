@@ -101,7 +101,7 @@ export default function QuizPage({
           }
         } catch (attemptError) {
           // User hasn't attempted the quiz yet - this is fine
-          console.log('No previous attempt found');
+
         }
       } catch (error) {
         console.error('Error fetching quiz:', error);
@@ -276,7 +276,7 @@ export default function QuizPage({
 
     try {
       const apiUrl = getApiUrl();
-      console.log('Submitting quiz with answers:', answers);
+
       
       const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',

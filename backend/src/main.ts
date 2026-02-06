@@ -94,7 +94,7 @@ async function bootstrap() {
   console.log(`
     ╔═══════════════════════════════════════╗
     ║                                       ║
-    ║     🚀 Geatherlyy API Server 🚀        ║
+    ║     🚀 Geatherlyy API Server 🚀       ║
     ║                                       ║
     ║     Environment: ${process.env.NODE_ENV || 'development'}            ║
     ║     Port: ${port}                          ║

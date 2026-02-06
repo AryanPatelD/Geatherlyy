@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/context/AuthContext';
-import { DashboardIcon, MagnifyingGlassIcon, HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, HamburgerMenuIcon, PersonIcon, ExitIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/apiUrl';
@@ -22,13 +22,18 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   });
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
       }
     };
 
@@ -112,6 +117,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         router.push(`/dashboard/resources/${id}`);
         break;
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
   };
 
   const hasResults = searchResults.clubs.length > 0 || 
@@ -279,10 +289,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
         <div className="flex items-center gap-2 md:gap-4">
           {user ? (
-            <>
-              <Link 
-                href="/dashboard/profile"
-                className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            <div className="relative" ref={profileRef}>
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-transparent hover:border-border"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold shadow-sm shrink-0">
                   {user.name.charAt(0).toUpperCase()}
@@ -293,15 +303,40 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                     {user.role}
                   </div>
                 </div>
-              </Link>
-              <Link
-                href="/dashboard"
-                className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <DashboardIcon className="w-4 h-4" />
-                <span className="hidden lg:inline">Dashboard</span>
-              </Link>
-            </>
+              </button>
+
+              {/* Profile Dropdown */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50">
+                  <div className="p-2">
+                    <div className="px-3 py-2 border-b border-border mb-2 lg:hidden">
+                      <p className="font-medium text-sm">{user.name}</p>
+                      <p className="text-xs text-muted-text">{user.role}</p>
+                    </div>
+                    
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      <PersonIcon className="w-4 h-4" />
+                      Profile
+                    </Link>
+                    
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowProfileMenu(false);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mt-1"
+                    >
+                      <ExitIcon className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Link 
               href="/login" 

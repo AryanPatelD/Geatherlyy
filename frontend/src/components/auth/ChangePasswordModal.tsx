@@ -1,21 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/context/AuthContext';
 import { getApiUrl } from '@/lib/apiUrl';
+import { Cross2Icon } from '@radix-ui/react-icons';
 
-export default function ChangePasswordModal() {
+interface ChangePasswordModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function ChangePasswordModal({ isOpen: propIsOpen, onClose }: ChangePasswordModalProps = {}) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user, updateUser, getToken } = useAuthStore();
 
-  if (!user?.mustChangePassword) return null;
+  const isForced = user?.mustChangePassword;
+  const isOpen = isForced || propIsOpen;
+
+  useEffect(() => {
+    if (isOpen) {
+      setPassword('');
+      setConfirmPassword('');
+      setError('');
+      setSuccess('');
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters long');
@@ -46,7 +66,16 @@ export default function ChangePasswordModal() {
         throw new Error('Failed to change password');
       }
 
-      updateUser({ mustChangePassword: false });
+      setSuccess('Password updated successfully');
+      
+      if (isForced) {
+        updateUser({ mustChangePassword: false });
+      } else {
+        // Clear success message after a delay and close if voluntary
+        setTimeout(() => {
+          if (onClose) onClose();
+        }, 1500);
+      }
     } catch (err) {
       setError('Failed to update password. Please try again.');
     } finally {
@@ -56,15 +85,35 @@ export default function ChangePasswordModal() {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Change Password Required</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        {!isForced && onClose && (
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <Cross2Icon className="w-5 h-5" />
+          </button>
+        )}
+        
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+          {isForced ? 'Change Password Required' : 'Change Password'}
+        </h2>
+        
         <p className="mb-6 text-gray-600 dark:text-gray-300">
-          For security reasons, you must change your password before continuing.
+          {isForced 
+            ? 'For security reasons, you must change your password before continuing.'
+            : 'Enter your new password below.'}
         </p>
 
         {error && (
           <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded mb-4 text-sm">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-3 rounded mb-4 text-sm">
+            {success}
           </div>
         )}
 

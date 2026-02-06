@@ -3,13 +3,15 @@
 import { useAuthStore } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'next/navigation';
-import { ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { ExitIcon, MoonIcon, SunIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
+import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -89,6 +91,14 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold mb-4">Actions</h2>
           <div className="space-y-3">
             <button
+              onClick={() => setShowPasswordModal(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors"
+            >
+              <LockClosedIcon className="w-5 h-5" />
+              Change Password
+            </button>
+
+            <button
               onClick={handleLogout}
               disabled={loggingOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 dark:border-red-800"
@@ -99,6 +109,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      <ChangePasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
   );
 }

@@ -102,7 +102,7 @@ export class QuizzesController {
          throw new ForbiddenException('You must be a member of the club to create quizzes');
      }
 
-    return this.quizzesService.create(createData);
+    return this.quizzesService.create(createData, req.user.id);
   }
 
   @Post(':id/submit')

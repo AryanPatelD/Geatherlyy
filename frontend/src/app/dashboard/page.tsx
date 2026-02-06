@@ -29,43 +29,27 @@ export default function DashboardPage() {
       try {
         const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+        };
         
-        // Fetch categories
-        const categoriesResponse = await fetch(`${apiUrl}/api/clubs/categories`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
+        // Build query params for category filter
+        const categoryParam = selectedCategory !== 'all' ? `?category=${selectedCategory}` : '';
+
+        // Execute all fetch requests in parallel
+        const [categoriesResponse, allClubsResponse, myClubsResponse, pendingClubsResponse] = await Promise.all([
+          fetch(`${apiUrl}/api/clubs/categories`, { headers }),
+          fetch(`${apiUrl}/api/clubs${categoryParam}`, { headers }),
+          fetch(`${apiUrl}/api/clubs/my-clubs`, { headers }),
+          fetch(`${apiUrl}/api/clubs/pending-requests`, { headers })
+        ]);
+
+        // Process Responses
         if (categoriesResponse.ok) {
           const categoriesData = await categoriesResponse.json();
           setCategories(categoriesData);
         }
-        
-        // Build query params for category filter
-        const categoryParam = selectedCategory !== 'all' ? `?category=${selectedCategory}` : '';
-        
-        // Fetch all clubs (with optional category filter)
-        const allClubsResponse = await fetch(`${apiUrl}/api/clubs${categoryParam}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        // Fetch user's clubs
-        const myClubsResponse = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
 
-        // Fetch pending clubs
-        const pendingClubsResponse = await fetch(`${apiUrl}/api/clubs/pending-requests`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
         if (allClubsResponse.ok) {
           const allData = await allClubsResponse.json();
           setClubs(allData);

@@ -266,7 +266,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
       const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       
-      console.log('Submitting quiz answers:', answers);
+
       
       const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',

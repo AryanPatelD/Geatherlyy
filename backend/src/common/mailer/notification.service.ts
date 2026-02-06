@@ -483,6 +483,7 @@ export class NotificationService {
     );
     
     try {
+      console.log(`[NotificationService] Sending approval email to ${data.userEmail} for ${data.requestType}`);
       await this.mailerService.sendMail(
         data.userEmail,
         `Your ${data.requestType || 'Request'} has been ${statusText}`,

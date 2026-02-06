@@ -161,6 +161,7 @@ export default function CreateQuizPage({ searchParams }: Props) {
 
       if (response.ok) {
         toast.success('Quiz created successfully!');
+        router.refresh(); // Refresh server components/data
         router.back();
       } else {
         const err = await response.json();
