@@ -133,7 +133,7 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filtered.map((club) => {
             const isMember = isUserMember(club.id);
             const isJoining = joiningClubId === club.id;
@@ -144,7 +144,7 @@ export default function DiscoverPage() {
                 href={!isJoining ? `/dashboard/clubs/${club.id}` : '#'}
                 className="card group cursor-pointer hover:scale-105 transition-transform duration-300 block"
               >
-                <div className="relative -m-6 mb-4 h-32 rounded-t-xl bg-gradient-to-br from-primary to-secondary overflow-hidden">
+                <div className="relative -m-4 md:-m-6 mb-3 md:mb-4 h-28 md:h-32 rounded-t-xl bg-gradient-to-br from-primary to-secondary overflow-hidden">
                   {club.imageUrl && (
                     <img
                       src={club.imageUrl}
@@ -152,27 +152,27 @@ export default function DiscoverPage() {
                       className="absolute inset-0 w-full h-full object-cover opacity-60"
                     />
                   )}
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className="px-3 py-1 rounded-full bg-white/90 text-xs font-medium text-primary">
+                  <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10">
+                    <span className="px-2 md:px-3 py-1 rounded-full bg-white/90 text-[10px] md:text-xs font-medium text-primary">
                       {club.category}
                     </span>
                   </div>
-                  <div className="absolute bottom-4 left-4 text-white font-semibold flex items-center gap-2 z-10">
+                  <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 text-white font-semibold flex items-center gap-1 md:gap-2 z-10 text-sm md:text-base">
                     <span>👥</span>
                     <span>{club._count?.members ?? club.memberCount ?? 0} members</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                <div className="space-y-2 md:space-y-3">
+                  <h3 className="text-lg md:text-xl font-bold group-hover:text-primary transition-colors">
                     {club.name}
                   </h3>
-                  <p className="text-sm text-muted-text line-clamp-2">
+                  <p className="text-xs md:text-sm text-muted-text line-clamp-2">
                     {club.description}
                   </p>
-                  <div className="flex items-center gap-2 text-sm text-muted-text">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-muted-text">
                     <span>👨‍🏫</span>
-                    <span>Mentor: {club.mentor}</span>
+                    <span className="truncate">Mentor: {club.mentor}</span>
                   </div>
                   <button 
                     onClick={(e) => {
@@ -184,7 +184,7 @@ export default function DiscoverPage() {
                       }
                     }}
                     disabled={isJoining}
-                    className={`w-full mt-4 px-4 py-3 rounded-lg font-medium transition-opacity ${
+                    className={`w-full mt-3 md:mt-4 px-4 py-2.5 md:py-3 rounded-lg font-medium transition-opacity text-sm md:text-base ${
                       isMember 
                         ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:opacity-90'
                         : 'bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90'

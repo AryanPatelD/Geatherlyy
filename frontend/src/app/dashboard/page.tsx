@@ -223,11 +223,11 @@ export default function DashboardPage() {
       </div>
 
         {/* Category Filter */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <span className="text-sm font-medium text-muted-text whitespace-nowrap">Filter by:</span>
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+          <span className="text-xs sm:text-sm font-medium text-muted-text whitespace-nowrap">Filter by:</span>
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
               selectedCategory === 'all'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -237,7 +237,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setSelectedCategory('Technical')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
               selectedCategory === 'Technical'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -247,7 +247,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setSelectedCategory('Non-Technical')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
               selectedCategory === 'Non-Technical'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -306,7 +306,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Clubs Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {loadingClubs ? (
             <div className="col-span-full text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

@@ -207,6 +207,21 @@ export class ClubsController {
     await this.clubsService.removeCoordinator(clubId, userId, req.user.id);
   }
 
+  @Delete(':id/members/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FACULTY, UserRole.ADMIN, UserRole.COORDINATOR)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove member from club (Faculty/Admin/Coordinator)' })
+  @ApiResponse({ status: 204, description: 'Member removed successfully' })
+  async removeMember(
+    @Param('id', ParseIntPipe) clubId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Request() req,
+  ) {
+    await this.clubsService.removeMember(clubId, userId, req.user.id);
+  }
+
   @Get(':id/members/export')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.COORDINATOR, UserRole.FACULTY, UserRole.ADMIN)

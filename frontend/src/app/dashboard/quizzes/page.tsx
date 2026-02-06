@@ -53,36 +53,36 @@ export default function QuizzesPage() {
       </div>
 
       {quizzes.length === 0 ? (
-        <div className="card text-center py-12">
-          <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-xl font-semibold mb-2">No quizzes available</h3>
-          <p className="text-muted-text">Check back later for new quizzes</p>
+        <div className="card text-center py-8 md:py-12">
+          <div className="text-5xl md:text-6xl mb-4">📝</div>
+          <h3 className="text-lg md:text-xl font-semibold mb-2">No quizzes available</h3>
+          <p className="text-muted-text text-sm md:text-base">Check back later for new quizzes</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}
               className="card hover:border-primary transition-all cursor-pointer"
               onClick={() => router.push(`/dashboard/quizzes/${quiz.id}`)}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-bold text-lg mb-1">{quiz.title}</h3>
-                  <p className="text-sm text-muted-text">{quiz.club?.name}</p>
+              <div className="flex items-start justify-between mb-3 md:mb-4">
+                <div className="min-w-0 flex-1 mr-2">
+                  <h3 className="font-bold text-base md:text-lg mb-1 truncate">{quiz.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-text truncate">{quiz.club?.name}</p>
                 </div>
-                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-medium">
+                <span className="px-2 md:px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] md:text-xs rounded-full font-medium whitespace-nowrap">
                   Active
                 </span>
               </div>
 
               {quiz.description && (
-                <p className="text-sm text-muted-text mb-4 line-clamp-2">
+                <p className="text-xs md:text-sm text-muted-text mb-3 md:mb-4 line-clamp-2">
                   {quiz.description}
                 </p>
               )}
 
-              <div className="flex gap-4 text-sm text-muted-text mb-4">
+              <div className="flex gap-3 md:gap-4 text-xs md:text-sm text-muted-text mb-3 md:mb-4">
                 <div className="flex items-center gap-1">
                   <span>📝</span>
                   <span>{quiz._count?.questions || 0} questions</span>
@@ -93,7 +93,7 @@ export default function QuizzesPage() {
                 </div>
               </div>
 
-              <button className="w-full btn btn-primary">
+              <button className="w-full btn btn-primary text-sm md:text-base py-2 md:py-2.5">
                 Start Quiz
               </button>
             </div>

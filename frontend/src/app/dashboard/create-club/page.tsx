@@ -22,6 +22,7 @@ export default function CreateClubPage() {
   const [mentorInput, setMentorInput] = useState('');
   const [mentorIdentifiers, setMentorIdentifiers] = useState<string[]>([]);
   const [convenorIdentifier, setConvenorIdentifier] = useState('');
+  const [creatorAddedAsMentor, setCreatorAddedAsMentor] = useState(false);
 
   const [clubPhotoPreview, setClubPhotoPreview] = useState<string>('');
   const [eventPhotoPreviews, setEventPhotoPreviews] = useState<string[]>([]);
@@ -34,6 +35,18 @@ export default function CreateClubPage() {
       router.push('/dashboard');
     }
   }, [user, isLoading, router]);
+
+  // Auto-add the creator (faculty) to Faculty Mentors section
+  useEffect(() => {
+    if (user && ['faculty', 'admin'].includes(user.role) && !creatorAddedAsMentor) {
+      // Add creator's email to mentor list automatically
+      const creatorIdentifier = user.email || user.name;
+      if (creatorIdentifier && !mentorIdentifiers.includes(creatorIdentifier)) {
+        setMentorIdentifiers([creatorIdentifier]);
+        setCreatorAddedAsMentor(true);
+      }
+    }
+  }, [user, creatorAddedAsMentor, mentorIdentifiers]);
 
   // Show loading state while checking auth
   if (isLoading || !user) {
@@ -58,12 +71,21 @@ export default function CreateClubPage() {
 
   const handleAddMentor = () => {
     if (mentorInput.trim() && mentorIdentifiers.length < 3) {
-      setMentorIdentifiers([...mentorIdentifiers, mentorInput.trim()]);
+      // Prevent adding duplicate
+      if (!mentorIdentifiers.includes(mentorInput.trim())) {
+        setMentorIdentifiers([...mentorIdentifiers, mentorInput.trim()]);
+      }
       setMentorInput('');
     }
   };
 
   const handleRemoveMentor = (index: number) => {
+    const mentorToRemove = mentorIdentifiers[index];
+    // Prevent removing the creator (themselves)
+    if (user && (mentorToRemove === user.email || mentorToRemove === user.name)) {
+      toast.error("You cannot remove yourself from the mentor list");
+      return;
+    }
     setMentorIdentifiers(mentorIdentifiers.filter((_, i) => i !== index));
   };
 
@@ -118,12 +140,18 @@ export default function CreateClubPage() {
 
     // Validation
     if (mentorIdentifiers.length < 2 || mentorIdentifiers.length > 3) {
-        setError('Please provide between 2 and 3 Faculty Mentors.');
+        setError('Please provide between 2 and 3 Faculty Mentors (you are already added, add 1-2 more).');
         setLoading(false);
         return;
     }
     if (!convenorIdentifier.trim()) {
-        setError('Please provide a Club Convenor.');
+        setError('Please provide a valid Club Convenor Email.');
+        setLoading(false);
+        return;
+    }
+    // Prevent convenor from being the same as any mentor
+    if (mentorIdentifiers.some(m => m.toLowerCase() === convenorIdentifier.trim().toLowerCase())) {
+        setError('The Convenor cannot be the same as a Faculty Mentor. Please choose a different person.');
         setLoading(false);
         return;
     }
@@ -235,14 +263,17 @@ export default function CreateClubPage() {
           {/* Faculty Mentors */}
           <div>
              <label className="block text-sm font-medium mb-2">
-               Faculty Mentors (Enter Name or Email) *
+               Faculty Mentors (Enter Email) *
              </label>
+             <p className="text-xs text-muted-foreground mb-2">
+               You are automatically added as a mentor. Add 1-2 more faculty members by their email.
+             </p>
              <div className="flex gap-2 mb-2">
                 <input 
-                    type="text"
+                    type="email"
                     value={mentorInput}
                     onChange={(e) => setMentorInput(e.target.value)}
-                    placeholder="e.g. Dr. Smith or smith@college.edu"
+                    placeholder="e.g. smith@college.edu"
                     className="flex-1 px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                     disabled={mentorIdentifiers.length >= 3}
                     onKeyDown={(e) => {
@@ -264,14 +295,20 @@ export default function CreateClubPage() {
              
              {/* Mentor List */}
              <div className="flex flex-wrap gap-2 mb-1">
-                {mentorIdentifiers.map((mentor, index) => (
-                    <div key={index} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm">
-                        <span>{mentor}</span>
-                        <button type="button" onClick={() => handleRemoveMentor(index)} className="text-muted-foreground hover:text-red-500">
-                            <Cross2Icon className="w-3 h-3" />
-                        </button>
-                    </div>
-                ))}
+                {mentorIdentifiers.map((mentor, index) => {
+                    const isCreator = user && (mentor === user.email || mentor === user.name);
+                    return (
+                        <div key={index} className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${isCreator ? 'bg-primary/20 dark:bg-primary/30 border border-primary' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                            <span>{mentor}</span>
+                            {isCreator && <span className="text-xs text-primary font-medium">(You)</span>}
+                            {!isCreator && (
+                                <button type="button" onClick={() => handleRemoveMentor(index)} className="text-muted-foreground hover:text-red-500">
+                                    <Cross2Icon className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
              </div>
              <p className="text-xs text-muted-foreground mt-1">
                 Min 2, Max 3 mentors required.
@@ -281,13 +318,13 @@ export default function CreateClubPage() {
           {/* Club Convenor */}
           <div>
              <label className="block text-sm font-medium mb-2">
-               Club Convenor (Name or Email) *
+               Club Convenor Email *
              </label>
              <input
-                type="text"
+                type="email"
                 value={convenorIdentifier}
                 onChange={(e) => setConvenorIdentifier(e.target.value)}
-                placeholder="e.g. Prof. Johnson"
+                placeholder="e.g. professor@college.edu"
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 required
              />

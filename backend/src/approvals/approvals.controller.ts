@@ -28,7 +28,7 @@ export class ApprovalsController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get all approval requests (Faculty/Admin only - Faculty only sees clubs they mentor)' })
+  @ApiOperation({ summary: 'Get all approval requests (Faculty/Admin only - Faculty only sees clubs they mentor or convene)' })
   @ApiResponse({ status: 200, description: 'Returns list of approval requests' })
   async getAllRequests(
     @Query('status') status?: ApprovalStatus,
@@ -51,7 +51,7 @@ export class ApprovalsController {
   @Get('pending')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get pending approval requests (Faculty/Admin only - Faculty only sees clubs they mentor)' })
+  @ApiOperation({ summary: 'Get pending approval requests (Faculty/Admin only - Faculty only sees clubs they mentor or convene)' })
   @ApiResponse({ status: 200, description: 'Returns pending requests' })
   async getPendingRequests(@Request() req) {
     const isAdmin = req?.user?.role === UserRole.ADMIN;
@@ -61,7 +61,7 @@ export class ApprovalsController {
   @Get('stats')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Get approval statistics (Faculty/Admin only - Faculty only sees stats for clubs they mentor)' })
+  @ApiOperation({ summary: 'Get approval statistics (Faculty/Admin only - Faculty only sees stats for clubs they mentor or convene)' })
   @ApiResponse({ status: 200, description: 'Returns approval statistics' })
   async getApprovalStats(@Request() req) {
     const isAdmin = req?.user?.role === UserRole.ADMIN;
@@ -111,9 +111,9 @@ export class ApprovalsController {
   @Put(':id/review')
   @UseGuards(RolesGuard)
   @Roles(UserRole.FACULTY, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Review approval request (Faculty can only review for clubs they mentor)' })
+  @ApiOperation({ summary: 'Review approval request (Faculty can only review for clubs they mentor or convene)' })
   @ApiResponse({ status: 200, description: 'Request reviewed successfully' })
-  @ApiResponse({ status: 403, description: 'Faculty can only review requests for clubs they mentor' })
+  @ApiResponse({ status: 403, description: 'Faculty can only review requests for clubs they mentor or convene' })
   async reviewRequest(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: ApprovalStatus,

@@ -1,97 +1,103 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
 @Injectable()
 export class MailerService implements OnModuleInit {
-  private transporter: nodemailer.Transporter;
+  private oauth2Client: any = null;
+  private gmail: any = null;
   private readonly logger = new Logger(MailerService.name);
+  private isReady = false;
+  private mailUser: string | undefined;
 
   constructor(private configService: ConfigService) {
-    this.createTransporter();
+    this.initializeGmailApi();
   }
 
   async onModuleInit() {
-    // Verify transporter connection on startup
-    if (this.transporter) {
-      try {
-        await this.transporter.verify();
-        this.logger.log('✅ Mail transporter verified and ready to send emails');
-      } catch (error) {
-        this.logger.error(`❌ Mail transporter verification failed: ${error.message}`);
-      }
+    if (this.gmail) {
+      this.logger.log('✅ Gmail API initialized and ready to send emails');
+      this.isReady = true;
     }
   }
 
-  private createTransporter() {
-    const host = this.configService.get<string>('MAIL_HOST');
-    const port = this.configService.get<number>('MAIL_PORT') || 587;
-    const user = this.configService.get<string>('MAIL_USER');
-    const pass = this.configService.get<string>('MAIL_PASS');
+  private initializeGmailApi() {
+    const clientId = this.configService.get<string>('GMAIL_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('GMAIL_CLIENT_SECRET');
+    const refreshToken = this.configService.get<string>('GMAIL_REFRESH_TOKEN');
+    this.mailUser = this.configService.get<string>('MAIL_USER');
 
-    this.logger.log(`Mail config: host=${host}, port=${port}, user=${user}, pass=${pass ? '***' : 'NOT SET'}`);
+    this.logger.log(`Gmail API config: clientId=${clientId ? 'SET' : 'NOT SET'}, clientSecret=${clientSecret ? 'SET' : 'NOT SET'}, refreshToken=${refreshToken ? 'SET' : 'NOT SET'}, user=${this.mailUser || 'NOT SET'}`);
 
-    if (host && user && pass) {
-      // Remove quotes from password if present (common .env issue)
-      const cleanPass = pass.replace(/^"|"$/g, '');
-      
-      // Use Gmail service for better compatibility
-      if (host === 'smtp.gmail.com') {
-        this.transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user,
-            pass: cleanPass,
-          },
+    if (clientId && clientSecret && refreshToken && this.mailUser) {
+      try {
+        this.oauth2Client = new google.auth.OAuth2(
+          clientId,
+          clientSecret,
+          'https://developers.google.com/oauthplayground' // Redirect URI used for getting refresh token
+        );
+
+        this.oauth2Client.setCredentials({
+          refresh_token: refreshToken,
         });
-        this.logger.log(`Mailer initialized with Gmail service for user: ${user}`);
-      } else {
-        this.transporter = nodemailer.createTransport({
-          host,
-          port,
-          secure: port === 465,
-          auth: {
-            user,
-            pass: cleanPass,
-          },
-          tls: {
-            rejectUnauthorized: false,
-          },
-        });
-        this.logger.log(`Mailer initialized with host: ${host}, port: ${port}`);
+
+        this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
+        this.logger.log(`Gmail API initialized for user: ${this.mailUser}`);
+      } catch (error) {
+        this.logger.error(`Failed to initialize Gmail API: ${error.message}`);
       }
     } else {
       this.logger.warn(
-        'Mailer credentials not found. Emails will be logged to console instead.',
+        'Gmail API credentials not found. Required: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, MAIL_USER. Emails will be logged to console instead.',
       );
     }
   }
 
-  async sendMail(to: string, subject: string, html: string) {
-    if (!this.transporter) {
+  private createEmailMessage(to: string, subject: string, html: string): string {
+    const from = this.configService.get<string>('MAIL_FROM') || `Geatherlyy <${this.mailUser}>`;
+    
+    const emailLines = [
+      `From: ${from}`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      html,
+    ];
+
+    const email = emailLines.join('\r\n');
+    
+    // Encode to base64url format (required by Gmail API)
+    const encodedEmail = Buffer.from(email)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    return encodedEmail;
+  }
+
+  async sendMail(to: string, subject: string, html: string): Promise<any> {
+    if (!this.gmail) {
       this.logger.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`);
-      return;
+      return { mock: true, to, subject };
     }
 
     try {
-      // For Gmail, the from address must match the authenticated user
-      const mailUser = this.configService.get<string>('MAIL_USER');
-      const mailFrom = this.configService.get<string>('MAIL_FROM');
-      
-      // Gmail will override the from address with the authenticated email anyway
-      // But we can set a display name
-      const from = mailFrom || `"Geatherlyy Support" <${mailUser}>`;
-      
-      const info = await this.transporter.sendMail({
-        from,
-        to,
-        subject,
-        html,
+      const encodedMessage = this.createEmailMessage(to, subject, html);
+
+      const result = await this.gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
+        },
       });
-      this.logger.log(`✅ Email sent to ${to}, messageId: ${info.messageId}`);
-      return info;
+
+      this.logger.log(`✅ Email sent to ${to}, messageId: ${result.data.id}`);
+      return { messageId: result.data.id, threadId: result.data.threadId };
     } catch (error) {
-      this.logger.error(`❌ Failed to send email to ${to}: ${error.message}`, error.stack);
+      this.logger.error(`❌ Failed to send email to ${to}: ${error.message}`);
       // Don't throw - allow app to continue even if email fails
       return null;
     }

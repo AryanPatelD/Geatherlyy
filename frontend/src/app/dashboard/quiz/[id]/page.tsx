@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/context/AuthContext';
 import { getApiUrl } from '@/lib/apiUrl';
+import { useQuizContext } from '@/context/QuizContext';
 
 interface QuizQuestion {
   id: number;
@@ -20,11 +21,22 @@ interface Quiz {
   description: string;
   timeLimit: number;
   totalMarks: number;
+  maxAttempts: number;
   questions: QuizQuestion[];
   club: {
     id: number;
     name: string;
   };
+}
+
+interface UserAttempt {
+  id: number;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  timeTaken: number;
+  attemptCount: number;
+  isPassed: boolean;
 }
 
 export default function QuizPage({
@@ -35,6 +47,7 @@ export default function QuizPage({
   const router = useRouter();
   const getToken = useAuthStore((state) => state.getToken);
   const token = getToken();
+  const { setQuizInProgress } = useQuizContext();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
@@ -46,26 +59,50 @@ export default function QuizPage({
   const [result, setResult] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [cheatingWarnings, setCheatingWarnings] = useState(0);
+  const [userAttempt, setUserAttempt] = useState<UserAttempt | null>(null);
+  const [showRetakeConfirm, setShowRetakeConfirm] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const submittingRef = useRef(false);
 
-  // Fetch quiz data
+  // Fetch quiz data and user's attempt status
   useEffect(() => {
-    const fetchQuiz = async () => {
+    const fetchQuizAndAttempt = async () => {
       try {
         const apiUrl = getApiUrl();
-        const response = await fetch(`${apiUrl}/api/quizzes/${params.id}`, {
+        
+        // Fetch quiz data
+        const quizResponse = await fetch(`${apiUrl}/api/quizzes/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
-        if (!response.ok) {
+        if (!quizResponse.ok) {
           throw new Error('Failed to fetch quiz');
         }
 
-        const data = await response.json();
-        setQuiz(data);
-        setTimeLeft(data.timeLimit * 60);
+        const quizData = await quizResponse.json();
+        setQuiz(quizData);
+        setTimeLeft(quizData.timeLimit * 60);
+
+        // Fetch user's attempt status
+        try {
+          const attemptResponse = await fetch(`${apiUrl}/api/quizzes/${params.id}/my-attempt`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (attemptResponse.ok) {
+            const attemptData = await attemptResponse.json();
+            if (attemptData) {
+              setUserAttempt(attemptData);
+            }
+          }
+        } catch (attemptError) {
+          // User hasn't attempted the quiz yet - this is fine
+          console.log('No previous attempt found');
+        }
       } catch (error) {
         console.error('Error fetching quiz:', error);
         toast.error('Failed to load quiz. Please try again.');
@@ -75,7 +112,7 @@ export default function QuizPage({
     };
 
     if (token) {
-      fetchQuiz();
+      fetchQuizAndAttempt();
     }
   }, [params.id, token]);
 
@@ -178,6 +215,7 @@ export default function QuizPage({
 
   const handleStartQuiz = () => {
     setStarted(true);
+    setQuizInProgress(true); // Hide sidebar
     // Start timer
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -188,6 +226,20 @@ export default function QuizPage({
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const handleRetakeQuiz = () => {
+    // Reset states for retake
+    setAnswers({});
+    setCurrentQuestion(0);
+    setSubmitted(false);
+    setResult(null);
+    setCheatingWarnings(0);
+    setShowRetakeConfirm(false);
+    if (quiz) {
+      setTimeLeft(quiz.timeLimit * 60);
+    }
+    handleStartQuiz();
   };
 
   const handleAnswer = (questionId: number, optionIndex: number) => {
@@ -210,17 +262,22 @@ export default function QuizPage({
   };
 
   const handleSubmit = async () => {
-    if (submitting || !quiz) return;
+    // Prevent double submission
+    if (submittingRef.current || submitting || !quiz) return;
+    submittingRef.current = true;
 
     // Clear timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
 
     setSubmitting(true);
 
     try {
       const apiUrl = getApiUrl();
+      console.log('Submitting quiz with answers:', answers);
+      
       const response = await fetch(`${apiUrl}/api/quizzes/${params.id}/submit`, {
         method: 'POST',
         headers: {
@@ -230,13 +287,26 @@ export default function QuizPage({
         body: JSON.stringify({ answers }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to submit quiz');
+        throw new Error(data.message || 'Failed to submit quiz');
       }
 
-      const data = await response.json();
       setResult(data);
       setSubmitted(true);
+      setQuizInProgress(false); // Show sidebar again
+
+      // Update userAttempt with new data
+      setUserAttempt({
+        id: data.id,
+        score: data.score,
+        totalMarks: data.totalMarks,
+        percentage: data.percentage,
+        timeTaken: data.timeTaken,
+        attemptCount: data.attemptCount || 1,
+        isPassed: data.isPassed,
+      });
 
       // Exit fullscreen after submission
       if (document.fullscreenElement) {
@@ -254,10 +324,14 @@ export default function QuizPage({
         const leaderboardData = await leaderboardResponse.json();
         setLeaderboard(leaderboardData);
       }
-    } catch (error) {
+      
+      toast.success('Quiz submitted successfully!');
+    } catch (error: any) {
       console.error('Error submitting quiz:', error);
-      toast.error('Failed to submit quiz. Please try again.');
+      toast.error(error.message || 'Failed to submit quiz. Please try again.');
       setSubmitting(false);
+      submittingRef.current = false;
+      setQuizInProgress(false);
     }
   };
 
@@ -267,14 +341,24 @@ export default function QuizPage({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Cleanup timer on unmount
+  // Cleanup timer and quiz state on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      setQuizInProgress(false); // Reset sidebar visibility on unmount
     };
-  }, []);
+  }, [setQuizInProgress]);
+
+  // Check if user can retake the quiz
+  const canRetake = quiz && userAttempt && 
+    quiz.maxAttempts > 1 && 
+    userAttempt.attemptCount < quiz.maxAttempts;
+
+  const attemptsRemaining = quiz && userAttempt 
+    ? quiz.maxAttempts - userAttempt.attemptCount 
+    : quiz?.maxAttempts || 1;
 
   if (loading) {
     return (
@@ -302,6 +386,10 @@ export default function QuizPage({
   }
 
   if (!started) {
+    // Check if user has already attempted and cannot retake
+    const hasAttempted = userAttempt && userAttempt.attemptCount > 0;
+    const canStartQuiz = !hasAttempted || canRetake;
+
     return (
       <div className="p-8">
         <div className="max-w-2xl mx-auto card">
@@ -325,14 +413,114 @@ export default function QuizPage({
               <span className="text-muted-text">Time Limit:</span>
               <span className="font-semibold">{quiz.timeLimit} minutes</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-text">Allowed Attempts:</span>
+              <span className="font-semibold">{quiz.maxAttempts}</span>
+            </div>
+            {hasAttempted && (
+              <div className="flex justify-between">
+                <span className="text-muted-text">Your Attempts:</span>
+                <span className="font-semibold">{userAttempt.attemptCount} / {quiz.maxAttempts}</span>
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={handleStartQuiz}
-            className="w-full btn btn-primary"
-          >
-            Start Quiz →
-          </button>
+          {/* Show previous attempt details if user has attempted */}
+          {hasAttempted && (
+            <div className="mb-6 p-4 bg-muted-bg rounded-lg border border-border">
+              <h3 className="font-semibold mb-3">📊 Your Previous Attempt</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-text">Score:</span>
+                  <span className="font-semibold">{userAttempt.score} / {userAttempt.totalMarks}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-text">Percentage:</span>
+                  <span className="font-semibold">{Math.round(userAttempt.percentage)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-text">Status:</span>
+                  <span className={`font-semibold ${userAttempt.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                    {userAttempt.isPassed ? '✓ Passed' : '✗ Failed'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-text">Time Taken:</span>
+                  <span className="font-semibold">
+                    {Math.floor(userAttempt.timeTaken / 60)}:{(userAttempt.timeTaken % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Retake confirmation modal */}
+          {showRetakeConfirm && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300 dark:border-yellow-700">
+              <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⚠️ Confirm Retake</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+                Are you sure you want to retake this quiz? You have {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining.
+                Your new score will replace your previous score.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRetakeQuiz}
+                  className="flex-1 btn btn-primary"
+                >
+                  Yes, Retake Quiz
+                </button>
+                <button
+                  onClick={() => setShowRetakeConfirm(false)}
+                  className="flex-1 btn btn-outline"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          {!showRetakeConfirm && (
+            <>
+              {!hasAttempted ? (
+                <button
+                  onClick={handleStartQuiz}
+                  className="w-full btn btn-primary"
+                >
+                  Start Quiz →
+                </button>
+              ) : canRetake ? (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowRetakeConfirm(true)}
+                    className="w-full btn btn-primary"
+                  >
+                    🔄 Retake Quiz ({attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining)
+                  </button>
+                  <button
+                    onClick={() => router.back()}
+                    className="w-full btn btn-outline"
+                  >
+                    Back to Club
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center">
+                    <p className="text-muted-text">
+                      You have used all {quiz.maxAttempts} attempt{quiz.maxAttempts !== 1 ? 's' : ''} for this quiz.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => router.back()}
+                    className="w-full btn btn-primary"
+                  >
+                    Back to Club
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
@@ -416,9 +604,22 @@ export default function QuizPage({
 
           {/* Action Buttons */}
           <div className="space-y-2">
+            {/* Show retake option if available */}
+            {canRetake && (
+              <button 
+                onClick={() => {
+                  setSubmitted(false);
+                  setResult(null);
+                  setShowRetakeConfirm(true);
+                }}
+                className="w-full btn btn-primary bg-green-600 hover:bg-green-700"
+              >
+                🔄 Retake Quiz ({attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining)
+              </button>
+            )}
             <button 
               onClick={() => router.push(`/dashboard/clubs/${quiz.club.id}`)}
-              className="w-full btn btn-primary"
+              className={`w-full btn ${canRetake ? 'btn-outline' : 'btn-primary'}`}
             >
               Back to Club
             </button>

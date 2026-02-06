@@ -17,6 +17,7 @@ export default function ClubDetailPage({
   const [showCoordinatorModal, setShowCoordinatorModal] = useState(false);
   const [coordinatorReason, setCoordinatorReason] = useState('');
   const [applyingCoordinator, setApplyingCoordinator] = useState(false);
+  const [hasAppliedAsCoordinator, setHasAppliedAsCoordinator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [resources, setResources] = useState<any[]>([]);
@@ -41,6 +42,39 @@ export default function ClubDetailPage({
       }
     }
   }, []);
+
+  // Check if user has a pending coordinator application for this club
+  useEffect(() => {
+    const checkPendingApplication = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/approvals/my-requests`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const requests = await response.json();
+          // Check if there's a pending COORDINATOR request for this club
+          const hasPendingRequest = requests.some(
+            (req: any) => 
+              req.clubId === parseInt(params.id) && 
+              req.requestedRole === 'COORDINATOR' && 
+              req.status === 'PENDING'
+          );
+          setHasAppliedAsCoordinator(hasPendingRequest);
+        }
+      } catch (error) {
+        console.error('Error checking pending applications:', error);
+      }
+    };
+
+    checkPendingApplication();
+  }, [params.id]);
 
   useEffect(() => {
     const fetchClub = async () => {
@@ -205,8 +239,13 @@ export default function ClubDetailPage({
         toast.success('Your coordinator application has been submitted! Wait for admin/faculty approval.');
         setShowCoordinatorModal(false);
         setCoordinatorReason('');
+        setHasAppliedAsCoordinator(true);
       } else {
         const errorData = await response.json();
+        // If user already has a pending application, update state
+        if (errorData.message?.toLowerCase().includes('already') || errorData.message?.toLowerCase().includes('pending')) {
+          setHasAppliedAsCoordinator(true);
+        }
         toast.error(errorData.message || 'Failed to apply as coordinator');
       }
     } catch (error) {
@@ -320,12 +359,21 @@ export default function ClubDetailPage({
         <div className="flex justify-end mb-6 gap-3">
           {isUserMember && !isUserCoordinator && userRole !== 'FACULTY' && userRole !== 'ADMIN' && (
             <>
-              <button 
-                onClick={() => setShowCoordinatorModal(true)}
-                className="btn btn-outline"
-              >
-                🎖️ Apply as Coordinator
-              </button>
+              {hasAppliedAsCoordinator ? (
+                <button 
+                  disabled
+                  className="btn btn-outline opacity-60 cursor-not-allowed"
+                >
+                  ⏳ Application Pending
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowCoordinatorModal(true)}
+                  className="btn btn-outline"
+                >
+                  🎖️ Apply as Coordinator
+                </button>
+              )}
               <button 
                 onClick={() => {
                   setLeaveStep(1);
@@ -639,6 +687,13 @@ export default function ClubDetailPage({
               className="input h-32 mb-4 resize-none"
               disabled={applyingCoordinator}
             />
+
+            {/* Disclaimer */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                <span className="font-semibold">📋 Note:</span> If your application is <span className="text-green-600 dark:text-green-400 font-semibold">approved</span>, you will get access to the <strong>Coordinator Hub</strong> where you can manage club activities, events, and quizzes. If your application is <span className="text-red-600 dark:text-red-400 font-semibold">rejected</span>, no coordinator access will be provided and you will remain a regular member.
+              </p>
+            </div>
             
             <div className="flex gap-3">
               <button

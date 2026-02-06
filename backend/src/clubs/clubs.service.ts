@@ -180,7 +180,11 @@ export class ClubsService {
         create: { userId: creatorId! } // Start with creator
       },
       members: {
-        create: { userId: creatorId! } // Creator is also a member
+        create: [
+          { userId: creatorId! }, // Creator
+          ...mentorIds.map(id => ({ userId: id })), // Mentors
+          ...(convenorId ? [{ userId: convenorId }] : []) // Convenor
+        ].filter((v, i, a) => a.findIndex(t => t.userId === v.userId) === i) // Remove duplicates
       }
     };
 
@@ -350,6 +354,16 @@ export class ClubsService {
               id: userId,
             },
           },
+          {
+            mentors: {
+              some: {
+                id: userId,
+              },
+            },
+          },
+          {
+            convenorId: userId,
+          }
         ],
       },
       include: {
@@ -483,6 +497,8 @@ export class ClubsService {
   async update(id: number, data: Prisma.ClubUpdateInput, userId?: number): Promise<Club> {
     // If userId provided, verify coordinator permission
     if (userId) {
+      console.log(`[ClubsService.update] Attempting update for Club ID: ${id} by User ID: ${userId}`);
+      
       const isCoordinator = await this.prisma.clubCoordinator.findUnique({
         where: {
           clubId_userId: {
@@ -491,12 +507,15 @@ export class ClubsService {
           },
         },
       });
+      console.log(`[ClubsService.update] Is Coordinator: ${!!isCoordinator}`);
 
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
       });
+      console.log(`[ClubsService.update] User Role: ${user?.role}`);
 
       if (!isCoordinator && user?.role !== UserRole.ADMIN && user?.role !== UserRole.FACULTY) {
+        console.error(`[ClubsService.update] Permission denied for User ID: ${userId}`);
         throw new ForbiddenException('Only coordinators, faculty, or admins can update club information');
       }
     }
@@ -625,6 +644,98 @@ export class ClubsService {
     await this.prisma.club.update({
       where: { id: clubId },
       data: { memberCount: { decrement: 1 } }
+    });
+
+    // Invalidate cache
+    await this.redis.del(`club:${clubId}`);
+  }
+
+  async removeMember(clubId: number, memberId: number, removedBy: number): Promise<void> {
+    // 1. Fetch the user performing the action
+    const remover = await this.prisma.user.findUnique({ where: { id: removedBy } });
+    if (!remover) throw new ForbiddenException('User not found');
+
+    // 2. Fetch the club to check roles within it
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      include: {
+        coordinators: true,
+        mentors: true,
+        convenor: true,
+      }
+    });
+    if (!club) throw new NotFoundException('Club not found');
+
+    // 3. Determine Remover's Role in the Club
+    const isRemoverAdmin = remover.role === UserRole.ADMIN;
+    const isRemoverFaculty = remover.role === UserRole.FACULTY; // General faculty role check
+    // Ideally check if specific mentor/convenor, but requirement says "Faculty... should be able to remove"
+    // We can assume any Faculty with access (Managed Club) is valid, 
+    // OR strictly check if they are Mentor/Convenor of THIS club.
+    // Given the endpoint guards will handle general access, we'll refine logic here:
+
+    const isRemoverCoordinator = club.coordinators.some(c => c.userId === removedBy);
+    const isRemoverMentor = club.mentors.some(m => m.id === removedBy);
+    const isRemoverConvenor = club.convenorId === removedBy;
+    const isRemoverAuthority = isRemoverAdmin || isRemoverMentor || isRemoverConvenor;
+
+    if (!isRemoverAuthority && !isRemoverCoordinator) {
+      throw new ForbiddenException('You do not have permission to remove members');
+    }
+
+    // 4. Determine Target's Role in the Club
+    const isTargetCoordinator = club.coordinators.some(c => c.userId === memberId);
+    const isTargetMentor = club.mentors.some(m => m.id === memberId);
+    const isTargetConvenor = club.convenorId === memberId;
+
+    // 5. Enforce Restrictions
+
+    // Case: Coordinator removing someone
+    if (isRemoverCoordinator && !isRemoverAuthority) {
+        if (isTargetCoordinator) {
+            throw new ForbiddenException('Coordinators cannot remove other Coordinators');
+        }
+        if (isTargetMentor || isTargetConvenor) {
+             throw new ForbiddenException('Coordinators cannot remove Faculty/Mentors');
+        }
+        // If target is just a member, allow.
+    }
+
+    // Case: Faculty/Authority removing someone
+    if (isRemoverAuthority) {
+        // Faculty can remove Coordinators and Members.
+        // Prevent removing the Convenor if you are just a Mentor? 
+        // For now, assuming Faculty authority is absolute for Coordinator/Member removal.
+        if (isTargetConvenor && !isRemoverAdmin && removedBy !== club.convenorId) {
+             // Maybe prevent removing the convenor unless you are admin or the convenor themselves?
+             // Leaving open for now as requirement just focused on Coord vs Faculty/Member.
+        }
+    }
+
+    // Perform Removal
+    // If target is coordinator, remove from coordinator table first?
+    // removeMember implies removing from the club entirely.
+
+    await this.prisma.$transaction(async (prisma) => {
+        // If coordinator, remove role
+        if (isTargetCoordinator) {
+            await prisma.clubCoordinator.delete({
+                where: { clubId_userId: { clubId, userId: memberId } }
+            });
+            // Downgrade role if they have no other coord roles? 
+            // Keeping simple: just remove from this club.
+        }
+
+        // Remove from members
+        await prisma.clubMember.delete({
+            where: { clubId_userId: { clubId, userId: memberId } }
+        });
+
+        // Decrement count
+         await prisma.club.update({
+            where: { id: clubId },
+            data: { memberCount: { decrement: 1 } }
+        });
     });
 
     // Invalidate cache

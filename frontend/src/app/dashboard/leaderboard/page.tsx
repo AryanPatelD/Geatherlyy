@@ -229,29 +229,29 @@ export default function LeaderboardPage() {
       )}
 
       {/* Tab Navigation */}
-      <div className="flex gap-4 mb-6 border-b border-border">
+      <div className="flex gap-2 md:gap-4 mb-6 border-b border-border overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('global')}
-          className={`px-6 py-3 font-medium transition-all ${activeTab === 'global'
+          className={`px-3 md:px-6 py-2 md:py-3 font-medium transition-all whitespace-nowrap text-sm md:text-base ${activeTab === 'global'
             ? 'border-b-2 border-blue-600 text-blue-600'
             : 'text-gray-500 hover:text-gray-700'
             }`}
         >
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5" />
-            Global Leaderboard
+          <div className="flex items-center gap-1 md:gap-2">
+            <Trophy className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Global</span> Leaderboard
           </div>
         </button>
         <button
           onClick={() => setActiveTab('clubs')}
-          className={`px-6 py-3 font-medium transition-all ${activeTab === 'clubs'
+          className={`px-3 md:px-6 py-2 md:py-3 font-medium transition-all whitespace-nowrap text-sm md:text-base ${activeTab === 'clubs'
             ? 'border-b-2 border-blue-600 text-blue-600'
             : 'text-gray-500 hover:text-gray-700'
             }`}
         >
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Club Leaderboards
+          <div className="flex items-center gap-1 md:gap-2">
+            <Users className="w-4 h-4 md:w-5 md:h-5" />
+            Club <span className="hidden sm:inline">Leaderboards</span>
           </div>
         </button>
       </div>
@@ -261,67 +261,67 @@ export default function LeaderboardPage() {
         <>
           {/* Top 3 Podium */}
           {globalLeaderboard.length >= 3 && (
-            <div className="mb-8 grid grid-cols-3 gap-6 items-end">
+            <div className="mb-6 md:mb-8 grid grid-cols-3 gap-2 md:gap-6 items-end">
               {/* 2nd Place */}
-              <div className="card text-center pt-8 pb-6 transform transition-all hover:scale-105">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-gray-300 to-gray-500 flex items-center justify-center text-white font-bold text-3xl mb-3">
+              <div className="card text-center pt-4 md:pt-8 pb-4 md:pb-6 transform transition-all hover:scale-105 px-2 md:px-4">
+                <div className="w-12 h-12 md:w-20 md:h-20 mx-auto rounded-full bg-gradient-to-r from-gray-300 to-gray-500 flex items-center justify-center text-white font-bold text-lg md:text-3xl mb-2 md:mb-3">
                   {globalLeaderboard[1]?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div className="w-10 h-10 mx-auto rounded-full bg-gradient-to-r from-gray-300 to-gray-500 flex items-center justify-center text-white font-bold mb-3">
+                <div className="w-6 h-6 md:w-10 md:h-10 mx-auto rounded-full bg-gradient-to-r from-gray-300 to-gray-500 flex items-center justify-center text-white font-bold text-xs md:text-base mb-2 md:mb-3">
                   2
                 </div>
-                <h3 className="font-bold text-lg mb-1">{globalLeaderboard[1]?.name}</h3>
-                <p className="text-sm text-muted-text mb-3">{globalLeaderboard[1]?.email}</p>
-                <div className="text-3xl font-bold text-gray-500">{globalLeaderboard[1]?.totalScore}</div>
-                <p className="text-xs text-muted-text">points</p>
+                <h3 className="font-bold text-xs md:text-lg mb-1 truncate">{globalLeaderboard[1]?.name}</h3>
+                <p className="text-xs text-muted-text mb-2 md:mb-3 hidden md:block truncate">{globalLeaderboard[1]?.email}</p>
+                <div className="text-lg md:text-3xl font-bold text-gray-500">{globalLeaderboard[1]?.totalScore}</div>
+                <p className="text-[10px] md:text-xs text-muted-text">points</p>
               </div>
 
               {/* 1st Place */}
-              <div className="card text-center pt-8 pb-6 transform transition-all hover:scale-105 border-2 border-yellow-500">
-                <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-4xl mb-3 shadow-lg">
+              <div className="card text-center pt-4 md:pt-8 pb-4 md:pb-6 transform transition-all hover:scale-105 border-2 border-yellow-500 px-2 md:px-4">
+                <div className="w-14 h-14 md:w-24 md:h-24 mx-auto rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-xl md:text-4xl mb-2 md:mb-3 shadow-lg">
                   {globalLeaderboard[0]?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-lg mb-3 shadow-lg">
-                  <Trophy className="w-6 h-6" />
+                <div className="w-8 h-8 md:w-12 md:h-12 mx-auto rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-sm md:text-lg mb-2 md:mb-3 shadow-lg">
+                  <Trophy className="w-4 h-4 md:w-6 md:h-6" />
                 </div>
-                <h3 className="font-bold text-xl mb-1">{globalLeaderboard[0]?.name}</h3>
-                <p className="text-sm text-muted-text mb-3">{globalLeaderboard[0]?.email}</p>
-                <div className="text-4xl font-bold text-yellow-600">{globalLeaderboard[0]?.totalScore}</div>
-                <p className="text-xs text-muted-text">points</p>
+                <h3 className="font-bold text-sm md:text-xl mb-1 truncate">{globalLeaderboard[0]?.name}</h3>
+                <p className="text-xs text-muted-text mb-2 md:mb-3 hidden md:block truncate">{globalLeaderboard[0]?.email}</p>
+                <div className="text-xl md:text-4xl font-bold text-yellow-600">{globalLeaderboard[0]?.totalScore}</div>
+                <p className="text-[10px] md:text-xs text-muted-text">points</p>
               </div>
 
               {/* 3rd Place */}
-              <div className="card text-center pt-8 pb-6 transform transition-all hover:scale-105">
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-amber-600 to-amber-800 flex items-center justify-center text-white font-bold text-3xl mb-3">
+              <div className="card text-center pt-4 md:pt-8 pb-4 md:pb-6 transform transition-all hover:scale-105 px-2 md:px-4">
+                <div className="w-12 h-12 md:w-20 md:h-20 mx-auto rounded-full bg-gradient-to-r from-amber-600 to-amber-800 flex items-center justify-center text-white font-bold text-lg md:text-3xl mb-2 md:mb-3">
                   {globalLeaderboard[2]?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div className="w-10 h-10 mx-auto rounded-full bg-gradient-to-r from-amber-600 to-amber-800 flex items-center justify-center text-white font-bold mb-3">
+                <div className="w-6 h-6 md:w-10 md:h-10 mx-auto rounded-full bg-gradient-to-r from-amber-600 to-amber-800 flex items-center justify-center text-white font-bold text-xs md:text-base mb-2 md:mb-3">
                   3
                 </div>
-                <h3 className="font-bold text-lg mb-1">{globalLeaderboard[2]?.name}</h3>
-                <p className="text-sm text-muted-text mb-3">{globalLeaderboard[2]?.email}</p>
-                <div className="text-3xl font-bold text-amber-700">{globalLeaderboard[2]?.totalScore}</div>
-                <p className="text-xs text-muted-text">points</p>
+                <h3 className="font-bold text-xs md:text-lg mb-1 truncate">{globalLeaderboard[2]?.name}</h3>
+                <p className="text-xs text-muted-text mb-2 md:mb-3 hidden md:block truncate">{globalLeaderboard[2]?.email}</p>
+                <div className="text-lg md:text-3xl font-bold text-amber-700">{globalLeaderboard[2]?.totalScore}</div>
+                <p className="text-[10px] md:text-xs text-muted-text">points</p>
               </div>
             </div>
           )}
 
           {/* Leaderboard Table */}
           <div className="card">
-            <div className="p-6 border-b border-border flex items-center justify-between">
+            <div className="p-4 md:p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <Trophy className="w-6 h-6 text-yellow-500" />
+                <h2 className="text-lg md:text-2xl font-bold flex items-center gap-2">
+                  <Trophy className="w-5 h-5 md:w-6 md:h-6 text-yellow-500" />
                   All Rankings
                 </h2>
-                <p className="text-sm text-muted-text mt-1">
+                <p className="text-xs md:text-sm text-muted-text mt-1 hidden sm:block">
                   Ranked by total score. Tiebreaker: Fewer clubs joined ranks higher
                 </p>
               </div>
               {(user?.role === 'coordinator' || user?.role === 'faculty' || user?.role === 'admin') && (
                 <button
                   onClick={handleExportGlobal}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                  className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md text-sm"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -331,15 +331,15 @@ export default function LeaderboardPage() {
               )}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead className="bg-gray-50 border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quizzes</th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Clubs</th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Avg %</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Quizzes</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Clubs</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wider">Avg %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -349,46 +349,46 @@ export default function LeaderboardPage() {
                       className={`hover:bg-gray-50 transition-colors ${entry.userId === Number(user?.id) ? 'bg-blue-50 hover:bg-blue-100' : ''
                         }`}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="w-8 h-8 flex items-center justify-center font-semibold text-gray-600">
+                          <span className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center font-semibold text-gray-600 text-sm md:text-base">
                             {entry.rank}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs md:text-base">
                             {entry.name.charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm md:text-base truncate max-w-[100px] md:max-w-none">
                               {entry.name}
                               {entry.userId === Number(user?.id) && (
-                                <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-1 rounded-full">You</span>
+                                <span className="ml-1 md:ml-2 text-[10px] md:text-xs bg-blue-600 text-white px-1 md:px-2 py-0.5 md:py-1 rounded-full">You</span>
                               )}
                             </p>
-                            <p className="text-xs text-gray-500">{entry.email}</p>
+                            <p className="text-[10px] md:text-xs text-gray-500 truncate hidden md:block">{entry.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Target className="w-4 h-4 text-blue-600" />
-                          <span className="font-bold text-lg text-blue-600">{entry.totalScore}</span>
+                          <Target className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                          <span className="font-bold text-sm md:text-lg text-blue-600">{entry.totalScore}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center hidden sm:table-cell">
                         <span className="font-semibold text-gray-700">{entry.quizzesCompleted}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                          <Users className="w-4 h-4" />
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center hidden sm:table-cell">
+                        <span className="inline-flex items-center gap-1 px-2 md:px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs md:text-sm font-medium">
+                          <Users className="w-3 h-3 md:w-4 md:h-4" />
                           {entry.clubsJoined}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="font-semibold text-gray-700">{entry.avgPercentage || 0}%</span>
+                      <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center">
+                        <span className="font-semibold text-gray-700 text-sm md:text-base">{entry.avgPercentage || 0}%</span>
                       </td>
                     </tr>
                   ))}

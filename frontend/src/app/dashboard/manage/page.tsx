@@ -51,6 +51,66 @@ function ManageClubContent() {
   const [removalReason, setRemovalReason] = useState('');
   const [submittingRemoval, setSubmittingRemoval] = useState(false);
 
+  // Edit Club State
+  const [showEditClubModal, setShowEditClubModal] = useState(false);
+  const [updatingClub, setUpdatingClub] = useState(false);
+  const [editClubData, setEditClubData] = useState({
+    name: '',
+    description: '',
+    category: '',
+  });
+
+  const handleUpdateClub = async () => {
+    if (!editClubData.name || !editClubData.description || !selectedClub) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    setUpdatingClub(true);
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/${selectedClub.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editClubData.name,
+          description: editClubData.description,
+          category: editClubData.category,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Club information updated successfully!');
+        setShowEditClubModal(false);
+        const updatedClub = await response.json();
+        
+        // Update local state
+        setSelectedClub((prev: any) => ({
+           ...prev,
+           name: updatedClub.name,
+           description: updatedClub.description,
+           category: updatedClub.category
+        }));
+        
+        // Update clubs list state
+        setClubs(prev => prev.map(c => c.id === updatedClub.id ? updatedClub : c));
+        
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to update club');
+      }
+    } catch (error) {
+      console.error('Error updating club:', error);
+      toast.error('An error occurred while updating the club');
+    } finally {
+      setUpdatingClub(false);
+    }
+  };
+
   const handleRequestRemoval = async () => {
     if (!memberToRemove || !removalReason.trim()) {
       toast.error('Please provide a reason for removal');
@@ -607,7 +667,17 @@ function ManageClubContent() {
                     <p className="font-medium">{new Date(selectedClub?.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <button className="w-full btn btn-outline text-sm mt-4">
+                <button 
+                  onClick={() => {
+                    setEditClubData({
+                      name: selectedClub.name,
+                      description: selectedClub.description || '',
+                      category: selectedClub.category,
+                    });
+                    setShowEditClubModal(true);
+                  }}
+                  className="w-full btn btn-outline text-sm mt-4"
+                >
                   Edit Club Info
                 </button>
               </div>
@@ -660,25 +730,99 @@ function ManageClubContent() {
               </tr>
             </thead>
             <tbody>
-              {selectedClub?.members?.map((member: any) => (
+              {selectedClub?.members?.map((member: any) => {
+                // Check permissions for removal button
+                const currentUserRole = user?.role;
+                const userId = user?.id ? Number(user.id) : null;
+                const isCurrentUserCoordinator = selectedClub?.coordinators?.some((c: any) => Number(c.userId) === userId);
+                const isCurrentUserFaculty = (currentUserRole as any) === 'FACULTY' || (currentUserRole as any) === 'ADMIN'; 
+                
+                // Target roles
+                const isTargetCoordinator = selectedClub?.coordinators?.some((c: any) => Number(c.userId) === Number(member.userId));
+                const isTargetMentor = selectedClub?.mentors?.some((m: any) => Number(m.id) === Number(member.userId));
+                const isTargetConvenor = Number(selectedClub?.convenor?.id) === Number(member.userId);
+
+                // Determine if removal is allowed (Direct vs Request)
+                let canDirectRemove = false;
+                let canRequestRemove = false;
+
+                if (isCurrentUserFaculty) {
+                   canDirectRemove = true; 
+                } else if (isCurrentUserCoordinator) {
+                   // Coordinator can remove members only
+                   if (!isTargetCoordinator && !isTargetMentor && !isTargetConvenor) {
+                      canDirectRemove = true;
+                   } else {
+                      // Allow requesting removal for restricted users?
+                      // If the user requirement was strict ("he should be able to remove the member only"),
+                      // maybe we shouldn't allow requesting removal of faculty?
+                      // But seeing the UI blank is bad. Let's allow requesting removal for anyone else as fallback,
+                      // OR just fix the direct remove for members.
+                      // Let's assume for now we only show direct remove for members.
+                      // But we must ensure 'isCurrentUserCoordinator' is calculating correctly.
+                   }
+                } else {
+                   // Normal member viewing this? (Shouldn't see this page usually, but if they do)
+                   // No actions.
+                }
+                
+
+                return (
                 <tr key={member.id} className="border-b border-border hover:bg-muted-bg">
                   <td className="py-3 px-4 text-sm">{member.user?.name || member.userId || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm">{member.user?.email || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm">{member.user?.department || 'N/A'}</td>
                   <td className="py-3 px-4 text-sm">{new Date(member.joinedAt).toLocaleDateString()}</td>
                   <td className="py-3 px-4 text-sm text-right">
+                    {canDirectRemove && (
                     <button
-                      onClick={() => {
-                        setMemberToRemove(member);
-                        setShowRemovalModal(true);
+                      onClick={async () => {
+                         if (!confirm(`Are you sure you want to remove ${member.user?.name}?`)) return;
+                         
+                         try {
+                           const token = localStorage.getItem('token');
+                           const apiUrl = getApiUrl();
+                           const response = await fetch(`${apiUrl}/api/clubs/${selectedClub.id}/members/${member.userId}`, {
+                             method: 'DELETE',
+                             headers: {
+                               'Authorization': `Bearer ${token}`,
+                             },
+                           });
+
+                           if (response.ok) {
+                             toast.success('Member removed successfully');
+                             fetchClubStats(); 
+                             const updatedClubs = clubs.map(c => {
+                                if (c.id === selectedClub.id) {
+                                   return {
+                                      ...c,
+                                      members: c.members.filter((m: any) => m.userId !== member.userId),
+                                      _count: { ...c._count, members: (c._count.members || 0) - 1 }
+                                   };
+                                }
+                                return c;
+                             });
+                             setClubs(updatedClubs);
+                             setSelectedClub(updatedClubs.find(c => c.id === selectedClub.id));
+
+                           } else {
+                             const error = await response.json();
+                             toast.error(error.message || 'Failed to remove member');
+                           }
+                         } catch (error) {
+                           console.error('Error removing member:', error);
+                           toast.error('An error occurred');
+                         }
                       }}
                       className="text-red-500 hover:text-red-700 font-medium text-xs border border-red-200 dark:border-red-900/30 px-3 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       Remove
                     </button>
+                    )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           </div>
@@ -1367,6 +1511,86 @@ function ManageClubContent() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Club Modal */}
+      {showEditClubModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg shadow-xl max-w-lg w-full">
+            <div className="p-6 border-b border-border">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">Edit Club Info</h2>
+                <button
+                  onClick={() => setShowEditClubModal(false)}
+                  className="text-muted-text hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Club Name</label>
+                <input
+                  type="text"
+                  value={editClubData.name}
+                  onChange={(e) => setEditClubData({ ...editClubData, name: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <select
+                  value={editClubData.category}
+                  onChange={(e) => setEditClubData({ ...editClubData, category: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="Technical">Technical</option>
+                  <option value="Cultural">Cultural</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Academic">Academic</option>
+                  <option value="Social">Social</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea
+                  value={editClubData.description}
+                  onChange={(e) => setEditClubData({ ...editClubData, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+              
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-900/30">
+                 <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                    Note: To update club images or advanced settings, please contact the faculty administrator.
+                 </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-border flex gap-3">
+              <button
+                onClick={() => setShowEditClubModal(false)}
+                className="flex-1 btn btn-outline"
+                disabled={updatingClub}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateClub}
+                className="flex-1 btn btn-primary"
+                disabled={updatingClub}
+              >
+                {updatingClub ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>

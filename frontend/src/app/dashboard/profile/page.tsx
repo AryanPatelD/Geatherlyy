@@ -223,25 +223,25 @@ export default function ProfilePage() {
         {/* Profile Overview Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-border shadow-sm overflow-hidden">
           {/* Header Background */}
-          <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
-            <div className="absolute -bottom-16 left-6">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-5xl font-bold shadow-xl border-4 border-white dark:border-gray-800">
+          <div className="h-24 md:h-32 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
+            <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-6">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-4xl md:text-5xl font-bold shadow-xl border-4 border-white dark:border-gray-800">
                 {user.name.charAt(0).toUpperCase()}
               </div>
             </div>
           </div>
           
           {/* Profile Info */}
-          <div className="pt-20 px-6 pb-6">
-            <div className="flex justify-between items-start">
+          <div className="pt-16 md:pt-20 px-4 md:px-6 pb-4 md:pb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
               <div>
-                <h2 className="text-2xl font-bold mb-1">{user.name}</h2>
-                <p className="text-muted-text capitalize mb-3 flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                <h2 className="text-xl md:text-2xl font-bold mb-1">{user.name}</h2>
+                <p className="text-muted-text capitalize mb-3 flex flex-wrap items-center gap-2">
+                  <span className="px-2 md:px-3 py-1 rounded-full bg-primary/10 text-primary text-xs md:text-sm font-medium">
                     {user.role}
                   </span>
                   {user.approvalStatus && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getApprovalStatusColor(user.approvalStatus)}`}>
+                    <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium ${getApprovalStatusColor(user.approvalStatus)}`}>
                       {getApprovalStatusText(user.approvalStatus)}
                     </span>
                   )}
@@ -371,72 +371,72 @@ export default function ProfilePage() {
         </div>
 
         {/* Activity Stats */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6 shadow-sm">
-          <h3 className="text-xl font-bold mb-6">Your Activity</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-4 md:p-6 shadow-sm">
+          <h3 className="text-lg md:text-xl font-bold mb-4 md:mb-6">Your Activity</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+            <div className="text-center p-4 md:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 {stats.clubsJoined}
               </div>
-              <p className="text-sm text-muted-text font-medium">Clubs Joined</p>
+              <p className="text-xs md:text-sm text-muted-text font-medium">Clubs Joined</p>
             </div>
-            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
-              <div className="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+            <div className="text-center p-4 md:p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+              <div className="text-3xl md:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                 {stats.quizzesCompleted}
               </div>
-              <p className="text-sm text-muted-text font-medium">Quizzes Completed</p>
+              <p className="text-xs md:text-sm text-muted-text font-medium">Quizzes Completed</p>
             </div>
-            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
-              <div className="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
+            <div className="text-center p-4 md:p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+              <div className="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
                 {stats.averageScore}%
               </div>
-              <p className="text-sm text-muted-text font-medium">Average Score</p>
+              <p className="text-xs md:text-sm text-muted-text font-medium">Average Score</p>
             </div>
           </div>
         </div>
 
         {/* Quiz History */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6 shadow-sm">
-          <h3 className="text-xl font-bold mb-6">📝 Quiz History</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-4 md:p-6 shadow-sm">
+          <h3 className="text-lg md:text-xl font-bold mb-4 md:mb-6">📝 Quiz History</h3>
           
           {loadingHistory ? (
-            <div className="text-center py-8">
+            <div className="text-center py-6 md:py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-text mt-4">Loading quiz history...</p>
+              <p className="text-muted-text mt-4 text-sm md:text-base">Loading quiz history...</p>
             </div>
           ) : quizHistory.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📚</div>
-              <p className="text-muted-text">No quizzes attempted yet</p>
-              <p className="text-sm text-muted-text mt-2">Join a club and start taking quizzes!</p>
+            <div className="text-center py-8 md:py-12">
+              <div className="text-5xl md:text-6xl mb-4">📚</div>
+              <p className="text-muted-text text-sm md:text-base">No quizzes attempted yet</p>
+              <p className="text-xs md:text-sm text-muted-text mt-2">Join a club and start taking quizzes!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {quizHistory.map((attempt) => (
                 <div
                   key={attempt.id}
-                  className="p-4 border border-border rounded-lg hover:bg-muted-bg transition-colors cursor-pointer"
+                  className="p-3 md:p-4 border border-border rounded-lg hover:bg-muted-bg transition-colors cursor-pointer"
                   onClick={() => router.push(`/dashboard/quiz/results/${attempt.quiz.id}`)}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-lg">{attempt.quiz.title}</h4>
-                      <p className="text-sm text-muted-text">{attempt.quiz.club.name}</p>
+                  <div className="flex justify-between items-start mb-2 gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-base md:text-lg truncate">{attempt.quiz.title}</h4>
+                      <p className="text-xs md:text-sm text-muted-text truncate">{attempt.quiz.club.name}</p>
                     </div>
-                    <div className="text-right">
-                      <div className={`text-2xl font-bold ${
+                    <div className="text-right flex-shrink-0">
+                      <div className={`text-xl md:text-2xl font-bold ${
                         attempt.percentage >= 80 ? 'text-green-600' :
                         attempt.percentage >= 60 ? 'text-yellow-600' :
                         'text-red-600'
                       }`}>
                         {Math.round(attempt.percentage)}%
                       </div>
-                      <p className="text-xs text-muted-text">
+                      <p className="text-[10px] md:text-xs text-muted-text">
                         {attempt.score}/{attempt.totalMarks} marks
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-text">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-text">
                     <span>⏱️ {formatTime(attempt.timeTaken)}</span>
                     <span>📅 {formatDate(attempt.attemptedAt)}</span>
                     {attempt.percentage >= 80 && <span className="text-green-600 font-medium">🏆 Excellent!</span>}
