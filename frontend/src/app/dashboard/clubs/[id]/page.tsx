@@ -27,6 +27,11 @@ export default function ClubDetailPage({
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [joiningClub, setJoiningClub] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [postingComment, setPostingComment] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
 
   useEffect(() => {
@@ -177,6 +182,82 @@ export default function ClubDetailPage({
       fetchActivities();
     }
   }, [activeTab, club, params.id]);
+
+  // Fetch comments when comments tab is active
+  useEffect(() => {
+    if (activeTab === 'comments' && club) {
+      const fetchComments = async () => {
+        setLoadingComments(true);
+        try {
+          const token = localStorage.getItem('token');
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/comments/club/${params.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setComments(data);
+          }
+        } catch (error) {
+          console.error('Error fetching comments:', error);
+        } finally {
+          setLoadingComments(false);
+        }
+      };
+      fetchComments();
+    }
+  }, [activeTab, club, params.id]);
+
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+
+    setPostingComment(true);
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/comments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clubId: Number(params.id),
+          content: newComment,
+          isAnonymous,
+        }),
+      });
+
+      if (response.ok) {
+        const comment = await response.json();
+        // Since we don't get the user details back in the create response for anonymous/non-anonymous immediately populated 
+        // (unless backend includes it), we might want to refetch or manually construct it.
+        // But backend `create` includes club, not user. 
+        // The endpoint returns `Comment & { club: ... }`.
+        
+        // Let's refetch to be safe and simple, or append with current user data if we had it.
+        // Refetching is easier for now to get consistent data structure (including user object if not anonymous)
+        const fetchResponse = await fetch(`${apiUrl}/api/comments/club/${params.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if(fetchResponse.ok) {
+            const data = await fetchResponse.json();
+            setComments(data);
+        }
+
+        setNewComment('');
+        toast.success('Comment posted successfully!');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to post comment');
+      }
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      toast.error('Failed to post comment');
+    } finally {
+      setPostingComment(false);
+    }
+  };
 
   const handleJoinClub = async () => {
     setJoiningClub(true);
@@ -647,26 +728,72 @@ export default function ClubDetailPage({
       {activeTab === 'comments' && (
         <div className="space-y-6">
           <div className="card">
-            <h3 className="font-bold mb-4">Share Feedback (Anonymous)</h3>
+            <h3 className="font-bold mb-4">Share Feedback</h3>
             <textarea
-              placeholder="Your comment here (your identity will be hidden)..."
-              className="input h-24"
+              placeholder="Your comment here..."
+              className="input h-24 mb-3"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={postingComment}
             />
-            <button className="btn btn-primary mt-3">Post Comment</button>
+            <div className="flex justify-between items-center">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="checkbox"
+                />
+                <span className="text-sm">Post Anonymously</span>
+              </label>
+              <button
+                className="btn btn-primary"
+                onClick={handlePostComment}
+                disabled={postingComment || !newComment.trim()}
+              >
+                {postingComment ? 'Posting...' : 'Post Comment'}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-bold">Comments</h3>
-            {[
-              'Great activities and supportive community!',
-              'Would love more advanced topics',
-              'Amazing club, highly recommend!',
-            ].map((comment, index) => (
-              <div key={index} className="card">
-                <p className="text-sm text-muted-text mb-2">Anonymous</p>
-                <p className="text-sm">{comment}</p>
+            <h3 className="font-bold">Comments ({comments.length})</h3>
+            {loadingComments ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ))}
+            ) : comments.length > 0 ? (
+              comments.map((comment) => (
+                <div key={comment.id} className="card">
+                  <div className="flex items-center gap-2 mb-2">
+                    {comment.isAnonymous ? (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        👤
+                      </div>
+                    ) : (
+                      <img
+                        src={comment.user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user?.name || 'User')}`}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">
+                        {comment.isAnonymous ? 'Anonymous' : comment.user?.name || 'User'}
+                      </p>
+                      <p className="text-xs text-muted-text">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm pl-10">{comment.content}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-text">
+                <p>No comments yet. Be the first to share your thoughts!</p>
+              </div>
+            )}
           </div>
         </div>
       )}

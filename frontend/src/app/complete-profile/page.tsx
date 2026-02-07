@@ -196,7 +196,7 @@ export default function CompleteProfilePage() {
 
               <div>
                 <label htmlFor="phone" className="label">
-                  Phone Number (Optional)
+                  Phone Number
                 </label>
                 <input
                   id="phone"

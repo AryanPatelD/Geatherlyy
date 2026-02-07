@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { MailerService } from '../common/mailer/mailer.service';
 import { NotificationService } from '../common/mailer/notification.service';
+import { ActivityService } from '../activity/activity.service';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -14,6 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailerService: MailerService,
     private notificationService: NotificationService,
+    private activityService: ActivityService,
   ) { }
 
   async register(registerDto: { email: string; password: string; name: string; universityId?: string; department: string; year?: string; phone?: string }) {
@@ -124,7 +126,7 @@ export class AuthService {
       role: user.role,
     };
 
-    return {
+    const response = {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
@@ -141,6 +143,11 @@ export class AuthService {
         avatar: user.avatar,
       },
     };
+
+    // Log Activity
+    this.activityService.logActivity(user.id, 'LOGIN', `User ${user.email} logged in`);
+
+    return response;
   }
 
   async forgotPassword(email: string) {

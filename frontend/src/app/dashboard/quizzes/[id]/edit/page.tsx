@@ -17,6 +17,15 @@ interface Question {
 }
 
 export default function EditQuizPage({ params }: { params: { id: string } }) {
+    // Auto-update passing marks when totalMarks changes
+    const handleTotalMarksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const total = parseInt(e.target.value);
+      setFormData(prev => ({
+        ...prev,
+        totalMarks: total,
+        passingMarks: Math.ceil(total * 0.33)
+      }));
+    };
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -269,7 +278,7 @@ export default function EditQuizPage({ params }: { params: { id: string } }) {
                 <input
                   type="number"
                   value={formData.totalMarks}
-                  onChange={e => setFormData({ ...formData, totalMarks: parseInt(e.target.value) })}
+                  onChange={handleTotalMarksChange}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-background"
                 />
               </div>

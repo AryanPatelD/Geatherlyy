@@ -36,6 +36,14 @@ export default function CreateQuizPage({ searchParams }: Props) {
     maxParticipants: 0, // 0 means unlimited
   });
 
+  // Auto-update passing marks when totalMarks changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      passingMarks: Math.ceil(prev.totalMarks * 0.33)
+    }));
+  }, [formData.totalMarks]);
+
   const [questions, setQuestions] = useState<Question[]>([
     {
       text: '',
@@ -69,6 +77,16 @@ export default function CreateQuizPage({ searchParams }: Props) {
   }, []);
 
   const handleQuestionChange = (index: number, field: keyof Question, value: any) => {
+    if (field === 'marks') {
+        const newMarks = parseInt(value) || 0;
+        const currentTotal = questions.reduce((sum, q, i) => sum + (i === index ? newMarks : (q.marks || 0)), 0);
+        
+        if (currentTotal > formData.totalMarks) {
+            toast.error(`Total marks cannot exceed ${formData.totalMarks}`);
+            return;
+        }
+    }
+
     const newQuestions = [...questions];
     
     // Logic for switching types
@@ -106,13 +124,22 @@ export default function CreateQuizPage({ searchParams }: Props) {
   };
 
   const addQuestion = () => {
+    // Calculate current total marks
+    const currentTotal = questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    // Default marks for new question
+    const newQuestionMarks = 10;
+    // Prevent adding if would exceed totalMarks
+    if (currentTotal + newQuestionMarks > formData.totalMarks) {
+      toast.error('Cannot add more questions. Total marks limit reached.');
+      return;
+    }
     setQuestions([
       ...questions,
       {
         text: '',
         options: ['', '', '', ''],
         correctAnswer: 0,
-        marks: 10,
+        marks: newQuestionMarks,
         type: 'single',
       },
     ]);
@@ -132,6 +159,12 @@ export default function CreateQuizPage({ searchParams }: Props) {
     }
 
     // Validate questions
+    const currentTotal = questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    if (currentTotal !== formData.totalMarks) {
+        toast.error(`Sum of question marks (${currentTotal}) must equal Total Marks (${formData.totalMarks})`);
+        return;
+    }
+
     for (const q of questions) {
         if (!q.text) { toast.error('All questions must have text'); return; }
         if (q.type === 'multiple' && (q.correctAnswer as number[]).length === 0) {
@@ -227,19 +260,19 @@ export default function CreateQuizPage({ searchParams }: Props) {
                     <div>
                          <label className="block text-sm font-medium mb-1">Total Marks</label>
                          <input 
-                            type="number"
-                            value={formData.totalMarks}
-                            onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})}
-                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
-                         />
+                             type="number"
+                             value={formData.totalMarks}
+                             onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value) || 0})}
+                             className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                           />
                     </div>
                     <div>
-                         <label className="block text-sm font-medium mb-1">Passing Marks</label>
+                         <label className="block text-sm font-medium mb-1">Passing Marks (Auto-calculated)</label>
                          <input 
                             type="number"
                             value={formData.passingMarks}
-                            onChange={e => setFormData({...formData, passingMarks: parseInt(e.target.value)})}
-                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                            disabled
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-muted cursor-not-allowed"
                          />
                     </div>
                     <div>

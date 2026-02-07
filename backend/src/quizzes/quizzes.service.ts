@@ -166,8 +166,42 @@ export class QuizzesService {
     return quiz;
   }
 
-  async update(id: number, data: Prisma.QuizUpdateInput): Promise<Quiz> {
-    const quiz = await this.prisma.quiz.update({
+  async update(id: number, data: Prisma.QuizUpdateInput, userId: number): Promise<Quiz> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id },
+      include: {
+        club: true,
+      },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${id} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+        throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+        where: {
+            clubId_userId: {
+                clubId: quiz.clubId,
+                userId: userId,
+            }
+        }
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+        throw new ForbiddenException('You do not have permission to update this quiz. You must be a coordinator of this club.');
+    }
+
+    const updatedQuiz = await this.prisma.quiz.update({
       where: { id },
       data,
       include: {
@@ -181,16 +215,40 @@ export class QuizzesService {
     await this.redis.del(`quiz:${id}:false`);
     await this.redis.del(`club:${quiz.clubId}:quizzes`);
 
-    return quiz;
+    return updatedQuiz;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number, userId: number): Promise<void> {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
+      include: { club: true }
     });
 
     if (!quiz) {
       throw new NotFoundException(`Quiz with ID ${id} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+        throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+        where: {
+            clubId_userId: {
+                clubId: quiz.clubId,
+                userId: userId,
+            }
+        }
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+        throw new ForbiddenException('You do not have permission to delete this quiz. You must be a coordinator of this club.');
     }
 
     await this.prisma.quiz.delete({
@@ -224,7 +282,7 @@ export class QuizzesService {
       });
       
       if (!userHasAttempt && participantCount >= (quiz as any).maxParticipants) {
-        throw new ForbiddenException('This quiz has reached its maximum number of participants.');
+        throw new ForbiddenException(`This quiz has reached its maximum number of participants (${(quiz as any).maxParticipants}).`);
       }
     }
 
@@ -257,7 +315,7 @@ export class QuizzesService {
       const currentAttempts = existingAttempt.attemptCount || 1; // Handle legacy records with null/0
 
       if (currentAttempts >= maxAttempts) {
-        throw new ForbiddenException(`You have reached the maximum number of attempts (${maxAttempts}) for this quiz.`);
+        throw new ForbiddenException(`You have reached the maximum number of attempts (${maxAttempts}) allowed for this quiz.`);
       }
     }
 
@@ -268,8 +326,31 @@ export class QuizzesService {
 
     for (const question of (quiz as any).questions) {
       const userAnswer = answers[question.id];
-      // correctAnswer is now a string array, so we need to check if the user's answer index (as string) is in the array
-      const isCorrect = userAnswer !== undefined && question.correctAnswer.includes(userAnswer.toString());
+      let isCorrect = false;
+
+      // Parse correct answers from DB (stored as string[])
+      // We assume they are stored as stringified indices "0", "1", etc.
+      const correctAnswers = question.correctAnswer || [];
+
+      if (question.type === 'MULTIPLE_ANSWER') {
+        // For multiple answer, user must select ALL correct options and NO incorrect ones
+        // userAnswer should be an array of numbers (indices)
+        if (Array.isArray(userAnswer)) {
+          const userIndices = userAnswer.map(String); // Convert to strings to match DB
+          
+          // Check if sets are equal
+          const isSetEqual = userIndices.length === correctAnswers.length && 
+                             userIndices.every(val => correctAnswers.includes(val));
+          
+          isCorrect = isSetEqual;
+        }
+      } else {
+        // Single choice / MCQ
+        // userAnswer should be a number (index)
+        if (userAnswer !== undefined) {
+           isCorrect = correctAnswers.includes(String(userAnswer));
+        }
+      }
 
       if (isCorrect) {
         score += question.marks;
@@ -278,10 +359,13 @@ export class QuizzesService {
 
       results.push({
         questionId: question.id,
+        questionText: question.text,
         userAnswer,
-        correctAnswer: question.correctAnswer,
+        correctAnswer: correctAnswers, // Return correct answer for feedback
+        explanation: 'Correct answer: ' + correctAnswers.map(i => question.options[parseInt(i)]).join(', '), // Helper text
         isCorrect,
         points: isCorrect ? question.marks : 0,
+        maxPoints: question.marks
       });
     }
 
@@ -353,6 +437,7 @@ export class QuizzesService {
       ...attempt,
       correctAnswers: correctAnswersCount,
       totalQuestions: (quiz as any).questions.length,
+      details: results, // Detailed question breakdown
     } as any;
   }
 
@@ -446,7 +531,39 @@ export class QuizzesService {
     return formattedLeaderboard;
   }
 
-  async getQuizStats(quizId: number): Promise<any> {
+  async getQuizStats(quizId: number, userId: number): Promise<any> {
+    // First verify permission - check if user can access stats for this quiz
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId: quiz.clubId,
+          userId: userId,
+        }
+      }
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+      throw new ForbiddenException('You do not have permission to view this quiz stats. You must be a coordinator of this club.');
+    }
+
     const cacheKey = `quiz:${quizId}:stats`;
     const cachedStats = await this.redis.get(cacheKey);
 
@@ -513,5 +630,266 @@ export class QuizzesService {
     });
 
     return !!isCoordinator;
+  }
+
+  /**
+   * End a quiz - Sets the end date to now and optionally deactivates it
+   * Only accessible to coordinators of the quiz's club
+   */
+  async endQuiz(quizId: number, userId: number): Promise<any> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { club: true },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId: quiz.clubId,
+          userId: userId,
+        },
+      },
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+      throw new ForbiddenException('You must be a coordinator of this club to end this quiz');
+    }
+
+    const updatedQuiz = await this.prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        endDate: new Date(),
+        isActive: false,
+      },
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            attempts: true,
+          },
+        },
+      },
+    });
+
+    // Invalidate cache
+    await this.redis.del(`quiz:${quizId}:true`);
+    await this.redis.del(`quiz:${quizId}:false`);
+    await this.redis.del(`club:${quiz.clubId}:quizzes`);
+
+    return {
+      message: `Quiz "${updatedQuiz.title}" has been ended`,
+      quiz: updatedQuiz,
+    };
+  }
+
+  /**
+   * Stop a quiz - Immediately deactivates the quiz
+   * Only accessible to coordinators of the quiz's club
+   */
+  async stopQuiz(quizId: number, userId: number): Promise<any> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { club: true },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId: quiz.clubId,
+          userId: userId,
+        },
+      },
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+      throw new ForbiddenException('You must be a coordinator of this club to stop this quiz');
+    }
+
+    const updatedQuiz = await this.prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        isActive: false,
+      },
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            attempts: true,
+          },
+        },
+      },
+    });
+
+    // Invalidate cache
+    await this.redis.del(`quiz:${quizId}:true`);
+    await this.redis.del(`quiz:${quizId}:false`);
+    await this.redis.del(`club:${quiz.clubId}:quizzes`);
+
+    return {
+      message: `Quiz "${updatedQuiz.title}" has been stopped`,
+      quiz: updatedQuiz,
+    };
+  }
+
+  /**
+   * Reactivate a quiz - Sets the quiz as active again
+   * Only accessible to coordinators of the quiz's club
+   */
+  async reactivateQuiz(quizId: number, userId: number): Promise<any> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { club: true },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId: quiz.clubId,
+          userId: userId,
+        },
+      },
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+      throw new ForbiddenException('You must be a coordinator of this club to reactivate this quiz');
+    }
+
+    const updatedQuiz = await this.prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        isActive: true,
+      },
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            attempts: true,
+          },
+        },
+      },
+    });
+
+    // Invalidate cache
+    await this.redis.del(`quiz:${quizId}:true`);
+    await this.redis.del(`quiz:${quizId}:false`);
+    await this.redis.del(`club:${quiz.clubId}:quizzes`);
+
+    return {
+      message: `Quiz "${updatedQuiz.title}" has been reactivated`,
+      quiz: updatedQuiz,
+    };
+  }
+
+  /**
+   * Clear all attempts for a quiz
+   * Only accessible to coordinators of the quiz's club
+   */
+  async clearQuizAttempts(quizId: number, userId: number): Promise<any> {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { club: true },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    // Check permissions
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const isGlobalAdminOrFaculty = user.role === UserRole.ADMIN || user.role === UserRole.FACULTY;
+    
+    // Check if user is a coordinator of this specific club
+    const isClubCoordinator = await this.prisma.clubCoordinator.findUnique({
+      where: {
+        clubId_userId: {
+          clubId: quiz.clubId,
+          userId: userId,
+        },
+      },
+    });
+
+    if (!isGlobalAdminOrFaculty && !isClubCoordinator) {
+      throw new ForbiddenException('You must be a coordinator of this club to clear quiz attempts');
+    }
+
+    const deletedAttempts = await this.prisma.quizAttempt.deleteMany({
+      where: { quizId },
+    });
+
+    // Invalidate cache
+    await this.redis.del(`quiz:${quizId}:stats`);
+    await this.redis.del(`quiz:${quizId}:leaderboard:10`);
+    await this.redis.del(`leaderboard:club:${quiz.clubId}`);
+    await this.redis.del('leaderboard:global');
+
+    return {
+      message: `Cleared ${deletedAttempts.count} attempts for quiz "${quiz.title}"`,
+      deletedCount: deletedAttempts.count,
+    };
   }
 }

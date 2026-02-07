@@ -78,6 +78,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     { label: 'Manage Club', href: '/dashboard/manage', roles: ['coordinator', 'admin'], icon: <GearIcon className="w-5 h-5" /> },
     { label: 'Approvals', href: '/dashboard/approvals', roles: ['faculty', 'admin'], icon: <CheckCircledIcon className="w-5 h-5" /> },
     { label: 'Analytics', href: '/dashboard/analytics', roles: ['faculty', 'admin'], icon: <BarChartIcon className="w-5 h-5" /> },
+    { label: 'Activity Logs', href: '/dashboard/admin/activity', roles: ['admin'], icon: <FileTextIcon className="w-5 h-5" /> },
     { label: 'Profile', href: '/dashboard/profile', roles: ['member', 'coordinator', 'faculty', 'admin'], icon: <PersonIcon className="w-5 h-5" /> },
   ];
 

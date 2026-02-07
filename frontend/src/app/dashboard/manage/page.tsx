@@ -737,37 +737,38 @@ function ManageClubContent() {
               {selectedClub?.members?.map((member: any) => {
                 // Check permissions for removal button
                 const currentUserRole = user?.role;
-                const userId = user?.id ? Number(user.id) : null;
-                const isCurrentUserCoordinator = selectedClub?.coordinators?.some((c: any) => Number(c.userId) === userId);
-                const isCurrentUserFaculty = (currentUserRole as any) === 'FACULTY' || (currentUserRole as any) === 'ADMIN'; 
+                const currentUserId = user?.id; // user.id is string based on AuthContext usually, but let's be consistent
+                const isCurrentUserAdmin = (currentUserRole as any) === 'ADMIN';
+                const isCurrentUserFaculty = (currentUserRole as any) === 'FACULTY' || isCurrentUserAdmin;
                 
-                // Target roles
-                const isTargetCoordinator = selectedClub?.coordinators?.some((c: any) => Number(c.userId) === Number(member.userId));
-                const isTargetMentor = selectedClub?.mentors?.some((m: any) => Number(m.id) === Number(member.userId));
-                const isTargetConvenor = Number(selectedClub?.convenor?.id) === Number(member.userId);
+                // Check if current user is a coordinator OF THIS CLUB
+                const isCurrentUserCoordinator = selectedClub?.coordinators?.some((c: any) => String(c.userId) === String(currentUserId));
 
-                // Determine if removal is allowed (Direct vs Request)
+                // Target checks
+                const targetUserId = member.userId || member.user?.id;
+                const targetUserRole = member.user?.role;
+                
+                const isTargetCoordinator = selectedClub?.coordinators?.some((c: any) => String(c.userId) === String(targetUserId));
+                const isTargetMentor = selectedClub?.mentors?.some((m: any) => String(m.id) === String(targetUserId));
+                const isTargetConvenor = String(selectedClub?.convenor?.id) === String(targetUserId);
+                
+                // Determine if removal is allowed
                 let canDirectRemove = false;
-                let canRequestRemove = false;
 
                 if (isCurrentUserFaculty) {
-                   canDirectRemove = true; 
+                   // Faculty can remove anyone (except maybe other faculty logic, but simplified for now: yes)
+                   canDirectRemove = true;
                 } else if (isCurrentUserCoordinator) {
-                   // Coordinator can remove members only
-                   if (!isTargetCoordinator && !isTargetMentor && !isTargetConvenor) {
+                   // Coordinator Logic:
+                   // 1. Cannot remove Faculty/Mentors/Convenors
+                   // 2. Cannot remove other Coordinators
+                   // 3. Can remove Members
+                   
+                   const isTargetProtected = isTargetCoordinator || isTargetMentor || isTargetConvenor || targetUserRole === 'FACULTY' || targetUserRole === 'ADMIN';
+                   
+                   if (!isTargetProtected) {
                       canDirectRemove = true;
-                   } else {
-                      // Allow requesting removal for restricted users?
-                      // If the user requirement was strict ("he should be able to remove the member only"),
-                      // maybe we shouldn't allow requesting removal of faculty?
-                      // But seeing the UI blank is bad. Let's allow requesting removal for anyone else as fallback,
-                      // OR just fix the direct remove for members.
-                      // Let's assume for now we only show direct remove for members.
-                      // But we must ensure 'isCurrentUserCoordinator' is calculating correctly.
                    }
-                } else {
-                   // Normal member viewing this? (Shouldn't see this page usually, but if they do)
-                   // No actions.
                 }
                 
 

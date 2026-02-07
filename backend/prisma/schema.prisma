@@ -41,6 +41,7 @@ model User {
   quizAttempts          QuizAttempt[]
   uploadedResources     Resource[]
   mentoredClubs         Club[]                     @relation("ClubMentors")
+  activityLogs          ActivityLog[]
 
   @@index([email])
   @@index([googleId])
@@ -356,4 +357,19 @@ enum RemovalApprovalStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
 }

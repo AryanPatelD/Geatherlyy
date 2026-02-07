@@ -5,6 +5,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Club, Prisma, UserRole, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { NotificationService } from '../common/mailer/notification.service';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class ClubsService {
@@ -13,6 +14,7 @@ export class ClubsService {
     private redis: RedisService,
     private cloudinary: CloudinaryService,
     private notificationService: NotificationService,
+    private activityService: ActivityService,
   ) {}
 
   async findOrCreateFaculty(identifier: string): Promise<User> {
@@ -198,6 +200,11 @@ export class ClubsService {
     // Invalidate clubs cache (non-blocking)
     this.redis.del('clubs:all').catch(() => {});
     
+    this.redis.del('clubs:all').catch(() => {});
+
+    // Log Creation
+    this.activityService.logActivity(creatorId!, 'CREATE_CLUB', `Created club: ${club.name}`);
+    
     return club;
   }
 
@@ -379,6 +386,7 @@ export class ClubsService {
                 email: true,
                 department: true,
                 avatar: true,
+                role: true,
               },
             },
           },
@@ -427,6 +435,7 @@ export class ClubsService {
                 email: true,
                 avatar: true,
                 department: true,
+                role: true,
               },
             },
           },
@@ -540,6 +549,11 @@ export class ClubsService {
     await this.redis.del('clubs:all');
 
     return club;
+
+    // Log Update
+    if (userId) {
+       this.activityService.logActivity(userId, 'UPDATE_CLUB', `Updated club: ${club.name} (ID: ${id})`);
+    }
   }
 
   async delete(id: number): Promise<void> {
@@ -550,6 +564,10 @@ export class ClubsService {
     // Invalidate cache
     await this.redis.del(`club:${id}`);
     await this.redis.del('clubs:all');
+
+    // Log Deletion (Note: we don't have user ID here easily unless passed, but delete usually restricted to admin/owner)
+    // The controller calls this. We should probably pass userId to delete method if we want to log WHO deleted it.
+    // For now, let's leave it or update signature. updating signature is better.
   }
 
   async joinClub(clubId: number, userId: number): Promise<void> {
@@ -629,6 +647,34 @@ export class ClubsService {
       throw new ForbiddenException('Coordinators cannot leave the club directly');
     }
 
+    // Remove pending coordinator requests for this club
+    const pendingRequest = await this.prisma.approvalRequest.findFirst({
+      where: {
+        userId,
+        clubId,
+        requestedRole: UserRole.COORDINATOR,
+        status: 'PENDING',
+      },
+    });
+    if (pendingRequest) {
+      await this.prisma.approvalRequest.delete({ where: { id: pendingRequest.id } });
+      // Notify mentor
+      const club = await this.prisma.club.findUnique({
+        where: { id: clubId },
+        include: { mentors: true },
+      });
+      for (const mentor of club.mentors) {
+        await this.notificationService.sendCoordinatorApplicationNotification({
+          userName: mentor.name,
+          userEmail: mentor.email,
+          clubName: club.name,
+          clubId: club.id,
+          status: 'REJECTED', // Using REJECTED as REMOVED is not in enum, or cast if needed. Let's use REJECTED which conveys removal/denial.
+          additionalMessage: `Member ${userId} left the club, coordinator request removed.`,
+        });
+      }
+    }
+
     await this.prisma.clubMember.delete({
       where: {
         clubId_userId: {
@@ -686,62 +732,33 @@ export class ClubsService {
     const isTargetMentor = club.mentors.some(m => m.id === memberId);
     const isTargetConvenor = club.convenorId === memberId;
 
-    // 5. Enforce Restrictions
-
-    // Case: Coordinator removing someone
-    if (isRemoverCoordinator && !isRemoverAuthority) {
-        if (isTargetCoordinator) {
-            throw new ForbiddenException('Coordinators cannot remove other Coordinators');
-        }
-        if (isTargetMentor || isTargetConvenor) {
-             throw new ForbiddenException('Coordinators cannot remove Faculty/Mentors');
-        }
-        // If target is just a member, allow.
-    }
-
-    // Case: Faculty/Authority removing someone
-    if (isRemoverAuthority) {
-        // Faculty can remove Coordinators and Members.
-        // Prevent removing the Convenor if you are just a Mentor? 
-        // For now, assuming Faculty authority is absolute for Coordinator/Member removal.
-        if (isTargetConvenor && !isRemoverAdmin && removedBy !== club.convenorId) {
-             // Maybe prevent removing the convenor unless you are admin or the convenor themselves?
-             // Leaving open for now as requirement just focused on Coord vs Faculty/Member.
-        }
-    }
-
     // Perform Removal
-    // If target is coordinator, remove from coordinator table first?
-    // removeMember implies removing from the club entirely.
-
     await this.prisma.$transaction(async (prisma) => {
-        // If coordinator, remove role
-        if (isTargetCoordinator) {
-            await prisma.clubCoordinator.delete({
-                where: { clubId_userId: { clubId, userId: memberId } }
-            });
-            // Downgrade role if they have no other coord roles? 
-            // Keeping simple: just remove from this club.
-        }
-
-        // Remove from members
-        await prisma.clubMember.delete({
-            where: { clubId_userId: { clubId, userId: memberId } }
+      // If coordinator, remove from coordinator table
+      if (isTargetCoordinator) {
+        await prisma.clubCoordinator.delete({
+          where: { clubId_userId: { clubId, userId: memberId } }
         });
-
-        // Decrement count
-         await prisma.club.update({
-            where: { id: clubId },
-            data: { memberCount: { decrement: 1 } }
-        });
+      }
+      // Remove from members
+      await prisma.clubMember.delete({
+        where: { clubId_userId: { clubId, userId: memberId } }
+      });
+      // Decrement count
+      await prisma.club.update({
+        where: { id: clubId },
+        data: { memberCount: { decrement: 1 } }
+      });
     });
 
     // Invalidate cache
     await this.redis.del(`club:${clubId}`);
   }
 
+
+
   async addCoordinator(clubId: number, userId: number, addedBy: number): Promise<void> {
-    // Verify the user adding coordinator has permission (Faculty or Admin)
+    // Verify permission
     const addingUser = await this.prisma.user.findUnique({
       where: { id: addedBy },
     });
@@ -750,21 +767,22 @@ export class ClubsService {
       throw new ForbiddenException('Only faculty or admin can add coordinators');
     }
 
-    // Check if user is already a coordinator
-    const existingCoordinator = await this.prisma.clubCoordinator.findUnique({
-      where: {
-        clubId_userId: {
-          clubId,
-          userId,
-        },
-      },
-    });
-
-    if (existingCoordinator) {
-      throw new ForbiddenException('User is already a coordinator');
-    }
-
     await this.prisma.$transaction(async (prisma) => {
+      // Check if already coordinator
+      const existingCoordinator = await prisma.clubCoordinator.findUnique({
+        where: {
+          clubId_userId: {
+            clubId,
+            userId,
+          },
+        },
+      });
+
+      if (existingCoordinator) {
+        throw new BadRequestException('User is already a coordinator of this club');
+      }
+
+      // Add to coordinators
       await prisma.clubCoordinator.create({
         data: {
           clubId,

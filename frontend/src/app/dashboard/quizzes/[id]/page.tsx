@@ -28,6 +28,7 @@ const deleteCookie = (name: string) => {
 };
 
 export default function QuizTakePage({ params }: { params: { id: string } }) {
+
   const router = useRouter();
   const [quiz, setQuiz] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -440,6 +441,54 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
                 <p className="text-xs md:text-sm text-muted-text">Accuracy</p>
               </div>
             </div>
+
+            {/* Detailed Results Analysis */}
+            {result.details && (
+              <div className="mt-8 text-left space-y-4 mb-8">
+                <h3 className="text-xl font-bold border-b pb-2 flex items-center gap-2">
+                  <span>📝</span> Review Answers
+                </h3>
+                {result.details.map((detail: any, index: number) => {
+                  const question = quiz.questions?.find((q: any) => q.id === detail.questionId) || quiz.questions?.[index];
+                  return (
+                    <div key={index} className={`p-4 rounded-lg border ${detail.isCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/10' : 'bg-red-50 border-red-200 dark:bg-red-900/10'}`}>
+                      <div className="flex justify-between items-start mb-2">
+                         <h4 className="font-semibold text-lg text-gray-800 dark:text-gray-200">
+                           <span className="text-muted-text mr-2">Q{index + 1}.</span>
+                           {detail.questionText}
+                         </h4>
+                         <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold ${detail.isCorrect ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                           {detail.isCorrect ? 'Correct' : 'Incorrect'}
+                         </span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm bg-white/50 dark:bg-black/20 p-3 rounded-lg mt-3">
+                         <div className="flex flex-col sm:flex-row sm:gap-4">
+                           <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[100px]">Your Answer:</span>
+                           <span className={`font-medium ${detail.isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                              {Array.isArray(detail.userAnswer) 
+                                  ? (detail.userAnswer.length > 0 
+                                      ? detail.userAnswer.map((i: any) => question?.options?.[parseInt(i)]).join(', ') 
+                                      : 'No answer selected')
+                                  : (detail.userAnswer !== undefined 
+                                      ? question?.options?.[parseInt(detail.userAnswer)] 
+                                      : 'Skipped')}
+                           </span>
+                         </div>
+                         {!detail.isCorrect && (
+                           <div className="flex flex-col sm:flex-row sm:gap-4 border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                              <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[100px]">Correct Answer:</span>
+                              <span className="font-medium text-green-600 dark:text-green-400">
+                                {detail.correctAnswer.map((i: any) => question?.options?.[parseInt(i)]).join(', ')}
+                              </span>
+                           </div>
+                         )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="flex flex-col md:flex-row gap-2 md:gap-3">
               <button

@@ -74,9 +74,14 @@ export class CommentsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new comment' })
   @ApiResponse({ status: 201, description: 'Comment created successfully' })
-  async createComment(@Body() createData: any, @Request() req) {
+  async createComment(@Body() createData: { clubId: number; content: string; isAnonymous?: boolean }, @Request() req) {
+    const { clubId, ...rest } = createData;
     return this.commentsService.create({
-      ...createData,
+      ...rest,
+      isAnonymous: rest.isAnonymous ?? true,
+      club: {
+        connect: { id: clubId },
+      },
       user: {
         connect: { id: req.user.id },
       },

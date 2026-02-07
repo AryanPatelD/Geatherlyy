@@ -64,8 +64,11 @@ export class QuizzesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get quiz statistics (Coordinator/Faculty/Admin only)' })
   @ApiResponse({ status: 200, description: 'Returns quiz statistics' })
-  async getQuizStats(@Param('id', ParseIntPipe) id: number) {
-    return this.quizzesService.getQuizStats(id);
+  async getQuizStats(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.quizzesService.getQuizStats(id, req.user.id);
   }
 
   @Get(':id/leaderboard')
@@ -133,27 +136,89 @@ export class QuizzesController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.COORDINATOR, UserRole.FACULTY, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update quiz (Coordinator/Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Update quiz (Creator/Coordinator/Faculty/Admin only)' })
   @ApiResponse({ status: 200, description: 'Quiz updated successfully' })
   async updateQuiz(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: any,
+    @Request() req,
   ) {
-    return this.quizzesService.update(id, updateData);
+    return this.quizzesService.update(id, updateData, req.user.id);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.COORDINATOR, UserRole.FACULTY, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete quiz (Coordinator/Faculty/Admin only)' })
+  @ApiOperation({ summary: 'Delete quiz (Creator/Coordinator/Faculty/Admin only)' })
   @ApiResponse({ status: 204, description: 'Quiz deleted successfully' })
-  async deleteQuiz(@Param('id', ParseIntPipe) id: number) {
-    await this.quizzesService.delete(id);
+  async deleteQuiz(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    await this.quizzesService.delete(id, req.user.id);
+  }
+
+  @Post(':id/end')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'End a quiz - Sets end date to now and deactivates (Coordinator only)' })
+  @ApiResponse({ status: 200, description: 'Quiz ended successfully' })
+  @ApiResponse({ status: 403, description: 'Not a coordinator of this club' })
+  @ApiResponse({ status: 404, description: 'Quiz not found' })
+  async endQuiz(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.quizzesService.endQuiz(id, req.user.id);
+  }
+
+  @Post(':id/stop')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Stop a quiz - Immediately deactivates the quiz (Coordinator only)' })
+  @ApiResponse({ status: 200, description: 'Quiz stopped successfully' })
+  @ApiResponse({ status: 403, description: 'Not a coordinator of this club' })
+  @ApiResponse({ status: 404, description: 'Quiz not found' })
+  async stopQuiz(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.quizzesService.stopQuiz(id, req.user.id);
+  }
+
+  @Post(':id/reactivate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reactivate a quiz - Sets the quiz as active again (Coordinator only)' })
+  @ApiResponse({ status: 200, description: 'Quiz reactivated successfully' })
+  @ApiResponse({ status: 403, description: 'Not a coordinator of this club' })
+  @ApiResponse({ status: 404, description: 'Quiz not found' })
+  async reactivateQuiz(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.quizzesService.reactivateQuiz(id, req.user.id);
+  }
+
+  @Delete(':id/attempts')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Clear all attempts for a quiz (Coordinator only)' })
+  @ApiResponse({ status: 200, description: 'Quiz attempts cleared successfully' })
+  @ApiResponse({ status: 403, description: 'Not a coordinator of this club' })
+  @ApiResponse({ status: 404, description: 'Quiz not found' })
+  async clearQuizAttempts(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.quizzesService.clearQuizAttempts(id, req.user.id);
   }
 }
 

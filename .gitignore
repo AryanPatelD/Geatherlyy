@@ -106,3 +106,7 @@ concurrency_test.ts
 # Keys
 backend/keys.json
 keys.json
+
+
+database_structure.md
+DEPLOYMENT.md

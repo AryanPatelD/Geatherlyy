@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { NotificationService } from '../common/mailer/notification.service';
+import { ActivityService } from '../activity/activity.service';
 import { ApprovalRequest, Prisma, ApprovalStatus, UserRole } from '@prisma/client';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class ApprovalsService {
     private prisma: PrismaService,
     private usersService: UsersService,
     private notificationService: NotificationService,
+    private activityService: ActivityService,
   ) { }
 
   async create(data: Prisma.ApprovalRequestCreateInput): Promise<ApprovalRequest> {
@@ -250,6 +252,22 @@ export class ApprovalsService {
     if (status === ApprovalStatus.APPROVED) {
       // If this is a coordinator request, add to ClubCoordinator table
       if (request.requestedRole === 'COORDINATOR' && request.clubId) {
+        // Check if user is still an active member of the club
+        const isActiveMember = await this.prisma.clubMember.findUnique({
+          where: {
+            clubId_userId: {
+              clubId: request.clubId,
+              userId: request.userId,
+            },
+          },
+        });
+
+        if (!isActiveMember) {
+          throw new BadRequestException(
+            'Cannot approve coordinator request: The user is no longer an active member of this club. They must rejoin the club first.'
+          );
+        }
+
         await this.prisma.clubCoordinator.create({
           data: {
             clubId: request.clubId,
@@ -264,7 +282,11 @@ export class ApprovalsService {
 
     // Send notification to the user about the approval/rejection
     console.log(`[ApprovalsService] Review complete. Status: ${status}, Sending notification for request ${requestId}`);
+    console.log(`[ApprovalsService] Review complete. Status: ${status}, Sending notification for request ${requestId}`);
     this.sendApprovalNotification(updatedRequest, status);
+
+    // Log Activity
+    this.activityService.logActivity(reviewerId, 'REVIEW_REQUEST', `Reviewed request ${requestId} (${request.requestedRole}): ${status}`);
 
     return updatedRequest;
   }

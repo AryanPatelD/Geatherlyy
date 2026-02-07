@@ -17,6 +17,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './cache/redis.module';
 import { UploadModule } from './upload/upload.module';
 import { MailerModule } from './common/mailer/mailer.module';
+import { DataManagementModule } from './data-management/data-management.module';
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { MailerModule } from './common/mailer/mailer.module';
     UploadModule,
     RemovalRequestsModule,
     MailerModule,
+    DataManagementModule,
+    ActivityModule,
   ],
   providers: [
     {

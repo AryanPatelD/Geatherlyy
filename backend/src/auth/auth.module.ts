@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { MailerModule } from '../common/mailer/mailer.module';
 import { NotificationModule } from '../common/notifications/notification.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
@@ -24,7 +25,9 @@ import { NotificationModule } from '../common/notifications/notification.module'
     }),
     UsersModule,
     MailerModule,
+    MailerModule,
     NotificationModule,
+    ActivityModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy, JwtStrategy],
