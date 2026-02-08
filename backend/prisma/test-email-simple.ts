@@ -30,7 +30,7 @@ async function main() {
     const prisma = app.get(PrismaClient); // Get generic client if possible, or PrismaService
 
     // 1. Get or Create Faculty
-    let faculty = await prisma.user.findFirst({ where: { email: 'test.faculty@geatherlyy.com' } });
+    let faculty = await prisma.user.findFirst({ where: { email: 'test.faculty@getherlyy.com' } });
     if (!faculty) {
         throw new Error('Faculty not found.');
     }
@@ -39,7 +39,7 @@ async function main() {
     let member = await prisma.user.findFirst({ 
         where: { 
             OR: [
-                { email: 'test.member@geatherlyy.com' },
+                { email: 'test.member@getherlyy.com' },
                 { email: 'heetmehta18125@gmail.com' }
             ]
         } 

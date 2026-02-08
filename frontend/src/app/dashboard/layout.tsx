@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { useInitializeAuth } from '@/context/AuthContext';
 import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 import { QuizProvider, useQuizContext } from '@/context/QuizContext';
+import { ClubProvider } from '@/context/ClubContext';
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -62,7 +63,9 @@ export default function DashboardLayout({
 }) {
   return (
     <QuizProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <ClubProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </ClubProvider>
     </QuizProvider>
   );
 }

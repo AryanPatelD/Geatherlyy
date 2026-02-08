@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../cache/redis.service';
+import * as ExcelJS from 'exceljs';
 
 @Injectable()
 export class LeaderboardsService {
@@ -148,7 +149,6 @@ export class LeaderboardsService {
   }
 
   async exportGlobalLeaderboard(): Promise<Buffer> {
-    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Global Leaderboard');
 
@@ -243,102 +243,108 @@ export class LeaderboardsService {
   }
 
   async exportClubLeaderboard(clubId: number): Promise<Buffer> {
-    const ExcelJS = require('exceljs');
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Club Leaderboard');
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Club Leaderboard');
 
-    // Get club name
-    const club = await this.prisma.club.findUnique({
-      where: { id: clubId },
-      select: { name: true },
-    });
+      // Get club name
+      const club = await this.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { name: true },
+      });
 
-    // Add title row
-    worksheet.mergeCells('A1:E1');
-    const titleRow = worksheet.getCell('A1');
-    titleRow.value = `${club?.name || 'Club'} Leaderboard`;
-    titleRow.font = { size: 16, bold: true };
-    titleRow.alignment = { horizontal: 'center' };
-
-    // Add date row
-    worksheet.mergeCells('A2:E2');
-    const dateRow = worksheet.getCell('A2');
-    dateRow.value = `Generated on: ${new Date().toLocaleString()}`;
-    dateRow.font = { size: 10, italic: true };
-    dateRow.alignment = { horizontal: 'center' };
-
-    // Add header row
-    worksheet.addRow([]);
-    const headerRow = worksheet.addRow([
-      'Rank',
-      'Member Name',
-      'Email',
-      'Total Score',
-      'Quizzes Completed',
-      'Average %',
-    ]);
-    
-    headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF9B59B6' },
-    };
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.alignment = { horizontal: 'center' };
-    });
-
-    // Get leaderboard data
-    const leaderboard = await this.getClubLeaderboard(clubId, 100);
-
-    // Add data rows
-    leaderboard.forEach((entry) => {
-      const row = worksheet.addRow([
-        entry.rank,
-        entry.name,
-        entry.email,
-        entry.totalScore,
-        entry.quizzesCompleted,
-        `${entry.avgPercentage}%`,
-      ]);
-
-      // Highlight top 3
-      if (entry.rank === 1) {
-        row.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFFFD700' },
-        };
-      } else if (entry.rank === 2) {
-        row.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFC0C0C0' },
-        };
-      } else if (entry.rank === 3) {
-        row.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFCD7F32' },
-        };
+      if (!club) {
+        throw new Error(`Club with ID ${clubId} not found`);
       }
-    });
 
-    // Set column widths
-    worksheet.columns = [
-      { width: 10 },
-      { width: 25 },
-      { width: 30 },
-      { width: 15 },
-      { width: 20 },
-      { width: 15 },
-    ];
+      // Add title row
+      worksheet.mergeCells('A1:E1');
+      const titleRow = worksheet.getCell('A1');
+      titleRow.value = `${club?.name || 'Club'} Leaderboard`;
+      titleRow.font = { size: 16, bold: true };
+      titleRow.alignment = { horizontal: 'center' };
 
-    // Generate buffer
-    const buffer = await workbook.xlsx.writeBuffer();
-    return Buffer.from(buffer);
+      // Add date row
+      worksheet.mergeCells('A2:E2');
+      const dateRow = worksheet.getCell('A2');
+      dateRow.value = `Generated on: ${new Date().toLocaleString()}`;
+      dateRow.font = { size: 10, italic: true };
+      dateRow.alignment = { horizontal: 'center' };
+
+      // Add header row
+      worksheet.addRow([]);
+      const headerRow = worksheet.addRow([
+        'Rank',
+        'Member Name',
+        'Email',
+        'Total Score',
+        'Quizzes Completed',
+        'Average %',
+      ]);
+      
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF9B59B6' },
+      };
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      // Get leaderboard data
+      const leaderboard = await this.getClubLeaderboard(clubId, 100);
+
+      // Add data rows
+      leaderboard.forEach((entry) => {
+        const row = worksheet.addRow([
+          entry.rank,
+          entry.name,
+          entry.email,
+          entry.totalScore,
+          entry.quizzesCompleted,
+          `${entry.avgPercentage}%`,
+        ]);
+
+        // Highlight top 3
+        if (entry.rank === 1) {
+          row.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFD700' },
+          };
+        } else if (entry.rank === 2) {
+          row.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFC0C0C0' },
+          };
+        } else if (entry.rank === 3) {
+          row.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFCD7F32' },
+          };
+        }
+      });
+
+      // Set column widths
+      worksheet.columns = [
+        { width: 10 },
+        { width: 25 },
+        { width: 30 },
+        { width: 15 },
+        { width: 20 },
+        { width: 15 },
+      ];
+
+      // Generate buffer
+      const buffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(buffer);
+    } catch (error) {
+      console.error('Error exporting club leaderboard:', error);
+      throw error;
+    }
   }
 }
-
-

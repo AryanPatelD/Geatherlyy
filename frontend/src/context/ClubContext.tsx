@@ -1,16 +1,18 @@
 'use client';
 
-import { create } from 'zustand';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuthStore } from './AuthContext';
+import { getApiUrl } from '@/lib/apiUrl';
 
 export interface Club {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  mentor?: string;
-  coordinators: string[];
-  members: number;
   imageUrl?: string;
-  createdAt: Date;
+  description?: string;
+  mentor?: string;
+  coordinators?: string[];
+  members?: number;
+  createdAt?: string | Date;
 }
 
 export interface Activity {
@@ -19,8 +21,16 @@ export interface Activity {
   title: string;
   description: string;
   date: Date;
-  type: 'event' | 'quiz' | 'resource';
-  status: 'upcoming' | 'ongoing' | 'completed';
+  type: 'event' | 'workshop' | 'webinar';
+  status: 'upcoming' | 'past';
+}
+
+export interface QuizQuestion {
+  id: string;
+  text: string;
+  type: 'mcq' | 'text';
+  options?: string[];
+  correctAnswer?: number | string;
 }
 
 export interface Quiz {
@@ -33,91 +43,94 @@ export interface Quiz {
   published: boolean;
 }
 
-export interface QuizQuestion {
-  id: string;
-  text: string;
-  type: 'mcq' | 'short';
-  options?: string[];
-  correctAnswer?: string | number;
-  image?: string;
+interface ClubContextType {
+  myClubs: Club[];
+  selectedClubId: number | null;
+  setSelectedClubId: (id: number | null) => void;
+  isLoading: boolean;
+  fetchMyClubs: () => Promise<void>;
 }
 
-export interface Resource {
-  id: string;
-  clubId: string;
-  title: string;
-  type: 'pdf' | 'image' | 'link';
-  url: string;
-  category: string;
-  uploadedAt: Date;
+const ClubContext = createContext<ClubContextType | undefined>(undefined);
+
+export function ClubProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore();
+  const [myClubs, setMyClubs] = useState<Club[]>([]);
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize from local storage or default to null (All Clubs)
+  useEffect(() => {
+    const savedClubId = localStorage.getItem('selectedClubId');
+    if (savedClubId) {
+      setSelectedClubId(Number(savedClubId));
+    }
+  }, []);
+
+  const handleSetSelectedClubId = (id: number | null) => {
+    setSelectedClubId(id);
+    if (id) {
+      localStorage.setItem('selectedClubId', String(id));
+    } else {
+      localStorage.removeItem('selectedClubId');
+    }
+  };
+
+  const fetchMyClubs = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMyClubs(data);
+        
+        // Validation: If selectedClubId is no longer in myClubs, reset it
+        if (selectedClubId && !data.find((c: Club) => c.id === selectedClubId)) {
+          handleSetSelectedClubId(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching my clubs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchMyClubs();
+    } else {
+      setMyClubs([]);
+      setSelectedClubId(null);
+    }
+  }, [user]);
+
+  return (
+    <ClubContext.Provider
+      value={{
+        myClubs,
+        selectedClubId,
+        setSelectedClubId: handleSetSelectedClubId,
+        isLoading,
+        fetchMyClubs,
+      }}
+    >
+      {children}
+    </ClubContext.Provider>
+  );
 }
 
-interface ClubState {
-  clubs: Club[];
-  activities: Activity[];
-  quizzes: Quiz[];
-  resources: Resource[];
-  selectedClub: Club | null;
-  
-  addClub: (club: Club) => void;
-  removeClub: (clubId: string) => void;
-  addActivity: (activity: Activity) => void;
-  addQuiz: (quiz: Quiz) => void;
-  addResource: (resource: Resource) => void;
-  setSelectedClub: (club: Club | null) => void;
-  getClubActivities: (clubId: string) => Activity[];
-  getClubQuizzes: (clubId: string) => Quiz[];
-  getClubResources: (clubId: string) => Resource[];
+export function useClubContext() {
+  const context = useContext(ClubContext);
+  if (context === undefined) {
+    throw new Error('useClubContext must be used within a ClubProvider');
+  }
+  return context;
 }
-
-const useClubStore = create<ClubState>((set, get) => ({
-  clubs: [],
-  activities: [],
-  quizzes: [],
-  resources: [],
-  selectedClub: null,
-
-  addClub: (club) =>
-    set((state) => ({
-      clubs: [...state.clubs, club],
-    })),
-
-  removeClub: (clubId) =>
-    set((state) => ({
-      clubs: state.clubs.filter((c) => c.id !== clubId),
-    })),
-
-  addActivity: (activity) =>
-    set((state) => ({
-      activities: [...state.activities, activity],
-    })),
-
-  addQuiz: (quiz) =>
-    set((state) => ({
-      quizzes: [...state.quizzes, quiz],
-    })),
-
-  addResource: (resource) =>
-    set((state) => ({
-      resources: [...state.resources, resource],
-    })),
-
-  setSelectedClub: (club) => set({ selectedClub: club }),
-
-  getClubActivities: (clubId) => {
-    const state = get();
-    return state.activities.filter((a) => a.clubId === clubId);
-  },
-
-  getClubQuizzes: (clubId) => {
-    const state = get();
-    return state.quizzes.filter((q) => q.clubId === clubId);
-  },
-
-  getClubResources: (clubId) => {
-    const state = get();
-    return state.resources.filter((r) => r.clubId === clubId);
-  },
-}));
-
-export { useClubStore };

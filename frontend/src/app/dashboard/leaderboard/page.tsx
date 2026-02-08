@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Trophy, Medal, Award, Users, TrendingUp, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/context/AuthContext';
+import { useClubContext } from '@/context/ClubContext';
 import { getApiUrl } from '@/lib/apiUrl';
 
 interface LeaderboardEntry {
@@ -23,27 +24,27 @@ interface LeaderboardEntry {
 export default function LeaderboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { myClubs, selectedClubId } = useClubContext();
   const [activeTab, setActiveTab] = useState<'global' | 'clubs'>('global');
   const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [myRank, setMyRank] = useState<LeaderboardEntry | null>(null);
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [selectedClub, setSelectedClub] = useState<number | null>(null);
+  const [localSelectedClub, setLocalSelectedClub] = useState<number | null>(null);
   const [clubLeaderboard, setClubLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sync active tab with selectedClubId
+  useEffect(() => {
+    if (selectedClubId) {
+      setActiveTab('clubs');
+    }
+  }, [selectedClubId]);
 
   useEffect(() => {
     fetchGlobalLeaderboard();
     fetchMyRank();
-    if (user?.role === 'member' || user?.role === 'coordinator') {
-      fetchMyClubs();
-    }
   }, [user]);
 
-  useEffect(() => {
-    if (selectedClub) {
-      fetchClubLeaderboard(selectedClub);
-    }
-  }, [selectedClub]);
+
 
   const fetchGlobalLeaderboard = async () => {
     try {
@@ -78,26 +79,13 @@ export default function LeaderboardPage() {
     }
   };
 
-  const fetchMyClubs = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/clubs/my-clubs`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setClubs(data);
-        if (data.length > 0) {
-          setSelectedClub(data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch clubs:', error);
+  useEffect(() => {
+    const clubIdToFetch = selectedClubId || localSelectedClub || (activeTab === 'clubs' && myClubs.length > 0 ? myClubs[0].id : null);
+    
+    if (clubIdToFetch && activeTab === 'clubs') {
+      fetchClubLeaderboard(clubIdToFetch);
     }
-  };
+  }, [selectedClubId, localSelectedClub, activeTab, myClubs]);
 
   const fetchClubLeaderboard = async (clubId: number) => {
     try {
@@ -151,7 +139,7 @@ export default function LeaderboardPage() {
 
       if (response.ok) {
         const blob = await response.blob();
-        const clubName = clubs.find(c => c.id === clubId)?.name || 'Club';
+        const clubName = myClubs.find(c => c.id === clubId)?.name || 'Club';
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -403,15 +391,17 @@ export default function LeaderboardPage() {
       {activeTab === 'clubs' && (
         <div className="space-y-6">
           {/* Club Selector */}
-          {clubs.length > 0 && (
+          {/* Club Selector - Only show if no global club selected */}
+          {!selectedClubId && myClubs.length > 0 && (
             <div className="card p-6">
               <label className="block text-sm font-medium mb-3">Select Club</label>
               <select
-                value={selectedClub || ''}
-                onChange={(e) => setSelectedClub(Number(e.target.value))}
+                value={localSelectedClub || ''}
+                onChange={(e) => setLocalSelectedClub(Number(e.target.value))}
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {clubs.map((club) => (
+                <option value="">Select a club...</option>
+                {myClubs.map((club) => (
                   <option key={club.id} value={club.id}>
                     {club.name}
                   </option>
@@ -421,13 +411,14 @@ export default function LeaderboardPage() {
           )}
 
           {/* Club Leaderboard */}
-          {selectedClub && clubLeaderboard.length > 0 && (
+          {/* Club Leaderboard */}
+          {(selectedClubId || localSelectedClub) && clubLeaderboard.length > 0 && (
             <div className="card">
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold flex items-center gap-2">
                     <Users className="w-6 h-6 text-purple-600" />
-                    {clubs.find(c => c.id === selectedClub)?.name} Leaderboard
+                    {myClubs.find(c => c.id === (selectedClubId || localSelectedClub))?.name} Leaderboard
                   </h2>
                   <p className="text-sm text-muted-text mt-1">
                     Members ranked by quiz performance in this club
@@ -435,7 +426,7 @@ export default function LeaderboardPage() {
                 </div>
                 {(user?.role === 'coordinator' || user?.role === 'faculty' || user?.role === 'admin') && (
                   <button
-                    onClick={() => handleExportClub(selectedClub)}
+                    onClick={() => handleExportClub((selectedClubId || localSelectedClub)!)}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,7 +492,7 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          {clubs.length === 0 && (
+          {myClubs.length === 0 && (
             <div className="card p-12 text-center">
               <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold mb-2">No Clubs Yet</h3>

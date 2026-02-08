@@ -101,14 +101,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div className="h-16 px-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-lg">G</span>
+            <div className="h-12 w-auto">
+              <img src="/brand-logo.png" alt="Getherlyy" className="h-full object-contain" />
             </div>
-            <div>
-              <h2 className="font-bold text-base text-gray-900 dark:text-white">Geatherlyy</h2>
-            </div>
+            {/* <span className="text-white font-bold text-lg">G</span> */}
           </div>
           <button 
             onClick={onClose}

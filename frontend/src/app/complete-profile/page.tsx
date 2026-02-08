@@ -93,7 +93,10 @@ export default function CompleteProfilePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 py-8">
       <div className="card max-w-md w-full">
-        <div className="mb-4 md:mb-6">
+        <div className="mb-4 md:mb-6 text-center">
+          <div className="flex justify-center mb-6">
+            <img src="/brand-logo.png" alt="Getherlyy" className="h-16 object-contain" />
+          </div>
           <h1 className="text-xl md:text-2xl font-bold">Complete Your Profile</h1>
           <p className="text-muted-text text-sm mt-2">Step {step} of 2</p>
           <div className="w-full bg-border rounded-full h-2 mt-4">

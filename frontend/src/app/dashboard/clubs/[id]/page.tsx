@@ -3,7 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { CheckCircledIcon, CrossCircledIcon, DownloadIcon } from '@radix-ui/react-icons';
 import { getApiUrl } from '@/lib/apiUrl';
+
+interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  name: string;
+  email: string;
+  avatar: string | null;
+  role: string;
+  totalScore: number;
+  clubsJoined: number;
+  quizzesCompleted: number;
+  avgPercentage?: string;
+}
 
 export default function ClubDetailPage({
   params,
@@ -33,6 +47,8 @@ export default function ClubDetailPage({
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [postingComment, setPostingComment] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [clubLeaderboard, setClubLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
   useEffect(() => {
     // Get current user ID and role from token
@@ -82,106 +98,47 @@ export default function ClubDetailPage({
   }, [params.id]);
 
   useEffect(() => {
-    const fetchClub = async () => {
+    const fetchClubData = async () => {
       try {
         const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        const response = await fetch(`${apiUrl}/api/clubs/${params.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setClub(data);
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        setLoading(true);
+        setLoadingResources(true);
+        setLoadingQuizzes(true);
+        setLoadingActivities(true);
+
+        const [clubRes, resourcesRes, quizzesRes, activitiesRes] = await Promise.all([
+          fetch(`${apiUrl}/api/clubs/${params.id}`, { headers }),
+          fetch(`${apiUrl}/api/resources?clubId=${params.id}`, { headers }),
+          fetch(`${apiUrl}/api/quizzes?clubId=${params.id}`, { headers }),
+          fetch(`${apiUrl}/api/activities?clubId=${params.id}`, { headers })
+        ]);
+
+        if (clubRes.ok) {
+          const clubData = await clubRes.json();
+          setClub(clubData);
         } else {
           console.error('Failed to fetch club');
         }
+
+        if (resourcesRes.ok) setResources(await resourcesRes.json());
+        if (quizzesRes.ok) setQuizzes(await quizzesRes.json());
+        if (activitiesRes.ok) setActivities(await activitiesRes.json());
+
       } catch (error) {
-        console.error('Error fetching club:', error);
+        console.error('Error fetching club data:', error);
       } finally {
         setLoading(false);
+        setLoadingResources(false);
+        setLoadingQuizzes(false);
+        setLoadingActivities(false);
       }
     };
 
-    fetchClub();
+    fetchClubData();
   }, [params.id]);
-
-  // Fetch resources when resources tab is active
-  useEffect(() => {
-    if (activeTab === 'resources' && club) {
-      const fetchResources = async () => {
-        setLoadingResources(true);
-        try {
-          const token = localStorage.getItem('token');
-          const apiUrl = getApiUrl();
-          const response = await fetch(`${apiUrl}/api/resources?clubId=${params.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setResources(data);
-          }
-        } catch (error) {
-          console.error('Error fetching resources:', error);
-        } finally {
-          setLoadingResources(false);
-        }
-      };
-      fetchResources();
-    }
-  }, [activeTab, club, params.id]);
-
-  // Fetch quizzes when quizzes tab is active
-  useEffect(() => {
-    if (activeTab === 'quizzes' && club) {
-      const fetchQuizzes = async () => {
-        setLoadingQuizzes(true);
-        try {
-          const token = localStorage.getItem('token');
-          const apiUrl = getApiUrl();
-          const response = await fetch(`${apiUrl}/api/quizzes?clubId=${params.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setQuizzes(data);
-          }
-        } catch (error) {
-          console.error('Error fetching quizzes:', error);
-        } finally {
-          setLoadingQuizzes(false);
-        }
-      };
-      fetchQuizzes();
-    }
-  }, [activeTab, club, params.id]);
-
-  // Fetch activities when activities tab is active
-  useEffect(() => {
-    if (activeTab === 'activities' && club) {
-      const fetchActivities = async () => {
-        setLoadingActivities(true);
-        try {
-          const token = localStorage.getItem('token');
-          const apiUrl = getApiUrl();
-          const response = await fetch(`${apiUrl}/api/activities?clubId=${params.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setActivities(data);
-          }
-        } catch (error) {
-          console.error('Error fetching activities:', error);
-        } finally {
-          setLoadingActivities(false);
-        }
-      };
-      fetchActivities();
-    }
-  }, [activeTab, club, params.id]);
 
   // Fetch comments when comments tab is active
   useEffect(() => {
@@ -207,6 +164,95 @@ export default function ClubDetailPage({
       fetchComments();
     }
   }, [activeTab, club, params.id]);
+
+  // Fetch leaderboard when leaderboard tab is active
+  useEffect(() => {
+    if (activeTab === 'leaderboard' && club) {
+      const fetchLeaderboard = async () => {
+        setLoadingLeaderboard(true);
+        try {
+          const token = localStorage.getItem('token');
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/api/leaderboards/club/${params.id}?limit=50`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setClubLeaderboard(data);
+          }
+        } catch (error) {
+          console.error('Error fetching leaderboard:', error);
+        } finally {
+          setLoadingLeaderboard(false);
+        }
+      };
+      fetchLeaderboard();
+    }
+  }, [activeTab, club, params.id]);
+
+  const handleExportLeaderboard = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/leaderboards/club/${params.id}/export`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${club.name}_Leaderboard_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('Leaderboard exported successfully');
+      } else {
+        toast.error('Failed to export leaderboard');
+      }
+    } catch (error) {
+      console.error('Error exporting leaderboard:', error);
+      toast.error('Error exporting leaderboard');
+    }
+  };
+
+  const handleExportComments = () => {
+    if (comments.length === 0) {
+      toast.error('No comments to export');
+      return;
+    }
+
+    // Define CSV headers
+    const headers = ['User', 'Date', 'Content', 'Anonymous'];
+    
+    // Convert comments to CSV rows
+    const csvRows = comments.map(comment => {
+      const userName = comment.isAnonymous ? 'Anonymous' : (comment.user?.name || 'Unknown');
+      const date = new Date(comment.createdAt).toLocaleDateString();
+      // Escape quotes in content
+      const content = `"${comment.content.replace(/"/g, '""')}"`;
+      const isAnon = comment.isAnonymous ? 'Yes' : 'No';
+      
+      return [userName, date, content, isAnon].join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${club.name}_Comments_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
@@ -407,6 +453,7 @@ export default function ClubDetailPage({
     { id: 'activities', label: 'Activities' },
     { id: 'quizzes', label: 'Quizzes' },
     { id: 'resources', label: 'Resources' },
+    { id: 'leaderboard', label: 'Leaderboard' },
     { id: 'comments', label: 'Comments' },
   ];
 
@@ -724,11 +771,98 @@ export default function ClubDetailPage({
         </div>
       )}
 
+      {/* Leaderboard */}
+      {activeTab === 'leaderboard' && (
+        <div className="space-y-6">
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold">Club Leaderboard 🏆</h3>
+              {(isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY') && (
+                <button
+                  onClick={handleExportLeaderboard}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                >
+                  <DownloadIcon className="w-4 h-4" />
+                  Export Excel
+                </button>
+              )}
+            </div>
+            
+            {loadingLeaderboard ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : clubLeaderboard.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/30 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-text uppercase">Rank</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-text uppercase">Member</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-text uppercase">Score</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-text uppercase">Quizzes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {clubLeaderboard.map((entry) => (
+                      <tr key={entry.userId} className="hover:bg-muted/10">
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                            entry.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+                            entry.rank === 2 ? 'bg-gray-100 text-gray-700' :
+                            entry.rank === 3 ? 'bg-orange-100 text-orange-700' :
+                            'text-muted-text'
+                          }`}>
+                            {entry.rank}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                {entry.name.charAt(0).toUpperCase()}
+                             </div>
+                             <div>
+                               <p className="text-sm font-medium">{entry.name}</p>
+                               <p className="text-xs text-muted-text">{entry.role}</p>
+                             </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center font-bold text-primary">
+                          {entry.totalScore}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
+                          {entry.quizzesCompleted}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+                <div className="text-center py-8 text-muted-text">
+                  <p>No leaderboard data yet</p>
+                </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Comments */}
       {activeTab === 'comments' && (
         <div className="space-y-6">
           <div className="card">
-            <h3 className="font-bold mb-4">Share Feedback</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold">Share Feedback</h3>
+              {(isUserCoordinator || userRole === 'ADMIN' || userRole === 'FACULTY') && comments.length > 0 && (
+                <button
+                  onClick={handleExportComments}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                >
+                  <DownloadIcon className="w-4 h-4" />
+                  Export CSV
+                </button>
+              )}
+            </div>
             <textarea
               placeholder="Your comment here..."
               className="input h-24 mb-3"

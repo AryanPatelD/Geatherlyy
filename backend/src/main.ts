@@ -70,7 +70,7 @@ async function bootstrap() {
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Geatherlyy API')
+      .setTitle('Getherlyy API')
       .setDescription('Centralized Club Management System API')
       .setVersion('1.0')
       .addBearerAuth()
@@ -94,7 +94,7 @@ async function bootstrap() {
   console.log(`
     ╔═══════════════════════════════════════╗
     ║                                       ║
-    ║     🚀 Geatherlyy API Server 🚀       ║
+    ║     🚀 Getherlyy API Server 🚀       ║
     ║                                       ║
     ║     Environment: ${process.env.NODE_ENV || 'development'}            ║
     ║     Port: ${port}                          ║

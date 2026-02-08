@@ -3,18 +3,28 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/apiUrl';
+import { useClubContext } from '@/context/ClubContext';
 
 export default function QuizzesPage() {
   const router = useRouter();
+  const { selectedClubId, myClubs, isLoading: clubContextLoading } = useClubContext();
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for myClubs to be loaded
+    if (clubContextLoading) return;
+
     const fetchQuizzes = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        const response = await fetch(`${apiUrl}/api/quizzes`, {
+        
+        // If a specific club is selected, fetch only for that club
+        const query = selectedClubId ? `?clubId=${selectedClubId}` : '';
+        
+        const response = await fetch(`${apiUrl}/api/quizzes${query}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -22,7 +32,16 @@ export default function QuizzesPage() {
         
         if (response.ok) {
           const data = await response.json();
-          setQuizzes(data.filter((q: any) => q.isActive));
+          
+          let filteredQuizzes = data.filter((q: any) => q.isActive);
+
+          // If "All My Clubs" is selected, filter to only show quizzes from clubs I've joined
+          if (!selectedClubId) {
+             const myClubIds = new Set(myClubs.map(c => c.id));
+             filteredQuizzes = filteredQuizzes.filter((q: any) => myClubIds.has(q.clubId));
+          }
+          
+          setQuizzes(filteredQuizzes);
         }
       } catch (error) {
         console.error('Failed to fetch quizzes:', error);
@@ -32,7 +51,7 @@ export default function QuizzesPage() {
     };
 
     fetchQuizzes();
-  }, []);
+  }, [selectedClubId, myClubs, clubContextLoading]);
 
   if (loading) {
     return (

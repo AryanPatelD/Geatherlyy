@@ -10,7 +10,7 @@ const features = [
     icon: '🎯',
     title: 'Club Management',
     description: 'Create, manage, and grow your university clubs with powerful tools for coordinators and members.',
-    gradient: 'from-violet-500 to-purple-600',
+    gradient: 'from-orange-500 to-amber-500',
   },
   {
     icon: '📅',
@@ -22,7 +22,7 @@ const features = [
     icon: '🧠',
     title: 'Interactive Quizzes',
     description: 'Create engaging quizzes with images, track scores on leaderboards, and gamify learning.',
-    gradient: 'from-orange-500 to-pink-500',
+    gradient: 'from-orange-400 to-red-500',
   },
   {
     icon: '📚',
@@ -30,18 +30,6 @@ const features = [
     description: 'Share study materials, documents, and resources with club members in an organized way.',
     gradient: 'from-emerald-500 to-teal-500',
   },
-  // {
-  //   icon: '💬',
-  //   title: 'Anonymous Feedback',
-  //   description: 'Collect honest feedback with hidden identities. Safe space for genuine opinions.',
-  //   gradient: 'from-rose-500 to-red-500',
-  // },
-  // {
-  //   icon: '📊',
-  //   title: 'Analytics Dashboard',
-  //   description: 'Track club growth, member engagement, and activity metrics with visual insights.',
-  //   gradient: 'from-indigo-500 to-blue-600',
-  // },
 ];
 
 const stats = [
@@ -57,19 +45,19 @@ const FloatingElements = () => {
     <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
       {/* 3D Cubes */}
       <div className="absolute top-20 left-[10%] w-16 h-16 animate-float-slow">
-        <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl shadow-xl transform rotate-12 hover:rotate-45 transition-transform duration-1000" 
+        <div className="w-full h-full bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl shadow-xl transform rotate-12 hover:rotate-45 transition-transform duration-1000" 
              style={{ transform: 'perspective(1000px) rotateX(20deg) rotateY(-20deg)' }}>
         </div>
       </div>
       
       <div className="absolute top-40 right-[15%] w-12 h-12 animate-float-medium">
-        <div className="w-full h-full bg-gradient-to-br from-pink-400 to-rose-500 rounded-lg shadow-xl"
+        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg shadow-xl"
              style={{ transform: 'perspective(1000px) rotateX(-15deg) rotateY(25deg)' }}>
         </div>
       </div>
       
       <div className="absolute bottom-32 left-[20%] w-10 h-10 animate-float-fast">
-        <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg shadow-xl"
+        <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-500 rounded-lg shadow-xl"
              style={{ transform: 'perspective(1000px) rotateX(25deg) rotateY(-30deg)' }}>
         </div>
       </div>
@@ -82,26 +70,26 @@ const FloatingElements = () => {
 
       {/* 3D Spheres */}
       <div className="absolute top-1/4 left-[5%] w-6 h-6 animate-float-medium animation-delay-1000">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg"
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-400 to-red-500 shadow-lg"
              style={{ boxShadow: 'inset -2px -2px 6px rgba(0,0,0,0.2), inset 2px 2px 6px rgba(255,255,255,0.3)' }}>
         </div>
       </div>
 
       <div className="absolute bottom-1/4 right-[12%] w-8 h-8 animate-float-fast animation-delay-4000">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-violet-400 to-purple-600 shadow-lg"
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg"
              style={{ boxShadow: 'inset -3px -3px 8px rgba(0,0,0,0.2), inset 3px 3px 8px rgba(255,255,255,0.3)' }}>
         </div>
       </div>
 
       {/* 3D Rings */}
       <div className="absolute top-2/3 left-[8%] w-20 h-20 animate-spin-slow">
-        <div className="w-full h-full border-4 border-indigo-300/50 rounded-full"
+        <div className="w-full h-full border-4 border-orange-500/30 rounded-full"
              style={{ transform: 'perspective(500px) rotateX(60deg)' }}>
         </div>
       </div>
 
       <div className="absolute top-1/2 right-[5%] w-16 h-16 animate-spin-slow animation-delay-2000">
-        <div className="w-full h-full border-4 border-purple-300/50 rounded-full"
+        <div className="w-full h-full border-4 border-blue-500/30 rounded-full"
              style={{ transform: 'perspective(500px) rotateX(70deg) rotateZ(30deg)' }}>
         </div>
       </div>
@@ -112,19 +100,19 @@ const FloatingElements = () => {
 // Animated Bar Chart Component
 const AnimatedBarChart = ({ mounted }: { mounted: boolean }) => {
   const bars = [
-    { height: 60, color: 'from-indigo-500 to-indigo-600', label: 'Mon' },
-    { height: 80, color: 'from-purple-500 to-purple-600', label: 'Tue' },
-    { height: 45, color: 'from-pink-500 to-pink-600', label: 'Wed' },
-    { height: 90, color: 'from-indigo-500 to-indigo-600', label: 'Thu' },
-    { height: 70, color: 'from-purple-500 to-purple-600', label: 'Fri' },
-    { height: 55, color: 'from-pink-500 to-pink-600', label: 'Sat' },
-    { height: 85, color: 'from-indigo-500 to-indigo-600', label: 'Sun' },
+    { height: 60, color: 'from-orange-500 to-orange-600', label: 'Mon' },
+    { height: 80, color: 'from-amber-500 to-amber-600', label: 'Tue' },
+    { height: 45, color: 'from-orange-500 to-orange-600', label: 'Wed' },
+    { height: 90, color: 'from-amber-500 to-amber-600', label: 'Thu' },
+    { height: 70, color: 'from-orange-500 to-orange-600', label: 'Fri' },
+    { height: 55, color: 'from-amber-500 to-amber-600', label: 'Sat' },
+    { height: 85, color: 'from-orange-500 to-orange-600', label: 'Sun' },
   ];
 
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 dark:border-slate-700/50">
+    <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-slate-700/50">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-semibold text-foreground">Weekly Activity</span>
+        <span className="text-sm font-semibold text-white">Weekly Activity</span>
         <span className="text-xs text-green-500 font-medium">+24%</span>
       </div>
       <div className="flex items-end justify-between gap-2 h-24">
@@ -137,7 +125,7 @@ const AnimatedBarChart = ({ mounted }: { mounted: boolean }) => {
                 transitionDelay: `${i * 100}ms`
               }}
             />
-            <span className="text-[10px] text-muted-text">{bar.label}</span>
+            <span className="text-[10px] text-slate-400">{bar.label}</span>
           </div>
         ))}
       </div>
@@ -151,21 +139,21 @@ const AnimatedLineChart = ({ mounted }: { mounted: boolean }) => {
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${i * 30} ${100 - p}`).join(' ');
   
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 dark:border-slate-700/50">
+    <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-slate-700/50">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-semibold text-foreground">Member Growth</span>
+        <span className="text-sm font-semibold text-white">Member Growth</span>
         <span className="text-xs text-green-500 font-medium">↑ 156 this week</span>
       </div>
       <svg viewBox="0 0 210 100" className="w-full h-20 overflow-visible">
         {/* Grid lines */}
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#a855f7" />
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#f59e0b" />
           </linearGradient>
           <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
           </linearGradient>
         </defs>
         
@@ -228,7 +216,7 @@ const CircularProgress = ({ percentage, label, mounted }: { percentage: number; 
             fill="none"
             stroke="currentColor"
             strokeWidth="8"
-            className="text-slate-200 dark:text-slate-700"
+            className="text-slate-700"
           />
           <circle
             cx="48"
@@ -244,18 +232,18 @@ const CircularProgress = ({ percentage, label, mounted }: { percentage: number; 
           />
           <defs>
             <linearGradient id="circleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#a855f7" />
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
           </defs>
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
             {mounted ? percentage : 0}%
           </span>
         </div>
       </div>
-      <span className="text-xs text-muted-text mt-2">{label}</span>
+      <span className="text-xs text-slate-400 mt-2">{label}</span>
     </div>
   );
 };
@@ -294,6 +282,63 @@ const Card3D = ({ children, className = '' }: { children: React.ReactNode; class
   );
 };
 
+const Typewriter = ({ words, delay = 100, pause = 2000 }: { words: string[], delay?: number, pause?: number }) => {
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const word = words[currentWordIndex];
+      if (isDeleting) {
+        if (currentText.length > 0) {
+          setCurrentText(word.substring(0, currentText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setCurrentWordIndex((prev) => (prev + 1) % words.length);
+        }
+      } else {
+        if (currentText.length < word.length) {
+          setCurrentText(word.substring(0, currentText.length + 1));
+        } else {
+          setIsDeleting(true);
+        }
+      }
+    }, isDeleting ? delay / 2 : (currentText.length === words[currentWordIndex].length ? pause : delay));
+
+    return () => clearTimeout(timeout);
+  }, [currentText, isDeleting, currentWordIndex, words, delay, pause]);
+
+  return (
+    <span className="inline-block min-w-[200px] text-left">
+      {currentText}
+      <span className="animate-pulse ml-1 text-orange-500">|</span>
+    </span>
+  );
+};
+
+const FeatureQuote = () => (
+  <div className="mt-8 p-4 bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 max-w-sm hover:border-orange-500/30 transition-colors duration-300">
+    <div className="flex gap-4">
+      <div className="text-4xl text-orange-500/50 font-serif leading-none">❝</div>
+      <div>
+        <p className="text-slate-300 italic text-sm mb-3 leading-relaxed">
+          "Getherlyy transformed how we manage our coding club. Events are easier to organize and engagement has doubled!"
+        </p>
+        <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold">
+              AG
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-white">Alex G.</div>
+              <div className="text-[10px] text-slate-400">CS Society President</div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function Home() {
   const { user, isLoading } = useAuthStore();
   const [mounted, setMounted] = useState(false);
@@ -304,10 +349,10 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-muted-text animate-pulse">Loading...</p>
+          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 animate-pulse">Loading...</p>
         </div>
       </div>
     );
@@ -315,22 +360,22 @@ export default function Home() {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950">
+      <div className="min-h-screen bg-slate-900 selection:bg-orange-500 selection:text-white">
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 bg-clip-text text-transparent">
                 Welcome back, {user.name}! 👋
               </h1>
-              <p className="text-lg text-muted-text">
-                You're logged in as <span className="font-semibold text-indigo-600 dark:text-indigo-400">{user.role}</span>
+              <p className="text-lg text-slate-400">
+                You're logged in as <span className="font-semibold text-orange-400">{user.role}</span>
               </p>
             </div>
             
             <div className="flex justify-center">
               <Link 
                 href="/dashboard" 
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-1"
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-2xl shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all duration-300 hover:-translate-y-1"
               >
                 <span>Go to Dashboard</span>
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,12 +390,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950 overflow-hidden">
+    <div className="min-h-screen bg-slate-900 selection:bg-orange-500 selection:text-white overflow-hidden">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900/30 rounded-full mix-blend-multiply dark:mix-blend-normal filter blur-3xl opacity-50 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-300 dark:bg-indigo-900/30 rounded-full mix-blend-multiply dark:mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900/30 rounded-full mix-blend-multiply dark:mix-blend-normal filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-slate-700/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* 3D Floating Elements */}
@@ -359,17 +404,14 @@ export default function Home() {
       {/* Navigation */}
       <nav className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg sm:rounded-xl rotate-12 flex items-center justify-center shadow-lg shadow-indigo-500/30 hover:rotate-[20deg] transition-transform duration-300">
-              <span className="text-white font-bold text-sm sm:text-lg -rotate-12">G</span>
-            </div>
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Geatherlyy
-            </span>
+          <div className="flex items-center gap-3">
+             <div className="h-14 sm:h-16 w-auto">
+                <img src="/brand-logo.png" alt="Getherlyy" className="h-full object-contain" />
+             </div>
           </div>
           <Link 
             href="/login" 
-            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-medium text-sm sm:text-base rounded-lg sm:rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-300 hover:scale-105"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-slate-800/80 backdrop-blur-sm border border-slate-700 text-orange-400 font-medium text-sm sm:text-base rounded-lg sm:rounded-xl hover:bg-slate-700/50 transition-all duration-300 hover:scale-105"
           >
             Sign In
           </Link>
@@ -382,24 +424,21 @@ export default function Home() {
           {/* Left Side - Text Content */}
           <div className={`text-center lg:text-left transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-800/80 border border-slate-700 text-orange-400 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
               University Club Platform
             </div>
 
             {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Connect. Collaborate.
-              </span>
-              <br />
-              <span className="text-foreground">
-                Grow Together.
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-white">
+              Unite. Engage.
+              <span className="block bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 bg-clip-text text-transparent h-[1.2em]">
+                <Typewriter words={['Grow Together.', 'Connect.', 'Inspire.']} />
               </span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-muted-text mb-6 sm:mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg text-slate-400 mb-6 sm:mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
               The all-in-one platform to manage university clubs, organize events, 
               run quizzes, share resources, and build thriving communities.
             </p>
@@ -408,22 +447,16 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4 mb-6 sm:mb-8">
               <Link 
                 href="/login" 
-                className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm sm:text-base rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-1 hover:scale-105 w-full sm:w-auto justify-center"
+                className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm sm:text-base rounded-xl sm:rounded-2xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:-translate-y-1 hover:scale-105 w-full sm:w-auto justify-center"
               >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span>Get Started with Google</span>
+                <span>Get Started</span>
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
               <a 
                 href="#features" 
-                className="inline-flex items-center gap-2 px-6 py-4 text-muted-text font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-4 text-slate-400 font-medium hover:text-white transition-colors"
               >
                 <span>Learn More</span>
                 <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -433,15 +466,20 @@ export default function Home() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex items-center justify-center lg:justify-start gap-3 sm:gap-4 text-xs sm:text-sm text-muted-text">
+            <div className="flex items-center justify-center lg:justify-start gap-3 sm:gap-4 text-xs sm:text-sm text-slate-500 mb-8">
               <div className="flex -space-x-2">
                 {['🧑‍🎓', '👩‍🎓', '🧑‍💻', '👨‍🏫'].map((emoji, i) => (
-                  <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 flex items-center justify-center text-xs sm:text-sm border-2 border-white dark:border-slate-800">
+                  <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs sm:text-sm border-2 border-slate-900">
                     {emoji}
                   </div>
                 ))}
               </div>
-              <span>Join <strong className="text-foreground">5,000+</strong> students</span>
+              <span>Join <strong className="text-slate-300">5,000+</strong> students</span>
+            </div>
+
+            {/* Feature Quote */}
+            <div className="flex justify-center lg:justify-start">
+              <FeatureQuote />
             </div>
           </div>
 
@@ -450,17 +488,17 @@ export default function Home() {
             <div className="relative" style={{ perspective: '1500px' }}>
               {/* Main Dashboard Card */}
               <Card3D className="relative">
-                <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-white/20 dark:border-slate-700/50"
+                <div className="bg-slate-800/90 backdrop-blur-xl rounded-3xl p-6 shadow-2xl border border-slate-700/50"
                      style={{ transform: 'rotateY(-5deg) rotateX(5deg)' }}>
                   {/* Dashboard Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                        G
+                      <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center text-white font-bold overflow-hidden p-1">
+                        <img src="/brand-logo.png" className="w-full h-full object-contain" />
                       </div>
                       <div>
-                        <div className="font-semibold text-foreground">Dashboard</div>
-                        <div className="text-xs text-muted-text">Welcome back!</div>
+                        <div className="font-semibold text-white">Dashboard</div>
+                        <div className="text-xs text-slate-400">Welcome back!</div>
                       </div>
                     </div>
                     <div className="flex gap-1.5">
@@ -477,7 +515,7 @@ export default function Home() {
                   </div>
 
                   {/* Circular Progress Row */}
-                  <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4">
+                  <div className="bg-slate-900/50 rounded-2xl p-4">
                     <div className="flex items-center justify-around">
                       <CircularProgress percentage={87} label="Attendance" mounted={mounted} />
                       <CircularProgress percentage={72} label="Engagement" mounted={mounted} />
@@ -490,13 +528,13 @@ export default function Home() {
               {/* Floating Notification Card */}
               <div className={`absolute -top-4 -right-8 transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
                    style={{ transform: 'rotateY(10deg)' }}>
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-xl border border-white/20 dark:border-slate-700/50 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600">
+                <div className="bg-slate-800 rounded-xl p-3 shadow-xl border border-slate-700/50 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-900/30 flex items-center justify-center text-green-500">
                     ✓
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-foreground">New member joined!</div>
-                    <div className="text-xs text-muted-text">Tech Club • Just now</div>
+                    <div className="text-sm font-medium text-white">New member joined!</div>
+                    <div className="text-xs text-slate-400">Tech Club • Just now</div>
                   </div>
                 </div>
               </div>
@@ -504,7 +542,7 @@ export default function Home() {
               {/* Floating Stats Card */}
               <div className={`absolute -bottom-4 -left-8 transition-all duration-700 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                    style={{ transform: 'rotateY(-10deg)' }}>
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 shadow-xl text-white">
+                <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-4 shadow-xl text-white">
                   <div className="text-2xl font-bold">+156</div>
                   <div className="text-xs text-white/80">New signups this week</div>
                 </div>
@@ -519,12 +557,12 @@ export default function Home() {
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           {stats.map((stat, index) => (
             <Card3D key={index}>
-              <div className="p-4 sm:p-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/20 dark:border-slate-700/50 text-center hover:shadow-xl transition-shadow duration-300">
-                <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">{stat.icon}</div>
-                <div className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="p-4 sm:p-6 bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-slate-700/50 text-center hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 group">
+                <div className="text-2xl sm:text-3xl mb-1 sm:mb-2 grayscale group-hover:grayscale-0 transition-all duration-300">{stat.icon}</div>
+                <div className="text-xl sm:text-3xl font-bold text-white group-hover:text-orange-400 transition-colors">
                   {stat.value}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-text">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-slate-400">{stat.label}</div>
               </div>
             </Card3D>
           ))}
@@ -534,13 +572,13 @@ export default function Home() {
       {/* Features Section */}
       <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
         <div className={`text-center mb-8 sm:mb-16 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-white">
             Everything you need to{' '}
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">
               build community
             </span>
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-muted-text max-w-2xl mx-auto px-4">
+          <p className="text-sm sm:text-base md:text-lg text-slate-400 max-w-2xl mx-auto px-4">
             Powerful features designed for students, coordinators, and faculty to collaborate effectively.
           </p>
         </div>
@@ -549,16 +587,16 @@ export default function Home() {
           {features.map((feature, index) => (
             <Card3D key={index}>
               <div
-                className={`group h-full p-4 sm:p-6 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/20 dark:border-slate-700/50 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                className={`group h-full p-4 sm:p-6 bg-slate-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-slate-700/50 hover:border-orange-500/50 transition-all duration-500 hover:shadow-xl hover:shadow-orange-500/10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center text-xl sm:text-2xl shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
                   {feature.icon}
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2 text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2 text-white group-hover:text-orange-400 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-sm sm:text-base text-muted-text leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-400 leading-relaxed group-hover:text-slate-300 transition-colors">
                   {feature.description}
                 </p>
               </div>
@@ -569,60 +607,42 @@ export default function Home() {
 
       {/* Role-based Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
-        <div className={`bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl shadow-indigo-500/20 transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <div className={`bg-slate-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl border border-slate-700/50 transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="text-white">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-center md:text-left">
                 Built for Everyone in the Campus
               </h2>
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    👨‍🎓
+              <div className="space-y-4 sm:space-y-6">
+                {[
+                  { icon: '👨‍🎓', title: 'Students', desc: 'Join clubs, participate in activities, take quizzes, and access resources.' },
+                  { icon: '🎓', title: 'Coordinators', desc: 'Manage club activities, create quizzes, upload resources, and engage members.' },
+                  { icon: '👨‍🏫', title: 'Faculty', desc: 'Mentor clubs, approve activities, and guide student initiatives.' },
+                  { icon: '⚙️', title: 'Administrators', desc: 'Oversee all clubs, manage approvals, and access platform analytics.' }
+                ].map((role, i) => (
+                  <div key={i} className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-700/30 transition-colors">
+                    <div className="w-10 h-10 bg-slate-700/50 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                      {role.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1 text-orange-400">{role.title}</h4>
+                      <p className="text-slate-400 text-sm">{role.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Students</h4>
-                    <p className="text-white/80 text-sm">Join clubs, participate in activities, take quizzes, and access resources.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    🎓
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Coordinators</h4>
-                    <p className="text-white/80 text-sm">Manage club activities, create quizzes, upload resources, and engage members.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    👨‍🏫
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Faculty</h4>
-                    <p className="text-white/80 text-sm">Mentor clubs, approve activities, and guide student initiatives.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    ⚙️
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Administrators</h4>
-                    <p className="text-white/80 text-sm">Oversee all clubs, manage approvals, and access platform analytics.</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
             <div className="hidden md:flex items-center justify-center">
               <div className="relative">
-                <div className="w-64 h-64 bg-white/10 rounded-3xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
-                  <div className="text-8xl">🏛️</div>
+                <div className="w-64 h-64 bg-slate-700/20 rounded-3xl backdrop-blur-sm border border-slate-600/30 flex items-center justify-center p-8">
+                   <div className="relative w-full h-full opacity-80">
+                      <img src="/brand-logo.png" className="w-full h-full object-contain" />
+                   </div>
                 </div>
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center text-4xl animate-float-slow">
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center text-4xl animate-float-slow shadow-xl border border-slate-700">
                   🎉
                 </div>
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl animate-float-medium animation-delay-1000">
+                <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl animate-float-medium animation-delay-1000 shadow-xl border border-slate-700">
                   📚
                 </div>
               </div>
@@ -633,16 +653,16 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
-        <div className={`text-center p-6 sm:p-8 md:p-12 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20 dark:border-slate-700/50 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+        <div className={`text-center p-6 sm:p-8 md:p-12 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-700 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-white">
             Ready to get started?
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-muted-text max-w-xl mx-auto mb-6 sm:mb-8">
-            Join thousands of students and faculty already using Geatherlyy to build thriving campus communities.
+          <p className="text-sm sm:text-base md:text-lg text-slate-400 max-w-xl mx-auto mb-6 sm:mb-8">
+            Join thousands of students and faculty already using Getherlyy to build thriving campus communities.
           </p>
           <Link 
             href="/login" 
-            className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm sm:text-base md:text-lg rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-1 hover:scale-105"
+            className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm sm:text-base md:text-lg rounded-xl sm:rounded-2xl shadow-lg shadow-orange-600/20 hover:shadow-orange-600/40 transition-all duration-300 hover:-translate-y-1 hover:scale-105"
           >
             <span>Start Your Journey</span>
             <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -653,17 +673,17 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-200 dark:border-slate-800">
+      <footer className="relative z-10 border-t border-slate-800 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg rotate-12 flex items-center justify-center">
-                <span className="text-white font-bold text-sm sm:text-base -rotate-12">G</span>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-auto">
+                <img src="/brand-logo.png" alt="Getherlyy" className="h-full object-contain" />
               </div>
-              <span className="text-base sm:text-lg font-semibold text-muted-text">Geatherlyy</span>
+              <span className="text-base sm:text-lg font-semibold text-slate-300">Getherlyy</span>
             </div>
-            <p className="text-xs sm:text-sm text-muted-text text-center">
-              © 2026 Geatherlyy. Built with ❤️ for university communities.
+            <p className="text-xs sm:text-sm text-slate-500 text-center">
+              © 2026 Getherlyy. Built with ❤️ for university communities.
             </p>
           </div>
         </div>

@@ -5,11 +5,74 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getPlatformAnalytics() {
+  async getPlatformAnalytics(userId: number, role: string) {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    if (role === 'FACULTY') {
+      // Faculty Specific Analytics
+      const myClubs = await this.prisma.club.findMany({
+        where: {
+          OR: [
+            { convenorId: userId },
+            { mentors: { some: { id: userId } } }
+          ],
+          approvalStatus: 'APPROVED'
+        },
+        include: {
+          _count: {
+            select: { 
+              members: true,
+              activities: true,
+              resources: true
+            }
+          }
+        }
+      });
+
+      const myClubIds = myClubs.map(c => c.id);
+      
+      const totalMembers = myClubs.reduce((acc, club) => acc + club._count.members, 0);
+      const totalActivities = myClubs.reduce((acc, club) => acc + club._count.activities, 0);
+      const totalResources = myClubs.reduce((acc, club) => acc + club._count.resources, 0);
+
+      // Get upcoming activities for my clubs
+      const upcomingActivities = await this.prisma.activity.count({
+        where: {
+          clubId: { in: myClubIds },
+          startDate: { gte: now },
+          status: 'UPCOMING'
+        }
+      });
+
+      // Get pending approval requests for my clubs (e.g. member joins if applicable, or role requests)
+      // Assuming ApprovalRequest is linked to clubId
+      const pendingRequests = await this.prisma.approvalRequest.count({
+        where: {
+          clubId: { in: myClubIds },
+          status: 'PENDING'
+        }
+      });
+
+      return {
+        role: 'FACULTY',
+        totalClubs: myClubs.length,
+        totalMembers,
+        totalActivities,
+        totalResources,
+        upcomingActivities,
+        pendingRequests,
+        myClubs: myClubs.map(club => ({
+          id: club.id,
+          name: club.name,
+          members: club._count.members,
+          activities: club._count.activities
+        })).sort((a, b) => b.members - a.members)
+      };
+    }
+
+    // Admin / Global Analytics
     const [
       totalUsers,
       newUsers,
@@ -34,12 +97,7 @@ export class AnalyticsService {
     const previousUsers = totalUsers - newUsers;
     const userGrowth = previousUsers > 0 ? Math.round((newUsers / previousUsers) * 100) : 0;
 
-    // Engagement Rate (Active users in last week / Total users)
-    // Note: Assuming 'updatedAt' on user or login logs tracks activity. 
-    // For now, using quiz attempts + activity participants as a proxy or just simplistic logic.
-    // Let's use a simple heuristic: Users who created an attempt or joined a club recently.
-    // Since we don't have a dedicated 'lastLogin' field readily visible, we'll placeholder this or use a simple count if possible.
-    // Better approach: Count unique users who attempted a quiz in last week.
+    // Engagement Rate
     const activeUserCount = await this.prisma.quizAttempt.groupBy({
       by: ['userId'],
       where: { attemptedAt: { gte: lastWeek } },
@@ -64,6 +122,7 @@ export class AnalyticsService {
     });
 
     return {
+      role: 'ADMIN',
       totalUsers,
       activeClubs,
       totalActivities,

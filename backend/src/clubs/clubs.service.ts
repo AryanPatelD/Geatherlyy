@@ -416,12 +416,16 @@ export class ClubsService {
   }
 
   async findById(id: number): Promise<Club> {
-    // Disable caching for now
-    // const cacheKey = `club:${id}`;
-    // const cached = await this.redis.getClubData(cacheKey);
-    // if (cached) {
-    //   return cached as Club;
-    // }
+    const cacheKey = `club:${id}`;
+    
+    try {
+      const cached = await this.redis.getClubData(cacheKey);
+      if (cached) {
+        return cached as Club;
+      }
+    } catch (error) {
+      console.warn('Redis cache read failed for club:', id, error);
+    }
 
     const club = await this.prisma.club.findUnique({
       where: { id },
@@ -495,8 +499,11 @@ export class ClubsService {
       throw new NotFoundException(`Club with ID ${id} not found`);
     }
 
-    // Disable caching for now
-    // await this.redis.setClubData(cacheKey, club);
+    try {
+      await this.redis.setClubData(cacheKey, club, 300); // Cache for 5 minutes
+    } catch (error) {
+      console.warn('Redis cache write failed for club:', id, error);
+    }
 
     return club;
   }
@@ -694,7 +701,7 @@ export class ClubsService {
     await this.redis.del(`club:${clubId}`);
   }
 
-  async removeMember(clubId: number, memberId: number, removedBy: number): Promise<void> {
+  async removeMember(clubId: number, memberId: number, removedBy: number): Promise<{ status: 'REMOVED' | 'REQUESTED', message: string }> {
     // 1. Fetch the user performing the action
     const remover = await this.prisma.user.findUnique({ where: { id: removedBy } });
     if (!remover) throw new ForbiddenException('User not found');
@@ -721,7 +728,7 @@ export class ClubsService {
     const isRemoverCoordinator = club.coordinators.some(c => c.userId === removedBy);
     const isRemoverMentor = club.mentors.some(m => m.id === removedBy);
     const isRemoverConvenor = club.convenorId === removedBy;
-    const isRemoverAuthority = isRemoverAdmin || isRemoverMentor || isRemoverConvenor;
+    const isRemoverAuthority = isRemoverAdmin || isRemoverFaculty || isRemoverMentor || isRemoverConvenor;
 
     if (!isRemoverAuthority && !isRemoverCoordinator) {
       throw new ForbiddenException('You do not have permission to remove members');
@@ -729,10 +736,44 @@ export class ClubsService {
 
     // 4. Determine Target's Role in the Club
     const isTargetCoordinator = club.coordinators.some(c => c.userId === memberId);
-    const isTargetMentor = club.mentors.some(m => m.id === memberId);
-    const isTargetConvenor = club.convenorId === memberId;
 
-    // Perform Removal
+    // 5. Permission Logic
+    if (isRemoverCoordinator && !isRemoverAuthority) {
+      // Coordinator cannot remove other coordinators
+      if (isTargetCoordinator) {
+        throw new ForbiddenException('Coordinators cannot remove other coordinators. Please contact a faculty mentor.');
+      }
+
+      // Coordinator removing a member -> Create Request
+      // Check if request already exists
+      const existingRequest = await this.prisma.clubMemberRemovalRequest.findFirst({
+        where: {
+          clubId,
+          memberId,
+          status: 'PENDING',
+        }
+      });
+
+      if (existingRequest) {
+        throw new BadRequestException('A removal request for this member is already pending.');
+      }
+
+      await this.prisma.clubMemberRemovalRequest.create({
+        data: {
+          clubId,
+          memberId,
+          requestedBy: removedBy,
+          reason: 'Coordinator requested removal', // Default reason for now, or could pass it in
+          status: 'PENDING',
+          mentorApproval: 'PENDING',
+          adminApproval: 'PENDING'
+        }
+      });
+
+      return { status: 'REQUESTED', message: 'Removal request sent to mentor for approval.' };
+    }
+
+    // Faculty/Authority -> Immediate Removal
     await this.prisma.$transaction(async (prisma) => {
       // If coordinator, remove from coordinator table
       if (isTargetCoordinator) {
@@ -753,7 +794,11 @@ export class ClubsService {
 
     // Invalidate cache
     await this.redis.del(`club:${clubId}`);
+    
+    return { status: 'REMOVED', message: 'Member removed successfully.' };
   }
+
+
 
 
 

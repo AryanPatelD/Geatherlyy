@@ -46,6 +46,9 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <img src="/brand-logo.png" alt="Getherlyy" className="h-12 object-contain" />
+          </div>
           <CardTitle className="text-2xl font-bold">Forgot password</CardTitle>
           <CardDescription>
             Enter your email address and we'll send you a link to reset your password.

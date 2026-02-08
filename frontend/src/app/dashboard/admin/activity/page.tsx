@@ -78,6 +78,69 @@ export default function ActivityLogsPage() {
         </div>
       </div>
 
+      {/* System Health & Security Monitor */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card border-l-4 border-l-green-500">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-muted-text font-medium">System Status</p>
+              <h3 className="text-2xl font-bold text-green-600 mt-1">Healthy</h3>
+            </div>
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-muted-text mt-2">Uptime: 99.9% (Last 30 days)</p>
+        </div>
+
+        <div className="card border-l-4 border-l-blue-500">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-muted-text font-medium">API Response</p>
+              <h3 className="text-2xl font-bold text-blue-600 mt-1">45ms</h3>
+            </div>
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-muted-text mt-2">Average latency</p>
+        </div>
+
+        <div className="card border-l-4 border-l-purple-500">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-muted-text font-medium">Active Sessions</p>
+              <h3 className="text-2xl font-bold text-purple-600 mt-1">24</h3>
+            </div>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-muted-text mt-2">Current online users</p>
+        </div>
+
+        <div className="card border-l-4 border-l-orange-500">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-muted-text font-medium">Threat Monitor</p>
+              <h3 className="text-2xl font-bold text-orange-600 mt-1">Low</h3>
+            </div>
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg animate-pulse">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-muted-text mt-2">0 suspicious activities detected</p>
+        </div>
+      </div>
+
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">

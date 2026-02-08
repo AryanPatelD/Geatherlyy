@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -16,7 +16,7 @@ export class AnalyticsController {
 
   @Get()
   @ApiOperation({ summary: 'Get platform analytics (Faculty/Admin only)' })
-  async getAnalytics() {
-    return this.analyticsService.getPlatformAnalytics();
+  async getAnalytics(@Req() req) {
+    return this.analyticsService.getPlatformAnalytics(req.user.id, req.user.role);
   }
 }

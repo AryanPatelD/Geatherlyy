@@ -3,11 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../cache/redis.service';
 import { Quiz, QuizAttempt, Prisma, UserRole } from '@prisma/client';
 
+import { ActivityService } from '../activity/activity.service';
+
 @Injectable()
 export class QuizzesService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
+    private activityService: ActivityService,
   ) {}
 
   async create(data: any, userId: number): Promise<Quiz> {
@@ -62,6 +65,9 @@ export class QuizzesService {
 
     // Invalidate cache
     await this.redis.del(`club:${quiz.clubId}:quizzes`);
+    // Attempt to invalidate filtered list if possible, otherwise rely on TTL
+    const cacheKey = `quizzes:all:${JSON.stringify({ clubId: quiz.clubId })}`;
+    await this.redis.del(cacheKey);
 
     return quiz;
   }
@@ -71,13 +77,24 @@ export class QuizzesService {
     skip?: number;
     take?: number;
   }): Promise<Quiz[]> {
+    const cacheKey = `quizzes:all:${JSON.stringify(filters || {})}`;
+
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached as string);
+      }
+    } catch (error) {
+      console.warn('Redis cache read failed for quizzes:', error);
+    }
+
     const where: Prisma.QuizWhereInput = {};
 
     if (filters?.clubId) {
       where.clubId = filters.clubId;
     }
 
-    return this.prisma.quiz.findMany({
+    const quizzes = await this.prisma.quiz.findMany({
       where,
       skip: filters?.skip,
       take: filters?.take || 20,
@@ -101,6 +118,14 @@ export class QuizzesService {
         createdAt: 'desc',
       },
     });
+
+    try {
+      await this.redis.set(cacheKey, JSON.stringify(quizzes), 60); // Cache for 1 minute
+    } catch (error) {
+      console.warn('Redis cache write failed for quizzes:', error);
+    }
+
+    return quizzes;
   }
 
   async findById(id: number, includeAnswers: boolean = false): Promise<Quiz> {
@@ -213,7 +238,11 @@ export class QuizzesService {
     // Invalidate cache
     await this.redis.del(`quiz:${id}:true`);
     await this.redis.del(`quiz:${id}:false`);
+    await this.redis.del(`quiz:${id}:stats`);
     await this.redis.del(`club:${quiz.clubId}:quizzes`);
+    
+    const cacheKey = `quizzes:all:${JSON.stringify({ clubId: quiz.clubId })}`;
+    await this.redis.del(cacheKey);
 
     return updatedQuiz;
   }
@@ -258,14 +287,28 @@ export class QuizzesService {
     // Invalidate cache
     await this.redis.del(`quiz:${id}:true`);
     await this.redis.del(`quiz:${id}:false`);
+    await this.redis.del(`quiz:${id}:stats`);
     await this.redis.del(`club:${quiz.clubId}:quizzes`);
+
+    const cacheKey = `quizzes:all:${JSON.stringify({ clubId: quiz.clubId })}`;
+    await this.redis.del(cacheKey);
   }
 
   async submitQuizAttempt(
     quizId: number,
     userId: number,
     answers: Record<number, number>, // questionId -> selectedOption
+    violations: number = 0,
   ): Promise<any> { // Changing return type to any to support extra fields
+    // Log violations if threshold exceeded
+    if (violations > 3) {
+      await this.activityService.logActivity(
+        userId,
+        'QUIZ_VIOLATION',
+        `User exceeded violation limit (Count: ${violations}) for Quiz ID: ${quizId}`,
+      );
+    }
+
     const quiz = await this.findById(quizId, true);
 
     // Check if quiz has participant limit
@@ -604,8 +647,11 @@ export class QuizzesService {
       maxScore: maxScore._max.score || 0,
     };
 
-    // Cache for 60 seconds to allow frequent updates but protect DB
-    await this.redis.set(cacheKey, JSON.stringify(stats), 60);
+    try {
+      await this.redis.set(cacheKey, JSON.stringify(stats), 60);
+    } catch (error) {
+      console.warn('Redis cache write failed for quiz stats:', error);
+    }
 
     return stats;
   }

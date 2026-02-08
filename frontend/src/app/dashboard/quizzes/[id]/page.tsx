@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, CrossCircledIcon, ArrowLeftIcon, ArrowRightIcon, DoubleArrowUpIcon } from '@radix-ui/react-icons';
 import { getApiUrl } from '@/lib/apiUrl';
 
 // Cookie helper functions
@@ -275,7 +275,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, violations }),
       });
 
       if (response.ok) {
@@ -575,7 +575,13 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
   }).length;
 
   return (
-    <div ref={quizContainerRef} className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div 
+      ref={quizContainerRef} 
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 select-none"
+      onCopy={(e) => { e.preventDefault(); return false; }}
+      onCut={(e) => { e.preventDefault(); return false; }}
+      onPaste={(e) => { e.preventDefault(); return false; }}
+    >
       {/* Warning Modal */}
       {showWarningModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -623,6 +629,15 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
+      {/* Scroll To Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-40 p-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-all opacity-80 hover:opacity-100"
+        title="Scroll to Top"
+      >
+        <DoubleArrowUpIcon className="w-6 h-6" />
+      </button>
+
       {/* Fullscreen status indicator */}
       {!isFullscreen && quizStarted && !quizSubmitted && (
         <div className="fixed top-4 left-4 z-40">
@@ -634,35 +649,46 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
 
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{quiz.title}</h1>
-              <div className="flex items-center gap-4 mt-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Question {currentQuestion + 1} of {totalQuestions}
-                </p>
-                <span className="text-sm text-gray-500">•</span>
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                  {answeredCount} answered
-                </p>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
+            <div className="flex items-center justify-between w-full md:w-auto gap-4">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white truncate max-w-[200px] md:max-w-none">{quiz.title}</h1>
+                <div className="flex items-center gap-2 md:gap-4 mt-1">
+                  <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    Q{currentQuestion + 1}/{totalQuestions}
+                  </p>
+                  <span className="text-xs md:text-sm text-gray-500">•</span>
+                  <p className="text-xs md:text-sm text-green-600 dark:text-green-400 font-medium">
+                    {answeredCount} done
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile Timer & Submit (Compact) */}
+              <div className="flex items-center gap-2 md:hidden">
+                 <div className={`px-2 py-1 rounded-lg font-bold text-sm ${
+                    timeRemaining < 60 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                 }`}>
+                   {formatTime(timeRemaining)}
+                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className={`px-5 py-2.5 rounded-xl font-bold text-lg shadow-md ${
-                timeRemaining < 60 
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 animate-pulse' 
-                  : timeRemaining < 300
-                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-              }`}>
+
+            {/* Desktop Navigation & Controls */}
+            <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-end">
+              
+
+
+              <div className="hidden md:block px-4 py-2 rounded-xl font-bold text-lg shadow-md bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                 ⏱️ {formatTime(timeRemaining)}
               </div>
+              
               <button
                 onClick={handleSubmit}
-                className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
+                className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all text-sm md:text-base whitespace-nowrap"
               >
-                Submit & End
+                Submit
               </button>
             </div>
           </div>
@@ -786,6 +812,23 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
                 </button>
               );
             })}
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+                disabled={currentQuestion === 0}
+                className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <ArrowLeftIcon className="w-4 h-4" /> Previous
+              </button>
+
+              <button
+                onClick={() => setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1))}
+                disabled={currentQuestion === totalQuestions - 1}
+                className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Next <ArrowRightIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -842,24 +885,7 @@ export default function QuizTakePage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          {/* Previous/Next Buttons */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-              disabled={currentQuestion === 0}
-              className="px-8 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
-            >
-              ← Previous Question
-            </button>
-
-            <button
-              onClick={() => setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1))}
-              disabled={currentQuestion === totalQuestions - 1}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
-            >
-              Next Question →
-            </button>
-          </div>
+          {/* Previous/Next Buttons moved to inside question card */}
         </div>
       </div>
     </div>

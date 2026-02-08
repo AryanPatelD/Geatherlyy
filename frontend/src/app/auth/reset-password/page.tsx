@@ -86,6 +86,9 @@ function ResetPasswordForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
+        <div className="flex justify-center mb-4">
+          <img src="/brand-logo.png" alt="Getherlyy" className="h-12 object-contain" />
+        </div>
         <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
         <CardDescription>
           Enter your new password below.

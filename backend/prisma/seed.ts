@@ -32,33 +32,33 @@ async function main() {
   }
   console.log('All tables truncated.');
 
-  const password = 'geatherlyy.com';
+  const password = 'getherlyy.com';
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const facultyMembers = [
     {
       name: 'Test Faculty',
-      email: 'test.faculty@geatherlyy.com',
+      email: 'test.faculty@getherlyy.com',
       department: 'Computer Engineering',
     },
     {
       name: 'Mrugrendrasinh Rahevar',
-      email: 'mrugrendrasinh.rahevar@geatherlyy.com',
+      email: 'mrugrendrasinh.rahevar@getherlyy.com',
       department: 'Computer Engineering',
     },
     {
       name: 'Martin Parmar',
-      email: 'martin.parmar@geatherlyy.com',
+      email: 'martin.parmar@getherlyy.com',
       department: 'Computer Engineering',
     },
     {
       name: 'Krunal Maheriya',
-      email: 'krunal.maheriya@geatherlyy.com',
+      email: 'krunal.maheriya@getherlyy.com',
       department: 'Computer Engineering',
     },
     {
       name: 'Test Admin',
-      email: 'test.admin@geatherlyy.com',
+      email: 'test.admin@getherlyy.com',
       department: 'Administration',
     },
   ];
@@ -66,7 +66,7 @@ async function main() {
   const memberUsers = [
     {
       name: 'Test Member',
-      email: 'test.member@geatherlyy.com',
+      email: 'test.member@getherlyy.com',
       department: 'Computer Engineering',
     },
   ];

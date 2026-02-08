@@ -781,7 +781,7 @@ function ManageClubContent() {
                   <td className="py-3 px-4 text-sm text-right">
                     {canDirectRemove && (
                     <button
-                      onClick={async () => {
+                       onClick={async () => {
                          if (!confirm(`Are you sure you want to remove ${member.user?.name}?`)) return;
                          
                          try {
@@ -795,20 +795,27 @@ function ManageClubContent() {
                            });
 
                            if (response.ok) {
-                             toast.success('Member removed successfully');
-                             fetchClubStats(); 
-                             const updatedClubs = clubs.map(c => {
-                                if (c.id === selectedClub.id) {
-                                   return {
-                                      ...c,
-                                      members: c.members.filter((m: any) => m.userId !== member.userId),
-                                      _count: { ...c._count, members: (c._count.members || 0) - 1 }
-                                   };
-                                }
-                                return c;
-                             });
-                             setClubs(updatedClubs);
-                             setSelectedClub(updatedClubs.find(c => c.id === selectedClub.id));
+                             const result = await response.json();
+
+                             if (result.status === 'REQUESTED') {
+                               toast.info(result.message);
+                               // Do not remove from UI as it is pending
+                             } else {
+                               toast.success(result.message);
+                               fetchClubStats(); 
+                               const updatedClubs = clubs.map(c => {
+                                 if (c.id === selectedClub.id) {
+                                    return {
+                                       ...c,
+                                       members: c.members.filter((m: any) => m.userId !== member.userId),
+                                       _count: { ...c._count, members: (c._count.members || 0) - 1 }
+                                    };
+                                 }
+                                 return c;
+                               });
+                               setClubs(updatedClubs);
+                               setSelectedClub(updatedClubs.find(c => c.id === selectedClub.id));
+                             }
 
                            } else {
                              const error = await response.json();

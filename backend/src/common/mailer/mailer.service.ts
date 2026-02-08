@@ -54,7 +54,7 @@ export class MailerService implements OnModuleInit {
   }
 
   private createEmailMessage(to: string, subject: string, html: string): string {
-    const from = this.configService.get<string>('MAIL_FROM') || `Geatherlyy <${this.mailUser}>`;
+    const from = this.configService.get<string>('MAIL_FROM') || `Getherlyy <${this.mailUser}>`;
     
     const emailLines = [
       `From: ${from}`,

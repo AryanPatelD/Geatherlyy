@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuthStore } from '@/context/AuthContext';
+import { useClubContext } from '@/context/ClubContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ExclamationTriangleIcon, PersonIcon, PlusIcon } from '@radix-ui/react-icons';
@@ -10,6 +11,7 @@ import { getApiUrl } from '@/lib/apiUrl';
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoading } = useAuthStore();
+  const { selectedClubId } = useClubContext();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [categories, setCategories] = useState<string[]>([]);
@@ -23,6 +25,11 @@ export default function DashboardPage() {
     availableClubs: 0,
     joinedClubs: 0,
   });
+
+  // Apply club filter
+  const filteredClubs = selectedClubId ? clubs.filter(c => c.id === selectedClubId) : clubs;
+  const filteredMyClubs = selectedClubId ? myClubs.filter(c => c.id === selectedClubId) : myClubs;
+  const filteredPendingClubs = selectedClubId ? pendingClubs.filter(c => c.id === selectedClubId) : pendingClubs;
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -278,9 +285,9 @@ export default function DashboardPage() {
             }`}
           >
             Pending Clubs
-            {pendingClubs.length > 0 && (
+            {filteredPendingClubs.length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-primary text-white text-xs rounded-full">
-                {pendingClubs.length}
+                {filteredPendingClubs.length}
               </span>
             )}
             {activeTab === 'pending' && (
@@ -296,18 +303,18 @@ export default function DashboardPage() {
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <p className="mt-4 text-gray-500">Loading clubs...</p>
             </div>
-          ) : (activeTab === 'my-clubs' ? myClubs : activeTab === 'pending' ? pendingClubs : clubs).length === 0 ? (
+          ) : (activeTab === 'my-clubs' ? filteredMyClubs : activeTab === 'pending' ? filteredPendingClubs : filteredClubs).length === 0 ? (
             <div className="col-span-full text-center py-12">
               <div className="text-6xl mb-4">
                 {activeTab === 'pending' ? '⏳' : '🎯'}
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {activeTab === 'pending' ? 'No pending requests' : 'No clubs available'}
+                {selectedClubId ? 'Club not found in this category' : (activeTab === 'pending' ? 'No pending requests' : 'No clubs available')}
               </h3>
               <p className="text-gray-500 mb-6">
-                {activeTab === 'pending' ? 'You have no pending club join requests' : 'Be the first to create a club!'}
+                {selectedClubId ? 'Try switching filters or selecting "All My Clubs"' : (activeTab === 'pending' ? 'You have no pending club join requests' : 'Be the first to create a club!')}
               </p>
-              {user && activeTab !== 'pending' && ['faculty', 'admin'].includes(user.role) && (
+              {user && activeTab !== 'pending' && ['faculty', 'admin'].includes(user.role) && !selectedClubId && (
                 <button
                   onClick={() => router.push('/dashboard/create-club')}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
@@ -318,7 +325,7 @@ export default function DashboardPage() {
               )}
             </div>
           ) : (
-            (activeTab === 'my-clubs' ? myClubs : activeTab === 'pending' ? pendingClubs : clubs).map((club) => (
+            (activeTab === 'my-clubs' ? filteredMyClubs : activeTab === 'pending' ? filteredPendingClubs : filteredClubs).map((club) => (
               <div
                 key={club.id}
                 onClick={() => setSelectedClub(club)}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuthStore } from '@/context/AuthContext';
+import { useClubContext, Club } from '@/context/ClubContext';
 import { MagnifyingGlassIcon, HamburgerMenuIcon, PersonIcon, ExitIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +14,7 @@ interface NavbarProps {
 
 export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuthStore();
+  const { myClubs, selectedClubId, setSelectedClubId, isLoading: clubsLoading } = useClubContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any>({
     clubs: [],
@@ -23,8 +25,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showClubMenu, setShowClubMenu] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const clubMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -34,6 +38,9 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
+      }
+      if (clubMenuRef.current && !clubMenuRef.current.contains(event.target as Node)) {
+        setShowClubMenu(false);
       }
     };
 
@@ -130,8 +137,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                      searchResults.resources.length > 0;
 
   return (
-    <nav className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-md z-30 shadow-sm w-full">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-2 md:gap-4 w-full">
+    <nav className="h-16 border-b border-border sticky top-0 bg-background/95 backdrop-blur-md z-30 shadow-sm w-full flex items-center">
+      <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center gap-2 md:gap-4">
         
         {/* Mobile Menu Button */}
         <button
@@ -144,7 +151,77 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
         {/* Search Bar - Only show when user is logged in */}
         {user && (
-          <div ref={searchRef} className="flex-1 max-w-2xl relative">
+          <>
+            {/* Club Selector */}
+            <div className="relative hidden md:block" ref={clubMenuRef}>
+              <button
+                onClick={() => setShowClubMenu(!showClubMenu)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-w-[160px] justify-between text-sm"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-muted-text">Club:</span>
+                  <span className="font-medium truncate max-w-[120px]">
+                    {selectedClubId
+                      ? myClubs.find((c) => c.id === selectedClubId)?.name || 'Unknown Club'
+                      : 'All My Clubs'}
+                  </span>
+                </div>
+                <svg className="w-4 h-4 text-muted-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showClubMenu && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50">
+                  <div className="p-1 max-h-[60vh] overflow-y-auto">
+                    <button
+                      onClick={() => {
+                        setSelectedClubId(null);
+                        setShowClubMenu(false);
+                        // Optional: Navigate to dashboard home when switching to "All"
+                        // router.push('/dashboard'); 
+                      }}
+                      className={`w-full px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
+                        selectedClubId === null
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-gray-400" />
+                      All My Clubs
+                    </button>
+                    
+                    {myClubs.length > 0 && <div className="my-1 border-t border-border" />}
+                    
+                    {myClubs.map((club) => (
+                      <button
+                        key={club.id}
+                        onClick={() => {
+                          setSelectedClubId(club.id);
+                          setShowClubMenu(false);
+                        }}
+                        className={`w-full px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
+                          selectedClubId === club.id
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {club.imageUrl ? (
+                          <img src={club.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-[8px] text-white">
+                            {club.name.charAt(0)}
+                          </div>
+                        )}
+                        <span className="truncate">{club.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div ref={searchRef} className="flex-1 max-w-2xl relative">
             <form onSubmit={handleSearch}>
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-text" />
@@ -285,6 +362,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             )}
           </div>
+          </>
         )}
 
         <div className="flex items-center gap-2 md:gap-4">

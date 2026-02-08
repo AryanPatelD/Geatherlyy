@@ -3,8 +3,11 @@ import { Providers } from '@/components/Providers';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Geatherlyy - Club Management',
+  title: 'Getherlyy - Club Management',
   description: 'Centralized Club Management System',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

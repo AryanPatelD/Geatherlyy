@@ -3,17 +3,17 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function updateGeatherlyyPasswords() {
-  console.log('Updating passwords for all @geatherlyy.com email users...');
+async function updateGetherlyyPasswords() {
+  console.log('Updating passwords for all @getherlyy.com email users...');
 
-  const defaultPassword = 'geatherlyy.com';
+  const defaultPassword = 'getherlyy.com';
   const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-  // Find all users with @geatherlyy.com email
-  const geatherlyyUsers = await prisma.user.findMany({
+  // Find all users with @getherlyy.com email
+  const getherlyyUsers = await prisma.user.findMany({
     where: {
       email: {
-        endsWith: '@geatherlyy.com',
+        endsWith: '@getherlyy.com',
       },
     },
     select: {
@@ -24,13 +24,13 @@ async function updateGeatherlyyPasswords() {
     },
   });
 
-  console.log(`Found ${geatherlyyUsers.length} users with @geatherlyy.com emails`);
+  console.log(`Found ${getherlyyUsers.length} users with @getherlyy.com emails`);
 
   // Update all these users' passwords
   const result = await prisma.user.updateMany({
     where: {
       email: {
-        endsWith: '@geatherlyy.com',
+        endsWith: '@getherlyy.com',
       },
     },
     data: {
@@ -39,18 +39,18 @@ async function updateGeatherlyyPasswords() {
     },
   });
 
-  console.log(`Updated ${result.count} user passwords to 'geatherlyy.com'`);
+  console.log(`Updated ${result.count} user passwords to 'getherlyy.com'`);
 
   // List all updated users
   console.log('\nUpdated users:');
-  geatherlyyUsers.forEach((user) => {
+  getherlyyUsers.forEach((user) => {
     console.log(`  - ${user.name} (${user.email}) - Role: ${user.role}`);
   });
 
   console.log('\nPassword update completed.');
 }
 
-updateGeatherlyyPasswords()
+updateGetherlyyPasswords()
   .catch((e) => {
     console.error('Error updating passwords:', e);
     process.exit(1);
