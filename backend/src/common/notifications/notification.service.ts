@@ -703,10 +703,7 @@ export class NotificationService {
             padding: 40px;
         }
 
-            <div class="logo-section">
-                <img src="${process.env.FRONTEND_URL}/brand-logo.png" alt="Getherlyy" style="height: 40px; margin-right: 15px;" />
-                <span class="brand-name">Getherlyy</span>
-            </div>
+
 
         .brand-name {
             font-size: 22px;
@@ -866,7 +863,7 @@ export class NotificationService {
     <div class="card">
         <div class="content">
             <div class="logo-section">
-                <div class="logo-icon"></div>
+                <img src="${this.frontendUrl}/brand-logo.png" alt="Getherlyy" style="height: 40px; margin-right: 15px;" />
                 <span class="brand-name">Getherlyy</span>
             </div>
 
