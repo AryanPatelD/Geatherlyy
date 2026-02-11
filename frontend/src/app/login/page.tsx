@@ -191,7 +191,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -382,28 +382,44 @@ export default function LoginPage() {
                         </div>
                         <div className="space-y-1">
                              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">Year</label>
-                             <input
+                             <select
                                 id="year"
                                 name="year"
-                                type="text"
                                 value={formData.year}
                                 onChange={handleInputChange}
-                                placeholder="2nd"
-                                className="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium"
-                             />
+                                className="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium appearance-none cursor-pointer"
+                             >
+                                <option value="" disabled>Select Year</option>
+                                <option value="1st">1st Year</option>
+                                <option value="2nd">2nd Year</option>
+                                <option value="3rd">3rd Year</option>
+                                <option value="4th">4th Year</option>
+                             </select>
                         </div>
                          <div className="col-span-2 space-y-1">
                              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">Department</label>
-                             <input
+                             <select
                                 id="department"
                                 name="department"
-                                type="text"
                                 value={formData.department}
                                 onChange={handleInputChange}
-                                placeholder="Computer Science"
                                 required
-                                className="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium"
-                             />
+                                className="block w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium appearance-none cursor-pointer"
+                             >
+                                <option value="" disabled>Select Department</option>
+                                <option value="AIML">AIML - Artificial Intelligence & Machine Learning</option>
+                                <option value="CE">CE - Computer Engineering</option>
+                                <option value="CSE">CSE - Computer Science & Engineering</option>
+                                <option value="IT">IT - Information Technology</option>
+                                <option value="DCE">DCE - Diploma Computer Engineering</option>
+                                <option value="DCSE">DCSE - Diploma Computer Science & Engineering</option>
+                                <option value="DIT">DIT - Diploma Information Technology</option>
+                                <option value="EC">EC - Electronics & Communication</option>
+                                <option value="EE">EE - Electrical Engineering</option>
+                                <option value="ME">ME - Mechanical Engineering</option>
+                                <option value="CE-Civil">CE - Civil Engineering</option>
+                                <option value="Other">Other</option>
+                             </select>
                         </div>
                     </div>
                 )}

@@ -155,16 +155,28 @@ export default function CompleteProfilePage() {
                 <label htmlFor="department" className="label">
                   Department
                 </label>
-                <input
+                <select
                   id="department"
-                  type="text"
                   name="department"
                   value={formData.department}
                   onChange={handleInputChange}
-                  placeholder="e.g., Computer Science"
-                  className="input"
+                  className="input cursor-pointer"
                   required
-                />
+                >
+                  <option value="" disabled>Select Department</option>
+                  <option value="AIML">AIML - Artificial Intelligence & Machine Learning</option>
+                  <option value="CE">CE - Computer Engineering</option>
+                  <option value="CSE">CSE - Computer Science & Engineering</option>
+                  <option value="IT">IT - Information Technology</option>
+                  <option value="DCE">DCE - Diploma Computer Engineering</option>
+                  <option value="DCSE">DCSE - Diploma Computer Science & Engineering</option>
+                  <option value="DIT">DIT - Diploma Information Technology</option>
+                  <option value="EC">EC - Electronics & Communication</option>
+                  <option value="EE">EE - Electrical Engineering</option>
+                  <option value="ME">ME - Mechanical Engineering</option>
+                  <option value="CE-Civil">CE - Civil Engineering</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               <button

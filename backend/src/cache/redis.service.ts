@@ -45,8 +45,10 @@ export class RedisService {
   // Clear all cache
   async reset(): Promise<void> {
     try {
-      if (typeof this.cacheManager.reset === 'function') {
-        await this.cacheManager.reset();
+      if (typeof (this.cacheManager as any).clear === 'function') {
+        await (this.cacheManager as any).clear();
+      } else if (typeof (this.cacheManager as any).reset === 'function') {
+        await (this.cacheManager as any).reset();
       }
     } catch (error) {
       // Silently fail
