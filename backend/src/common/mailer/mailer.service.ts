@@ -34,7 +34,7 @@ export class MailerService implements OnModuleInit {
         this.oauth2Client = new google.auth.OAuth2(
           clientId,
           clientSecret,
-          'https://developers.google.com/oauthplayground' // Redirect URI used for getting refresh token
+          'https://developers.google.com/oauthplayground'
         );
 
         this.oauth2Client.setCredentials({
@@ -59,6 +59,7 @@ export class MailerService implements OnModuleInit {
     const emailLines = [
       `From: ${from}`,
       `To: ${to}`,
+      `Reply-To: noreply@getherlyy.com`,
       `Subject: ${subject}`,
       'MIME-Version: 1.0',
       'Content-Type: text/html; charset=utf-8',
@@ -68,7 +69,6 @@ export class MailerService implements OnModuleInit {
 
     const email = emailLines.join('\r\n');
     
-    // Encode to base64url format (required by Gmail API)
     const encodedEmail = Buffer.from(email)
       .toString('base64')
       .replace(/\+/g, '-')
@@ -98,7 +98,6 @@ export class MailerService implements OnModuleInit {
       return { messageId: result.data.id, threadId: result.data.threadId };
     } catch (error) {
       this.logger.error(`❌ Failed to send email to ${to}: ${error.message}`);
-      // Don't throw - allow app to continue even if email fails
       return null;
     }
   }

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '../mailer/mailer.service';
+import style from 'styled-jsx/style';
 
 export interface NotificationData {
   // User info
@@ -37,199 +38,64 @@ export class NotificationService {
   
   private generateEmailHtml(title: string, bodyParagraphs: string[], buttonText: string, buttonUrl: string): string {
     return `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Getherlyyy Notification</title>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background: white;
-            width: 500px;
-            max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-top: 5px solid #1a73e8;
-            overflow: hidden;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .logo-icon {
-            width: 24px;
-            height: 24px;
-            background-color: #000;
-            transform: rotate(45deg);
-            margin-right: 10px;
-        }
-
-        .brand-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #1a1a1b;
-        }
-
-        h1 {
-            font-size: 28px;
-            color: #1a1a1b;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        p {
-            color: #5f6368;
-            line-height: 1.6;
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-
-        .highlight {
-            font-weight: bold;
-            color: #1a1a1b;
-        }
-
-        .info-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid #1a73e8;
-            padding: 15px 20px;
-            margin: 20px 0;
-            border-radius: 0 6px 6px 0;
-        }
-
-        .info-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #70757a;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 15px;
-            color: #1a1a1b;
-            font-weight: 500;
-        }
-
-        .status-approved {
-            color: #0d9488;
-            font-weight: bold;
-        }
-
-        .status-rejected {
-            color: #dc2626;
-            font-weight: bold;
-        }
-
-        .status-pending {
-            color: #d97706;
-            font-weight: bold;
-        }
-
-        .btn {
-            background-color: #1a73e8;
-            color: white !important;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #1557b0;
-        }
-
-        .btn-icon {
-            margin-right: 8px;
-            font-size: 18px;
-        }
-
-        .footer {
-            border-top: 1px solid #eee;
-            padding: 30px 40px;
-            color: #70757a;
-            font-size: 14px;
-        }
-
-        .footer a {
-            color: #1a73e8;
-            text-decoration: none;
-        }
-
-        .signature {
-            margin-top: 20px;
-            line-height: 1.4;
-        }
-
-        ul {
-            color: #5f6368;
-            line-height: 1.8;
-            font-size: 15px;
-            padding-left: 20px;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
-    </style>
+    <title>${title}</title>
 </head>
-<body>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; max-width: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td align="center" style="padding: 40px 0 30px 0; background-color: #ffffff; border-bottom: 1px solid #e4e4e7;">
+                            <img src="cid:logo_cid" alt="Getherlyy" width="50" height="50" style="display: block; border: 0; margin: 0 auto;" />
+                            <h2 style="margin: 10px 0 0 0; color: #18181b; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center;">Getherlyy</h2>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 40px; background-color: #ffffff;">
+                            <h1 style="margin: 0 0 24px 0; color: #18181b; font-size: 22px; font-weight: 600; text-align: left; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">${title}</h1>
+                            
+                            <!-- Body Paragraphs -->
+                            <div style="color: #52525b; font-size: 16px; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                ${bodyParagraphs.join('\n                                ')}
+                            </div>
 
-    <div class="card">
-        <div class="content">
-            <div class="logo-section">
-                <img src="${this.frontendUrl}/brand-logo.png" alt="Getherlyy" style="height: 40px; margin-right: 15px;" />
-                <span class="brand-name">Getherlyy</span>
-            </div>
+                            <!-- CTA Button -->
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 32px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px; text-align: center; transition: background-color 0.2s; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                            ${buttonText}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-            <h1>${title}</h1>
-
-            ${bodyParagraphs.join('\n            ')}
-
-            <a href="${buttonUrl}" class="btn">
-                <span class="btn-icon">✨</span> ${buttonText}
-            </a>
-        </div>
-
-        <div class="footer">
-            <div class="disclaimer">
-                <p style="font-size: 12px; color: #70757a; margin-bottom: 15px; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #1a73e8;">
-                    <strong>📌 Disclaimer:</strong> This is an automated notification from Getherlyy. If you have any further issues, queries, or concerns, please contact the <strong>Club Administrator</strong> or your <strong>Faculty Mentor</strong> for assistance.
-                </p>
-            </div>
-            Having trouble with your account? <a href="${this.frontendUrl}/contact">Contact us</a>
-            <div class="signature">
-                Best,<br>
-                <strong>~ Getherlyy team</strong>
-            </div>
-        </div>
-    </div>
-
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 32px 40px; background-color: #fafafa; border-top: 1px solid #e4e4e7;">
+                            <p style="margin: 0 0 16px 0; color: #71717a; font-size: 14px; line-height: 1.5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                <strong>📌 Disclaimer:</strong> This is an automated notification. If you have any issues, please contact your Club Administrator or Faculty Mentor.
+                            </p>
+                            <p style="margin: 0; color: #a1a1aa; font-size: 13px; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                &copy; ${new Date().getFullYear()} Getherlyy. All rights reserved.<br>
+                                <a href="${this.frontendUrl}/contact" style="color: #2563eb; text-decoration: none;">Contact Support</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`;
   }
@@ -671,246 +537,76 @@ export class NotificationService {
    */
   private generatePasswordResetEmailHtml(title: string, bodyParagraphs: string[], buttonText: string, buttonUrl: string): string {
     return `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset - Getherlyy</title>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background: white;
-            width: 500px;
-            max-width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-top: 5px solid #dc2626;
-            overflow: hidden;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-
-
-        .brand-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #1a1a1b;
-        }
-
-        .lock-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-        }
-
-        .lock-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
-        }
-
-        h1 {
-            font-size: 28px;
-            color: #1a1a1b;
-            margin-bottom: 20px;
-            font-weight: 500;
-            text-align: center;
-        }
-
-        p {
-            color: #5f6368;
-            line-height: 1.6;
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-
-        .highlight {
-            font-weight: bold;
-            color: #1a1a1b;
-        }
-
-        .info-box {
-            background-color: #fef2f2;
-            border-left: 4px solid #dc2626;
-            padding: 15px 20px;
-            margin: 20px 0;
-            border-radius: 0 6px 6px 0;
-        }
-
-        .info-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #dc2626;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #7f1d1d;
-            font-weight: 500;
-        }
-
-        .btn-container {
-            text-align: center;
-            margin: 30px 0;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: white !important;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
-        }
-
-        .btn:hover {
-            background: linear-gradient(135deg, #b91c1c, #991b1b);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
-        }
-
-        .btn-icon {
-            margin-right: 8px;
-            font-size: 18px;
-        }
-
-        .alternative-link {
-            background-color: #f8f9fa;
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin: 20px 0;
-            word-break: break-all;
-        }
-
-        .alternative-link p {
-            margin-bottom: 10px;
-            font-size: 13px;
-            color: #70757a;
-        }
-
-        .alternative-link a {
-            color: #dc2626;
-            font-size: 12px;
-            text-decoration: none;
-        }
-
-        .security-notice {
-            background-color: #fffbeb;
-            border: 1px solid #fbbf24;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-
-        .security-notice p {
-            margin: 0;
-            font-size: 13px;
-            color: #92400e;
-        }
-
-        .security-notice strong {
-            color: #78350f;
-        }
-
-        .footer {
-            border-top: 1px solid #eee;
-            padding: 30px 40px;
-            color: #70757a;
-            font-size: 14px;
-        }
-
-        .footer a {
-            color: #dc2626;
-            text-decoration: none;
-        }
-
-        .signature {
-            margin-top: 20px;
-            line-height: 1.4;
-        }
-    </style>
+    <title>${title}</title>
 </head>
-<body>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; max-width: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+                     <!-- Header with Logo -->
+                    <tr>
+                        <td align="center" style="padding: 40px 0 30px 0; background-color: #ffffff; border-bottom: 1px solid #e4e4e7;">
+                            <img src="cid:logo_cid" alt="Getherlyy" width="50" height="50" style="display: block; width: 50px; height: 50px; border: 0; margin: 0 auto;" />
+                            <h2 style="margin: 10px 0 0 0; color: #18181b; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center;">Getherlyy</h2>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 40px; background-color: #ffffff;">
+                             <div style="text-align: center; margin-bottom: 30px;">
+                                <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background-color: #fef2f2; border-radius: 50%;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <h1 style="margin: 0 0 24px 0; color: #18181b; font-size: 22px; font-weight: 600; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">${title}</h1>
+                            
+                            <!-- Body Paragraphs -->
+                            <div style="color: #52525b; font-size: 16px; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                ${bodyParagraphs.join('\n                                ')}
+                            </div>
 
-    <div class="card">
-        <div class="content">
-            <div class="logo-section">
-                <img src="${this.frontendUrl}/brand-logo.png" alt="Getherlyy" style="height: 40px; margin-right: 15px;" />
-                <span class="brand-name">Getherlyy</span>
-            </div>
+                            <!-- CTA Button -->
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 32px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px; text-align: center; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                            ${buttonText}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                             <p style="margin: 32px 0 0 0; font-size: 14px; color: #71717a; text-align: center;">
+                                If the button above doesn't work, verify that you requested this reset.
+                            </p>
+                        </td>
+                    </tr>
 
-            <div class="lock-icon">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1C8.676 1 6 3.676 6 7v2H4a1 1 0 00-1 1v11a1 1 0 001 1h16a1 1 0 001-1V10a1 1 0 00-1-1h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v2H8V7c0-2.276 1.724-4 4-4zm0 10a2 2 0 011 3.732V18a1 1 0 11-2 0v-1.268A2 2 0 0112 13z"/>
-                </svg>
-            </div>
-
-            <h1>${title}</h1>
-
-            ${bodyParagraphs.join('\n            ')}
-
-            <div class="btn-container">
-                <a href="${buttonUrl}" class="btn">
-                    <span class="btn-icon">🔐</span> ${buttonText}
-                </a>
-            </div>
-
-            <div class="alternative-link">
-                <p>If the button doesn't work, copy and paste this link into your browser:</p>
-                <a href="${buttonUrl}">${buttonUrl}</a>
-            </div>
-
-            <div class="security-notice">
-                <p><strong>🔒 Security Tip:</strong> Never share this link with anyone. Getherlyy will never ask for your password via email.</p>
-            </div>
-        </div>
-
-        <div class="footer">
-            <div class="disclaimer">
-                <p style="font-size: 12px; color: #70757a; margin-bottom: 15px; padding: 12px; background-color: #fef2f2; border-radius: 6px; border-left: 3px solid #dc2626;">
-                    <strong>📌 Disclaimer:</strong> This is an automated security notification from Getherlyy. If you did not request this password reset or have any concerns about your account security, please contact the <strong>Administrator</strong> or your <strong>Faculty Mentor</strong> immediately.
-                </p>
-            </div>
-            Didn't request this? <a href="${this.frontendUrl}/contact">Contact our support team</a>
-            <div class="signature">
-                Stay secure,<br>
-                <strong>~ Getherlyy Security Team</strong>
-            </div>
-        </div>
-    </div>
-
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 32px 40px; background-color: #fafafa; border-top: 1px solid #e4e4e7;">
+                            <p style="margin: 0; color: #a1a1aa; font-size: 13px; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                &copy; ${new Date().getFullYear()} Getherlyy. All rights reserved.<br>
+                                <a href="${this.frontendUrl}/contact" style="color: #2563eb; text-decoration: none;">Contact Support</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`;
   }
-
   // ==================== BULK NOTIFICATIONS ====================
 
   /**

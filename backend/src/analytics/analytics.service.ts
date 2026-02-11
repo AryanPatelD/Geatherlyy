@@ -5,6 +5,22 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
+  async getPublicStats() {
+    const [activeClubs, totalMembers, eventsHosted, quizAttempts] = await Promise.all([
+      this.prisma.club.count({ where: { approvalStatus: 'APPROVED', isActive: true } }),
+      this.prisma.clubMember.count(),
+      this.prisma.activity.count(),
+      this.prisma.quizAttempt.count(),
+    ]);
+
+    return {
+      activeClubs,
+      totalMembers,
+      eventsHosted,
+      quizAttempts,
+    };
+  }
+
   async getPlatformAnalytics(userId: number, role: string) {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());

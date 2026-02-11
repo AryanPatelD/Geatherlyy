@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
+import { getApiUrl } from '@/lib/apiUrl';
 
 // Feature data
 const features = [
@@ -32,12 +33,7 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: '100+', label: 'Active Clubs', icon: '🏛️' },
-  { value: '5000+', label: 'Members', icon: '👥' },
-  { value: '500+', label: 'Events Hosted', icon: '🎉' },
-  { value: '10K+', label: 'Quiz Attempts', icon: '🧠' },
-];
+// Stats will be fetched from the API
 
 // 3D Floating Elements Component
 const FloatingElements = () => {
@@ -113,7 +109,7 @@ const AnimatedBarChart = ({ mounted }: { mounted: boolean }) => {
     <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-slate-700/50">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-semibold text-white">Weekly Activity</span>
-        <span className="text-xs text-green-500 font-medium">+24%</span>
+        <span className="text-xs text-green-500 font-medium">Overview</span>
       </div>
       <div className="flex items-end justify-between gap-2 h-24">
         {bars.map((bar, i) => (
@@ -142,7 +138,7 @@ const AnimatedLineChart = ({ mounted }: { mounted: boolean }) => {
     <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-slate-700/50">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-semibold text-white">Member Growth</span>
-        <span className="text-xs text-green-500 font-medium">↑ 156 this week</span>
+        <span className="text-xs text-green-500 font-medium">Trend</span>
       </div>
       <svg viewBox="0 0 210 100" className="w-full h-20 overflow-visible">
         {/* Grid lines */}
@@ -317,35 +313,46 @@ const Typewriter = ({ words, delay = 100, pause = 2000 }: { words: string[], del
   );
 };
 
-const FeatureQuote = () => (
-  <div className="mt-8 p-4 bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 max-w-sm hover:border-orange-500/30 transition-colors duration-300">
-    <div className="flex gap-4">
-      <div className="text-4xl text-orange-500/50 font-serif leading-none">❝</div>
-      <div>
-        <p className="text-slate-300 italic text-sm mb-3 leading-relaxed">
-          "Getherlyy transformed how we manage our coding club. Events are easier to organize and engagement has doubled!"
-        </p>
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold">
-              AG
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-white">Alex G.</div>
-              <div className="text-[10px] text-slate-400">CS Society President</div>
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+// FeatureQuote removed - no fake testimonials
 
 export default function Home() {
   const { user, isLoading } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [platformStats, setPlatformStats] = useState<{
+    activeClubs: number;
+    totalMembers: number;
+    eventsHosted: number;
+    quizAttempts: number;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Fetch real platform stats
+    fetch(`${getApiUrl()}/analytics/public-stats`)
+      .then(res => res.json())
+      .then(data => setPlatformStats(data))
+      .catch(err => console.error('Failed to fetch platform stats:', err));
   }, []);
+
+  const formatNumber = (num: number): string => {
+    if (num >= 10000) return `${Math.floor(num / 1000)}K+`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K+`;
+    return num.toString();
+  };
+
+  const stats = platformStats
+    ? [
+        { value: formatNumber(platformStats.activeClubs), label: 'Active Clubs', icon: '🏛️' },
+        { value: formatNumber(platformStats.totalMembers), label: 'Members', icon: '👥' },
+        { value: formatNumber(platformStats.eventsHosted), label: 'Events Hosted', icon: '🎉' },
+        { value: formatNumber(platformStats.quizAttempts), label: 'Quiz Attempts', icon: '🧠' },
+      ]
+    : [
+        { value: '—', label: 'Active Clubs', icon: '🏛️' },
+        { value: '—', label: 'Members', icon: '👥' },
+        { value: '—', label: 'Events Hosted', icon: '🎉' },
+        { value: '—', label: 'Quiz Attempts', icon: '🧠' },
+      ];
 
   if (isLoading) {
     return (
@@ -474,12 +481,24 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <span>Join <strong className="text-slate-300">5,000+</strong> students</span>
+              <span>Join <strong className="text-slate-300">{platformStats ? `${formatNumber(platformStats.totalMembers)}` : '...'}</strong> members</span>
             </div>
 
-            {/* Feature Quote */}
+            {/* Platform highlights */}
             <div className="flex justify-center lg:justify-start">
-              <FeatureQuote />
+              <div className="mt-8 p-4 bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 max-w-sm hover:border-orange-500/30 transition-colors duration-300">
+                <div className="flex gap-4">
+                  <div className="text-4xl text-orange-500/50 font-serif leading-none">🚀</div>
+                  <div>
+                    <p className="text-slate-300 text-sm mb-2 leading-relaxed font-medium">
+                      Your campus community platform
+                    </p>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Manage clubs, run events, create quizzes, and share resources — all in one place.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -517,34 +536,43 @@ export default function Home() {
                   {/* Circular Progress Row */}
                   <div className="bg-slate-900/50 rounded-2xl p-4">
                     <div className="flex items-center justify-around">
-                      <CircularProgress percentage={87} label="Attendance" mounted={mounted} />
-                      <CircularProgress percentage={72} label="Engagement" mounted={mounted} />
-                      <CircularProgress percentage={95} label="Quiz Score" mounted={mounted} />
+                      <div className="flex flex-col items-center">
+                        <div className="text-2xl font-bold text-orange-400">{platformStats ? platformStats.activeClubs : '—'}</div>
+                        <span className="text-xs text-slate-400 mt-1">Clubs</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="text-2xl font-bold text-orange-400">{platformStats ? platformStats.totalMembers : '—'}</div>
+                        <span className="text-xs text-slate-400 mt-1">Members</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="text-2xl font-bold text-orange-400">{platformStats ? platformStats.eventsHosted : '—'}</div>
+                        <span className="text-xs text-slate-400 mt-1">Events</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </Card3D>
 
-              {/* Floating Notification Card */}
+              {/* Floating Stats Card - Real Data */}
               <div className={`absolute -top-4 -right-8 transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
                    style={{ transform: 'rotateY(10deg)' }}>
                 <div className="bg-slate-800 rounded-xl p-3 shadow-xl border border-slate-700/50 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-900/30 flex items-center justify-center text-green-500">
-                    ✓
+                  <div className="w-10 h-10 rounded-full bg-orange-900/30 flex items-center justify-center text-orange-500 text-lg">
+                    🏛️
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white">New member joined!</div>
-                    <div className="text-xs text-slate-400">Tech Club • Just now</div>
+                    <div className="text-sm font-medium text-white">{platformStats ? `${platformStats.activeClubs} Active Clubs` : 'Loading...'}</div>
+                    <div className="text-xs text-slate-400">On the platform</div>
                   </div>
                 </div>
               </div>
 
-              {/* Floating Stats Card */}
+              {/* Floating Quiz Card - Real Data */}
               <div className={`absolute -bottom-4 -left-8 transition-all duration-700 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                    style={{ transform: 'rotateY(-10deg)' }}>
                 <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-4 shadow-xl text-white">
-                  <div className="text-2xl font-bold">+156</div>
-                  <div className="text-xs text-white/80">New signups this week</div>
+                  <div className="text-2xl font-bold">{platformStats ? formatNumber(platformStats.quizAttempts) : '—'}</div>
+                  <div className="text-xs text-white/80">Quiz Attempts</div>
                 </div>
               </div>
             </div>
@@ -658,7 +686,9 @@ export default function Home() {
             Ready to get started?
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-slate-400 max-w-xl mx-auto mb-6 sm:mb-8">
-            Join thousands of students and faculty already using Getherlyy to build thriving campus communities.
+            {platformStats
+              ? `Join ${formatNumber(platformStats.totalMembers)} members already using Getherlyy to build thriving campus communities.`
+              : 'Join students and faculty already using Getherlyy to build thriving campus communities.'}
           </p>
           <Link 
             href="/login" 

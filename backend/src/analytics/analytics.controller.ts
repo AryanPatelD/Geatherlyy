@@ -8,13 +8,19 @@ import { AnalyticsService } from './analytics.service';
 
 @ApiTags('analytics')
 @Controller('analytics')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.FACULTY, UserRole.ADMIN)
-@ApiBearerAuth()
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  @Get('public-stats')
+  @ApiOperation({ summary: 'Get public platform stats for landing page (no auth required)' })
+  async getPublicStats() {
+    return this.analyticsService.getPublicStats();
+  }
+
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FACULTY, UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get platform analytics (Faculty/Admin only)' })
   async getAnalytics(@Req() req) {
     return this.analyticsService.getPlatformAnalytics(req.user.id, req.user.role);

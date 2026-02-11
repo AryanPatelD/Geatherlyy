@@ -41,7 +41,7 @@ export class NotificationService {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geatherlyy Notification</title>
+    <title>Getherlyy Notification</title>
     <style>
         body {
             background-color: #f8f9fa;
@@ -203,8 +203,8 @@ export class NotificationService {
     <div class="card">
         <div class="content">
             <div class="logo-section">
-                <div class="logo-icon"></div>
-                <span class="brand-name">Geatherlyy</span>
+                <img src="${this.frontendUrl}/brand-logo.png" alt="Getherlyy" style="height: 40px; margin-right: 15px;" />
+                <span class="brand-name">Getherlyy</span>
             </div>
 
             <h1>${title}</h1>
@@ -219,13 +219,13 @@ export class NotificationService {
         <div class="footer">
             <div class="disclaimer">
                 <p style="font-size: 12px; color: #70757a; margin-bottom: 15px; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #1a73e8;">
-                    <strong>📌 Disclaimer:</strong> This is an automated notification from Geatherlyy. If you have any further issues, queries, or concerns, please contact the <strong>Club Administrator</strong> or your <strong>Faculty Mentor</strong> for assistance.
+                    <strong>📌 Disclaimer:</strong> This is an automated notification from Getherlyy. If you have any further issues, queries, or concerns, please contact the <strong>Club Administrator</strong> or your <strong>Faculty Mentor</strong> for assistance.
                 </p>
             </div>
             Having trouble with your account? <a href="${this.frontendUrl}/contact">Contact us</a>
             <div class="signature">
                 Best,<br>
-                <strong>~ Geatherlyy team</strong>
+                <strong>~ Getherlyy team</strong>
             </div>
         </div>
     </div>
@@ -277,7 +277,7 @@ export class NotificationService {
                 <div class="info-label">Reason</div>
                 <div class="info-value">${data.reason}</div>
             </div>` : '',
-      `<p>If you believe this was done in error, please contact the club administrators or your faculty mentor. You can also explore and join other clubs on Geatherlyy.</p>`
+      `<p>If you believe this was done in error, please contact the club administrators or your faculty mentor. You can also explore and join other clubs on Getherlyy.</p>`
     ].filter(p => p);
 
     const html = this.generateEmailHtml(
@@ -541,7 +541,7 @@ export class NotificationService {
                 <div class="info-label">Reason</div>
                 <div class="info-value">${data.reason}</div>
             </div>` : '',
-        `<p>You can explore other clubs on Geatherlyy that might be a great fit for you.</p>`
+        `<p>You can explore other clubs on Getherlyy that might be a great fit for you.</p>`
       ].filter(p => p);
       buttonText = 'Discover Other Clubs';
       buttonUrl = `${this.frontendUrl}/dashboard/discover`;
@@ -639,7 +639,7 @@ export class NotificationService {
 
     const bodyParagraphs = [
       `<p>Hi <span class="highlight">${data.userName || 'there'}</span>,</p>`,
-      `<p>We received a request to reset the password for your Geatherlyy account associated with this email address.</p>`,
+      `<p>We received a request to reset the password for your Getherlyy account associated with this email address.</p>`,
       `<div class="info-box">
                 <div class="info-label">Important</div>
                 <div class="info-value">This link will expire in ${expiresText}. If you didn't request this password reset, you can safely ignore this email.</div>
@@ -657,7 +657,7 @@ export class NotificationService {
     try {
       await this.mailerService.sendMail(
         data.userEmail,
-        'Password Reset Request - Geatherlyy',
+        'Password Reset Request - Getherlyy',
         html
       );
       this.logger.log(`Password reset email sent to ${data.userEmail}`);
@@ -676,7 +676,7 @@ export class NotificationService {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset - Geatherlyy</title>
+    <title>Password Reset - Getherlyy</title>
     <style>
         body {
             background-color: #f8f9fa;
