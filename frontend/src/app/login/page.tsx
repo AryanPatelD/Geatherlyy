@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleStatus, setGoogleStatus] = useState('Connecting to server...');
 
   // Helper to import PEM public key
   const importPublicKey = async (pem: string) => {
@@ -86,13 +87,74 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
+  // Wait for the backend server to be alive before redirecting to Google OAuth
+  const waitForServer = async (apiUrl: string): Promise<boolean> => {
+    const MAX_ATTEMPTS = 30; // ~60 seconds max wait
+    const POLL_INTERVAL = 2000; // 2 seconds between pings
+
+    const statusMessages = [
+      'Waking up server...',
+      'Server is starting up...',
+      'Almost ready...',
+      'Preparing authentication...',
+    ];
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      // Update status message progressively
+      if (attempt < 3) {
+        setGoogleStatus(statusMessages[0]);
+      } else if (attempt < 8) {
+        setGoogleStatus(statusMessages[1]);
+      } else if (attempt < 15) {
+        setGoogleStatus(statusMessages[2]);
+      } else {
+        setGoogleStatus(statusMessages[3]);
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const res = await fetch(`${apiUrl}/api/auth/me`, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        // Any response (even 401 Unauthorized) means the server is alive
+        if (res.status > 0) {
+          setGoogleStatus('Redirecting to Google...');
+          return true;
+        }
+      } catch {
+        // Server not ready yet, continue polling
+      }
+
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+    }
+
+    return false; // Timed out
+  };
+
+  const handleGoogleLogin = async () => {
     setGoogleLoading(true);
+    setGoogleStatus('Connecting to server...');
     const apiUrl = getApiUrl();
-    // Small delay to let the loading overlay render before the redirect
-    setTimeout(() => {
+
+    const serverReady = await waitForServer(apiUrl);
+
+    if (serverReady) {
+      // Small delay to show the "Redirecting" message
+      await new Promise(resolve => setTimeout(resolve, 300));
       window.location.href = `${apiUrl}/api/auth/google`;
-    }, 100);
+    } else {
+      // Server never woke up — show error
+      setGoogleStatus('Server is taking too long. Please try again.');
+      setTimeout(() => {
+        setGoogleLoading(false);
+        setGoogleStatus('Connecting to server...');
+      }, 3000);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -206,27 +268,84 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Full-screen loading overlay for Google OAuth redirect */}
+      {/* Full-screen loading overlay for Google OAuth — waits for server before redirect */}
       {googleLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
           {/* Animated background */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-pulse" />
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-600/5 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }} />
           </div>
-          <div className="relative z-10 flex flex-col items-center gap-6">
-            <div className="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center overflow-hidden p-2 shadow-2xl">
-              <img src="/brand-logo.png" alt="Getherlyy" className="w-full h-full object-contain" />
+          <div className="relative z-10 flex flex-col items-center gap-8 p-8 max-w-md w-full">
+            {/* Brand Logo with pulsing ring */}
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center overflow-hidden p-2 shadow-2xl">
+                <img src="/brand-logo.png" alt="Getherlyy" className="w-full h-full object-contain" />
+              </div>
+              <div className="absolute inset-0 -m-2 rounded-2xl border-2 border-orange-500/30 animate-ping" style={{ animationDuration: '2s' }} />
             </div>
-            <div className="relative w-14 h-14">
+
+            {/* Dual Spinner */}
+            <div className="relative w-16 h-16">
               <div className="absolute inset-0 rounded-full border-4 border-slate-700/50" />
               <div
                 className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500/50 animate-spin"
               />
+              <div
+                className="absolute inset-1 rounded-full border-4 border-transparent border-b-amber-500 border-l-amber-500/50"
+                style={{ animation: 'spin 1.5s linear infinite reverse' }}
+              />
             </div>
-            <div className="text-center space-y-2">
-              <p className="text-white font-semibold text-lg">Redirecting to Google...</p>
-              <p className="text-slate-500 text-sm">You&apos;ll be redirected back automatically</p>
+
+            {/* Dynamic Status Text */}
+            <div className="text-center space-y-3">
+              <p className="text-white font-semibold text-lg transition-all duration-300">
+                {googleStatus}
+              </p>
+              <p className="text-slate-500 text-sm">
+                {googleStatus.includes('taking too long')
+                  ? 'The server may be temporarily unavailable'
+                  : 'Continue with Google sign-in'}
+              </p>
+            </div>
+
+            {/* Skeleton Card — gives visual feedback during long waits */}
+            <div className="w-full bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-slate-700/80 animate-pulse" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-3 bg-slate-700/80 rounded-full w-2/3 animate-pulse" />
+                  <div className="h-2 bg-slate-700/60 rounded-full w-1/3 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                </div>
+              </div>
+              <div className="space-y-3 pt-2">
+                <div className="h-2.5 bg-slate-700/60 rounded-full w-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                <div className="h-2.5 bg-slate-700/60 rounded-full w-5/6 animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <div className="h-2.5 bg-slate-700/60 rounded-full w-4/6 animate-pulse" style={{ animationDelay: '0.5s' }} />
+              </div>
+              <div className="grid grid-cols-3 gap-3 pt-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="bg-slate-700/40 rounded-xl p-3 space-y-2">
+                    <div className="h-4 bg-slate-600/60 rounded w-1/2 mx-auto animate-pulse" style={{ animationDelay: `${0.6 + i * 0.15}s` }} />
+                    <div className="h-2 bg-slate-600/40 rounded w-3/4 mx-auto animate-pulse" style={{ animationDelay: `${0.7 + i * 0.15}s` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Progress dots */}
+            <div className="flex items-center gap-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-orange-500/60"
+                  style={{
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: `${i * 0.3}s`,
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
