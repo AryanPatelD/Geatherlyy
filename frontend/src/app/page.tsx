@@ -328,13 +328,22 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     // Fetch real platform stats
-    fetch(`${getApiUrl()}/analytics/public-stats`)
-      .then(res => res.json())
-      .then(data => setPlatformStats(data))
+    fetch(`${getApiUrl()}/api/analytics/public-stats`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        // Validate that data has expected shape before setting state
+        if (data && typeof data.activeClubs === 'number') {
+          setPlatformStats(data);
+        }
+      })
       .catch(err => console.error('Failed to fetch platform stats:', err));
   }, []);
 
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num: number | undefined | null): string => {
+    if (num == null) return '—';
     if (num >= 10000) return `${Math.floor(num / 1000)}K+`;
     if (num >= 1000) return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K+`;
     return num.toString();

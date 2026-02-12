@@ -23,6 +23,8 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   // Helper to import PEM public key
   const importPublicKey = async (pem: string) => {
     // 1. Decode base64 to get the original PEM string
@@ -85,8 +87,12 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
+    setGoogleLoading(true);
     const apiUrl = getApiUrl();
-    window.location.href = `${apiUrl}/api/auth/google`;
+    // Small delay to let the loading overlay render before the redirect
+    setTimeout(() => {
+      window.location.href = `${apiUrl}/api/auth/google`;
+    }, 100);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -199,6 +205,32 @@ export default function LoginPage() {
   };
 
   return (
+    <>
+      {/* Full-screen loading overlay for Google OAuth redirect */}
+      {googleLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
+          {/* Animated background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-pulse" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
+          <div className="relative z-10 flex flex-col items-center gap-6">
+            <div className="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center overflow-hidden p-2 shadow-2xl">
+              <img src="/brand-logo.png" alt="Getherlyy" className="w-full h-full object-contain" />
+            </div>
+            <div className="relative w-14 h-14">
+              <div className="absolute inset-0 rounded-full border-4 border-slate-700/50" />
+              <div
+                className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500/50 animate-spin"
+              />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-white font-semibold text-lg">Redirecting to Google...</p>
+              <p className="text-slate-500 text-sm">You&apos;ll be redirected back automatically</p>
+            </div>
+          </div>
+        </div>
+      )}
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 selection:bg-orange-500 selection:text-white">
       {/* Left Side - Hero & Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 flex-col items-center justify-center p-12 overflow-hidden">
@@ -456,5 +488,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
